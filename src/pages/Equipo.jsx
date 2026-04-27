@@ -1,0 +1,727 @@
+import { useState, useEffect, useRef } from 'react';
+
+const FORM_INIT = { nombre: '', puesto: '', email: '', telefono: '', departamento: '', cumpleanos: '' };
+
+const AVATAR_COLORS = [
+  '#1c1c2a','#374151','#6b7280','#9ca3af',
+  '#e53e3e','#dd6b20','#d69e2e','#38a169',
+  '#2b6cb0','#4299e1','#6b46c1','#d53f8c',
+  '#2c7a7b','#1a365d','#744210','#276749',
+];
+
+const EMOJIS = [
+  '😀','😄','😎','🤓','🥳','🤩','😇','🥸','🤠','😏','🧐','🤗',
+  '🧑‍💻','👩‍💻','👨‍💻','👩‍🎨','👨‍🎨','👩‍🏫','👨‍🏫','👩‍💼','👨‍💼','👩‍🔬','👨‍🔬','🧑‍🚀',
+  '💼','📊','📈','📉','📱','💻','🖥️','🖨️','⌨️','🖱️','📡','🔧',
+  '🎨','🎬','📸','📹','🎤','📢','✍️','📝','📌','📎','🗂️','📋',
+  '🚀','💡','🎯','⭐','🔥','👑','🏆','🥇','💫','🌟','✨','⚡',
+  '🦁','🐯','🦊','🐺','🦅','🐧','🦋','🌈','🍀','🌻','🌊','🏔️',
+  '🎭','🤖','👾','🎮','🎸','🎵','🏄','💎','🧩','🔮','🪄','🎪',
+];
+
+const ESTADOS = [
+  { key: 'asistio',      label: 'Asistió',             color: '#4ade80', emoji: ''   },
+  { key: 'retardo',      label: 'Retardo',             color: '#facc15', emoji: ''   },
+  { key: 'falta',        label: 'Falta',               color: '#ef4444', emoji: ''   },
+  { key: 'vacaciones',   label: 'Vacaciones',          color: '#67e8f9', emoji: '🌴' },
+  { key: 'enfermedad',   label: 'Enfermedad',          color: '#fde68a', emoji: '😷' },
+  { key: 'homeoffice',   label: 'Home Office',         color: '#94a3b8', emoji: '💻' },
+  { key: 'falta_just',   label: 'Falta Justificada',   color: '#a855f7', emoji: ''   },
+  { key: 'retardo_just', label: 'Retardo Justificado', color: '#fb923c', emoji: ''   },
+  { key: 'feriado',      label: 'Feriado',             color: '#e879f9', emoji: ''   },
+];
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS = ['', 'L', 'M', 'X', 'J', 'V'];
+
+function getFeriadosMexico(year) {
+  function nthMonday(month, n) {
+    const d = new Date(year, month, 1);
+    while (d.getDay() !== 1) d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + (n - 1) * 7);
+    return `${year}-${String(month + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  const pad = m => String(m).padStart(2, '0');
+  return {
+    [`${year}-01-01`]: 'Año Nuevo',
+    [nthMonday(1, 1)]:  'Día de la Constitución',
+    [nthMonday(2, 3)]:  'Natalicio de Benito Juárez',
+    [`${year}-05-01`]: 'Día del Trabajo',
+    [`${year}-09-16`]: 'Día de la Independencia',
+    [nthMonday(10, 3)]: 'Día de la Revolución',
+    [`${year}-12-25`]: 'Navidad',
+  };
+}
+
+function getWeekdays(year, month) {
+  const days = [];
+  const d = new Date(year, month, 1);
+  while (d.getMonth() === month) {
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) {
+      days.push({
+        dateStr: `${year}-${String(month + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+        day: d.getDate(),
+        dow,
+        isMonday: dow === 1,
+      });
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+function getIniciales(nombre) {
+  return nombre.trim().split(/\s+/).slice(0, 2).map(n => n[0] || '').join('').toUpperCase();
+}
+
+function renderAvatar(m, size = 44) {
+  const radius = size <= 44 ? 12 : 10;
+  const base = { width: size, height: size, borderRadius: radius, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+  if (m.avatarType === 'photo' && m.avatarPhoto)
+    return <div style={base}><img src={m.avatarPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>;
+  if (m.avatarType === 'emoji' && m.avatarEmoji)
+    return <div style={{ ...base, background: m.avatarBg || '#1c1c2a', fontSize: size * 0.5 }}>{m.avatarEmoji}</div>;
+  return <div style={{ ...base, background: m.avatarBg || '#1c1c2a', color: '#fff', fontWeight: 700, fontSize: size * 0.32, letterSpacing: 0.5 }}>{getIniciales(m.nombre)}</div>;
+}
+
+function ChevronIcon({ open }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  );
+}
+function PencilIcon({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  );
+}
+function TrashIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/><path d="M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
+  );
+}
+function MailIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+      <polyline points="22,6 12,13 2,6"/>
+    </svg>
+  );
+}
+function PhoneIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+    </svg>
+  );
+}
+function EyeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+}
+function EyeOffIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
+
+export default function Equipo() {
+  const [equipo, setEquipo] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('equipo') || '[]'); } catch { return []; }
+  });
+  const [asistencia, setAsistencia] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('equipo_asistencia') || '{}'); } catch { return {}; }
+  });
+  const [estadoColores, setEstadoColores] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('equipo_estado_colores') || 'null');
+      if (saved) return saved;
+    } catch {}
+    return Object.fromEntries(ESTADOS.map(e => [e.key, e.color]));
+  });
+  const [tab, setTab] = useState('miembros');
+  const [nameColWidth, setNameColWidth] = useState(140);
+  const resizingRef = useRef(false);
+  const resizeStartX = useRef(0);
+  const resizeStartW = useRef(0);
+  const [viewDate, setViewDate] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() }; });
+  const [openCell, setOpenCell] = useState(null);
+  const [noteInput, setNoteInput] = useState('');
+  const [customEstados, setCustomEstados] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('equipo_estados_custom') || '[]'); } catch { return []; }
+  });
+  const [showNewEstado, setShowNewEstado] = useState(false);
+  const [newEstadoForm, setNewEstadoForm] = useState({ label: '', color: '#94a3b8', emoji: '' });
+  const [editingAlias, setEditingAlias] = useState(null);
+  const [aliasInput, setAliasInput] = useState('');
+  const [feriadoTooltip, setFeriadoTooltip] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
+  const [form, setForm] = useState(FORM_INIT);
+  const [expandido, setExpandido] = useState(null);
+  const [focusDept, setFocusDept] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
+  const [hoverAvatar, setHoverAvatar] = useState(null);
+  const [avatarEditorId, setAvatarEditorId] = useState(null);
+  const [avatarTab, setAvatarTab] = useState('color');
+  const [avatarDraft, setAvatarDraft] = useState({ type: 'initials', bg: '#1c1c2a', emoji: '', photo: '' });
+  const fileRef = useRef();
+
+  useEffect(() => { localStorage.setItem('equipo', JSON.stringify(equipo)); }, [equipo]);
+  useEffect(() => { localStorage.setItem('equipo_asistencia', JSON.stringify(asistencia)); }, [asistencia]);
+  useEffect(() => { localStorage.setItem('equipo_estado_colores', JSON.stringify(estadoColores)); }, [estadoColores]);
+  useEffect(() => { localStorage.setItem('equipo_estados_custom', JSON.stringify(customEstados)); }, [customEstados]);
+
+  const todosEstados = [...ESTADOS, ...customEstados];
+  const weekdays = getWeekdays(viewDate.year, viewDate.month);
+  const feriadosMexico = getFeriadosMexico(viewDate.year);
+
+  function agregarEstado() {
+    if (!newEstadoForm.label.trim()) return;
+    const key = 'custom_' + Date.now();
+    setCustomEstados(prev => [...prev, { key, label: newEstadoForm.label.trim(), color: newEstadoForm.color, emoji: newEstadoForm.emoji.trim() }]);
+    setEstadoColores(prev => ({ ...prev, [key]: newEstadoForm.color }));
+    setNewEstadoForm({ label: '', color: '#94a3b8', emoji: '' });
+    setShowNewEstado(false);
+  }
+  function eliminarEstado(key) {
+    setCustomEstados(prev => prev.filter(e => e.key !== key));
+    setEstadoColores(prev => { const next = { ...prev }; delete next[key]; return next; });
+  }
+
+  function prevMonth() {
+    setViewDate(v => {
+      const d = new Date(v.year, v.month - 1, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  }
+  function nextMonth() {
+    setViewDate(v => {
+      const d = new Date(v.year, v.month + 1, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  }
+
+  function startResize(e) {
+    e.preventDefault();
+    resizingRef.current = true;
+    resizeStartX.current = e.clientX;
+    resizeStartW.current = nameColWidth;
+    const onMove = ev => {
+      if (!resizingRef.current) return;
+      const delta = ev.clientX - resizeStartX.current;
+      setNameColWidth(Math.max(80, Math.min(300, resizeStartW.current + delta)));
+    };
+    const onUp = () => {
+      resizingRef.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function clickCell(e, memberId, dateStr) {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const current = asistencia[memberId]?.[dateStr];
+    setNoteInput(current?.note || '');
+    setOpenCell({ memberId, dateStr, x: rect.left, y: rect.bottom + 6 });
+  }
+
+  function setEstado(key) {
+    if (!openCell) return;
+    const { memberId, dateStr } = openCell;
+    setAsistencia(prev => {
+      const memberData = { ...(prev[memberId] || {}) };
+      if (key === null) { delete memberData[dateStr]; }
+      else { memberData[dateStr] = { status: key, note: noteInput }; }
+      return { ...prev, [memberId]: memberData };
+    });
+    setOpenCell(null);
+  }
+
+  function confirmarNota(key) {
+    if (!openCell) return;
+    const { memberId, dateStr } = openCell;
+    setAsistencia(prev => {
+      const memberData = { ...(prev[memberId] || {}) };
+      memberData[dateStr] = { status: key, note: noteInput };
+      return { ...prev, [memberId]: memberData };
+    });
+    setOpenCell(null);
+  }
+
+  function abrir() { setEditandoId(null); setForm(FORM_INIT); setShowModal(true); }
+  function abrirEditar(m) {
+    setEditandoId(m.id);
+    setForm({ nombre: m.nombre, puesto: m.puesto || '', email: m.email || '', telefono: m.telefono || '', departamento: m.departamento || '', cumpleanos: m.cumpleanos || '' });
+    setShowModal(true);
+  }
+  function guardar() {
+    if (!form.nombre.trim()) return;
+    if (editandoId) {
+      setEquipo(prev => prev.map(m => m.id === editandoId ? { ...m, ...form } : m));
+    } else {
+      setEquipo(prev => [...prev, { ...form, id: Date.now(), avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '' }]);
+    }
+    setShowModal(false);
+  }
+  function eliminar(id) {
+    if (confirm('¿Eliminar este miembro?')) {
+      setEquipo(prev => prev.filter(m => m.id !== id));
+      if (expandido === id) setExpandido(null);
+    }
+  }
+  function onDragStart(i) { setDragIndex(i); }
+  function onDragOver(e, i) { e.preventDefault(); if (i !== dragIndex) setDragOver(i); }
+  function onDrop(i) {
+    if (dragIndex === null || dragIndex === i) { setDragIndex(null); setDragOver(null); return; }
+    setEquipo(prev => { const arr = [...prev]; const [item] = arr.splice(dragIndex, 1); arr.splice(i, 0, item); return arr; });
+    setDragIndex(null); setDragOver(null);
+  }
+  function onDragEnd() { setDragIndex(null); setDragOver(null); }
+
+  function toggleAsistencia(id) {
+    setEquipo(prev => prev.map(m => m.id === id ? { ...m, enAsistencia: m.enAsistencia === false ? true : false } : m));
+  }
+  function startEditAlias(m) {
+    setAliasInput(m.aliasAsistencia || '');
+    setEditingAlias(m.id);
+  }
+  function saveAlias(id) {
+    setEquipo(prev => prev.map(m => m.id === id ? { ...m, aliasAsistencia: aliasInput.trim() } : m));
+    setEditingAlias(null);
+  }
+
+  function abrirAvatarEditor(m) {
+    setAvatarDraft({ type: m.avatarType || 'initials', bg: m.avatarBg || '#1c1c2a', emoji: m.avatarEmoji || '', photo: m.avatarPhoto || '' });
+    setAvatarTab('color'); setAvatarEditorId(m.id);
+  }
+  function guardarAvatar() {
+    setEquipo(prev => prev.map(m => m.id === avatarEditorId
+      ? { ...m, avatarType: avatarDraft.type, avatarBg: avatarDraft.bg, avatarEmoji: avatarDraft.emoji, avatarPhoto: avatarDraft.photo }
+      : m
+    ));
+    setAvatarEditorId(null);
+  }
+  function onFotoChange(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => setAvatarDraft(d => ({ ...d, type: 'photo', photo: ev.target.result }));
+    reader.readAsDataURL(file);
+  }
+
+  const avatarPreviewMember = equipo.find(m => m.id === avatarEditorId);
+  const previewM = avatarPreviewMember ? { ...avatarPreviewMember, avatarType: avatarDraft.type, avatarBg: avatarDraft.bg, avatarEmoji: avatarDraft.emoji, avatarPhoto: avatarDraft.photo } : null;
+  const inp = (extra = {}) => ({ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box', ...extra });
+
+  const openEstado = openCell ? ESTADOS.find(e => e.key === asistencia[openCell.memberId]?.[openCell.dateStr]?.status) : null;
+  const needsNote = openCell && (asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo_just');
+
+  return (
+    <div style={{ background: '#f5f6fa', minHeight: '100%' }} onClick={() => setOpenCell(null)}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0', background: '#fff', borderBottom: '1px solid #e8e8ee', position: 'sticky', top: 0, zIndex: 20 }}>
+        <div style={{ paddingBottom: 16 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Equipo</h1>
+          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, marginTop: 2 }}>{equipo.length} miembros</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* Tab toggle */}
+          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
+            {[['miembros','Miembros'],['asistencia','Asistencia']].map(([key, label]) => (
+              <button key={key} onClick={() => setTab(key)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === key ? 600 : 400, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#111827' : '#6b7280', boxShadow: tab === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {tab === 'miembros' && (
+            <button onClick={abrir} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              + Agregar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── MIEMBROS TAB ── */}
+      {tab === 'miembros' && (
+        <div style={{ padding: '20px 24px' }}>
+          {equipo.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9090a8' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>👥</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#555', marginBottom: 6 }}>Sin miembros</div>
+              <div style={{ fontSize: 13 }}>Agrega el primer miembro con el botón "+ Agregar"</div>
+            </div>
+          ) : (
+            <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              {equipo.map((m, i) => (
+                <div key={m.id} draggable onDragStart={() => onDragStart(i)} onDragOver={e => onDragOver(e, i)} onDrop={() => onDrop(i)} onDragEnd={onDragEnd}
+                  style={{ opacity: dragIndex === i ? 0.4 : 1, borderTop: dragOver === i && dragIndex !== i ? '2px solid #e53e3e' : '2px solid transparent', transition: 'opacity 0.15s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: expandido === m.id || i === equipo.length - 1 ? 'none' : '1px solid #f3f4f6', cursor: 'grab' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
+                      <line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/>
+                    </svg>
+                    <div style={{ position: 'relative', flexShrink: 0, cursor: 'pointer' }}
+                      onMouseEnter={() => setHoverAvatar(m.id)} onMouseLeave={() => setHoverAvatar(null)}
+                      onClick={e => { e.stopPropagation(); abrirAvatarEditor(m); }}>
+                      {renderAvatar(m, 44)}
+                      {hoverAvatar === m.id && (
+                        <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                          <PencilIcon size={14} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{m.nombre}</div>
+                      <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{[m.puesto, m.departamento].filter(Boolean).join(' · ')}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, cursor: 'default' }} onClick={e => e.stopPropagation()}>
+                      <button onClick={() => toggleAsistencia(m.id)} title={m.enAsistencia === false ? 'Excluido de asistencia (clic para incluir)' : 'Incluido en asistencia (clic para excluir)'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: m.enAsistencia === false ? '#ef4444' : '#bbb', display: 'flex', padding: 4 }}>{m.enAsistencia === false ? <EyeOffIcon /> : <EyeIcon />}</button>
+                      <button onClick={() => setExpandido(expandido === m.id ? null : m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><ChevronIcon open={expandido === m.id} /></button>
+                      <button onClick={() => abrirEditar(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><PencilIcon /></button>
+                      <button onClick={() => eliminar(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><TrashIcon /></button>
+                    </div>
+                  </div>
+                  {expandido === m.id && (
+                    <div style={{ padding: '0 20px 14px 78px', borderBottom: i < equipo.length - 1 ? '1px solid #f3f4f6' : 'none', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                      {m.email && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 12 }}><span style={{ color: '#bbb', display: 'flex' }}><MailIcon /></span>{m.email}</div>}
+                      {m.telefono && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 12 }}><span style={{ color: '#bbb', display: 'flex' }}><PhoneIcon /></span>{m.telefono}</div>}
+                      {m.cumpleanos && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 12 }}>
+                        <span style={{ color: '#bbb' }}>🎂</span>
+                        {new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}
+                        <span style={{ color: '#9ca3af', fontSize: 11 }}>({new Date().getFullYear() - parseInt(m.cumpleanos.slice(0, 4))} años)</span>
+                      </div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ASISTENCIA TAB ── */}
+      {tab === 'asistencia' && (
+        <div style={{ padding: '16px 24px 24px' }}>
+          {/* Legend */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 2 }}>Estados (clic en color para editar):</span>
+              {todosEstados.map(e => (
+                <div key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 6, padding: '3px 7px 3px 5px' }}>
+                  <label title={`Editar color: ${e.label}`} style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
+                    <input type="color" value={estadoColores[e.key] || e.color}
+                      onChange={ev => setEstadoColores(prev => ({ ...prev, [e.key]: ev.target.value }))}
+                      style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
+                  </label>
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>{e.emoji} {e.label}</span>
+                  {e.key.startsWith('custom_') && (
+                    <button onClick={() => eliminarEstado(e.key)} title="Eliminar estado" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 13, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
+                  )}
+                </div>
+              ))}
+              <button onClick={() => setShowNewEstado(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: showNewEstado ? '#f3f4f6' : '#fff', border: '1px dashed #d1d5db', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 11, color: '#6b7280', fontWeight: 500 }}>
+                + Estado
+              </button>
+            </div>
+            {showNewEstado && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px 12px', flexWrap: 'wrap' }}>
+                <label style={{ position: 'relative', width: 28, height: 28, borderRadius: 6, background: newEstadoForm.color, cursor: 'pointer', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }} title="Elegir color">
+                  <input type="color" value={newEstadoForm.color} onChange={e => setNewEstadoForm(p => ({ ...p, color: e.target.value }))} style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
+                </label>
+                <input value={newEstadoForm.label} onChange={e => setNewEstadoForm(p => ({ ...p, label: e.target.value }))} placeholder="Nombre del estado" onKeyDown={e => e.key === 'Enter' && agregarEstado()} autoFocus style={{ border: '1px solid #e8e8ee', borderRadius: 6, padding: '5px 10px', fontSize: 12, outline: 'none', width: 160 }} />
+                <input value={newEstadoForm.emoji} onChange={e => setNewEstadoForm(p => ({ ...p, emoji: e.target.value }))} placeholder="Emoji (opcional)" style={{ border: '1px solid #e8e8ee', borderRadius: 6, padding: '5px 10px', fontSize: 12, outline: 'none', width: 130 }} />
+                <button onClick={agregarEstado} style={{ padding: '5px 14px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Agregar</button>
+                <button onClick={() => setShowNewEstado(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid #e8e8ee', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#6b7280' }}>Cancelar</button>
+              </div>
+            )}
+          </div>
+
+          {equipo.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9090a8', background: '#fff', borderRadius: 14 }}>
+              <div style={{ fontSize: 13 }}>Agrega miembros primero en la pestaña Miembros.</div>
+            </div>
+          ) : (
+            <div style={{ background: '#fff', borderRadius: 14, overflow: 'auto', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <table style={{ borderCollapse: 'collapse', minWidth: '100%' }}>
+                <thead>
+                  {/* Month name row */}
+                  <tr>
+                    <th rowSpan={2} style={{ position: 'sticky', left: 0, background: '#f8f9fa', zIndex: 5, padding: '8px 12px', textAlign: 'left', fontSize: 11, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #e8e8ee', borderRight: '2px solid #e8e8ee', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, whiteSpace: 'nowrap', userSelect: 'none', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>Nombre</span>
+                        <div onMouseDown={startResize} style={{ width: 6, height: 20, cursor: 'col-resize', borderRadius: 3, background: '#d1d5db', flexShrink: 0, marginRight: -4 }} title="Arrastra para redimensionar" />
+                      </div>
+                    </th>
+                    <th colSpan={weekdays.length} style={{ background: '#f8f9fa', borderBottom: '1px solid #e8e8ee', padding: '4px 8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <button onClick={prevMonth} style={{ background: 'none', border: '1px solid #e8e8ee', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 15, color: '#555', lineHeight: 1 }}>‹</button>
+                        <span style={{ fontWeight: 700, fontSize: 12, color: '#374151', letterSpacing: 1, textTransform: 'uppercase', minWidth: 130, textAlign: 'center' }}>{MESES[viewDate.month]} {viewDate.year}</span>
+                        <button onClick={nextMonth} style={{ background: 'none', border: '1px solid #e8e8ee', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 15, color: '#555', lineHeight: 1 }}>›</button>
+                      </div>
+                    </th>
+                  </tr>
+                  {/* Day columns row */}
+                  <tr>
+                    {weekdays.map(d => {
+                      const feriadoNombre = feriadosMexico[d.dateStr];
+                      return (
+                        <th key={d.dateStr} title={feriadoNombre || undefined} style={{ padding: '0', textAlign: 'center', borderBottom: '2px solid #e8e8ee', borderLeft: d.isMonday ? '2px solid #e8e8ee' : '1px solid #f3f4f6', minWidth: 26, width: 26, background: feriadoNombre ? 'rgba(232,121,240,0.1)' : 'transparent' }}>
+                          <div style={{ fontSize: 9, color: feriadoNombre ? '#d946ef' : '#bbb', paddingTop: 3 }}>{DIAS[d.dow]}</div>
+                          <div style={{ fontSize: 10, fontWeight: 600, color: feriadoNombre ? '#d946ef' : '#374151', paddingBottom: 3 }}>{d.day}</div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {equipo.filter(m => m.enAsistencia !== false).map((m, mi) => (
+                    <tr key={m.id} style={{ background: mi % 2 === 0 ? '#fff' : '#fafafa' }}>
+                      {/* Sticky name cell */}
+                      <td style={{ position: 'sticky', left: 0, background: mi % 2 === 0 ? '#fff' : '#fafafa', zIndex: 4, padding: '6px 12px', borderBottom: '1px solid #f3f4f6', borderRight: '2px solid #e8e8ee', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          {renderAvatar(m, 24)}
+                          {editingAlias === m.id ? (
+                            <input autoFocus value={aliasInput} onChange={e => setAliasInput(e.target.value)}
+                              onBlur={() => saveAlias(m.id)}
+                              onKeyDown={e => { if (e.key === 'Enter') saveAlias(m.id); if (e.key === 'Escape') setEditingAlias(null); }}
+                              onClick={e => e.stopPropagation()}
+                              style={{ fontSize: 12, fontWeight: 600, color: '#111827', border: '1px solid #e53e3e', borderRadius: 4, padding: '1px 4px', outline: 'none', flex: 1, minWidth: 0, background: '#fff' }} />
+                          ) : (
+                            <span onClick={e => { e.stopPropagation(); startEditAlias(m); }} title="Clic para editar nombre en asistencia"
+                              style={{ fontSize: 12, fontWeight: 600, color: '#111827', cursor: 'text', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {m.aliasAsistencia || m.nombre}
+                            </span>
+                          )}
+                          {m.cumpleanos && m.cumpleanos.slice(5, 7) === String(viewDate.month + 1).padStart(2, '0') && (
+                            <span title={`Cumpleaños: ${m.cumpleanos.split('-').reverse().slice(0,2).join('/')}`} style={{ fontSize: 11, flexShrink: 0 }}>🎂</span>
+                          )}
+                        </div>
+                      </td>
+                      {weekdays.map(d => {
+                        const entry = asistencia[m.id]?.[d.dateStr];
+                        const estado = entry ? todosEstados.find(e => e.key === entry.status) : null;
+                        const feriadoNombre = feriadosMexico[d.dateStr];
+                        const esFeriado = !entry && !!feriadoNombre;
+                        const feriadoEstado = ESTADOS.find(e => e.key === 'feriado');
+                        const esBirthday = m.cumpleanos && d.dateStr.slice(5) === m.cumpleanos.slice(5);
+                        const color = estado ? (estadoColores[estado.key] || estado.color) : (esFeriado ? estadoColores['feriado'] : (esBirthday ? '#fef9c3' : null));
+                        const tooltipParts = [];
+                        if (feriadoNombre) tooltipParts.push(feriadoNombre);
+                        if (esBirthday && m.cumpleanos) tooltipParts.push(`🎂 ${viewDate.year - parseInt(m.cumpleanos.slice(0, 4))} años`);
+                        return (
+                          <td key={d.dateStr}
+                            onClick={e => clickCell(e, m.id, d.dateStr)}
+                            onMouseEnter={tooltipParts.length ? e => { const r = e.currentTarget.getBoundingClientRect(); setFeriadoTooltip({ text: tooltipParts.join(' · '), x: r.left + r.width / 2, y: r.top - 6 }); } : undefined}
+                            onMouseLeave={tooltipParts.length ? () => setFeriadoTooltip(null) : undefined}
+                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid #f3f4f6', borderLeft: d.isMonday ? '2px solid #e8e8ee' : '1px solid #f3f4f6', background: color || 'transparent', cursor: 'pointer', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle' }}>
+                            {(estado || esFeriado) && (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: 1 }}>
+                                {estado?.emoji ? <span style={{ fontSize: 15 }}>{estado.emoji}</span> : null}
+                                {esFeriado && feriadoEstado?.emoji ? <span style={{ fontSize: 15 }}>{feriadoEstado.emoji}</span> : null}
+                                {entry?.note ? <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(0,0,0,0.6)' }}>{entry.note}</span> : null}
+                              </div>
+                            )}
+                            {esBirthday && !estado && !esFeriado && (
+                              <span style={{ fontSize: 15, lineHeight: 1 }}>🎂</span>
+                            )}
+                            {esBirthday && (estado || esFeriado) && (
+                              <span style={{ position: 'absolute', top: 1, right: 1, fontSize: 8, lineHeight: 1 }}>🎂</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* Feriado tooltip */}
+      {feriadoTooltip && (
+        <div style={{ position: 'fixed', left: feriadoTooltip.x, top: feriadoTooltip.y, transform: 'translate(-50%, -100%)', background: '#1f2937', color: '#fff', fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, whiteSpace: 'nowrap', zIndex: 9999, pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+          {feriadoTooltip.text}
+          <div style={{ position: 'absolute', left: '50%', bottom: -4, transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #1f2937' }} />
+        </div>
+      )}
+
+      {/* Cell popover */}
+      {openCell && (
+        <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', left: Math.min(openCell.x, window.innerWidth - 230), top: Math.min(openCell.y, window.innerHeight - 60), transform: openCell.y + 40 > window.innerHeight - 60 ? 'translateY(-100%)' : 'none', background: '#fff', border: '1px solid #e8e8ee', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 200, width: 220, overflow: 'hidden' }}>
+          <div style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6', fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
+            {openCell.dateStr}
+          </div>
+          <div style={{ padding: 6, maxHeight: 320, overflowY: 'auto' }}>
+            {todosEstados.map(e => {
+              const isCurrent = asistencia[openCell.memberId]?.[openCell.dateStr]?.status === e.key;
+              const needNote = e.key === 'retardo' || e.key === 'retardo_just';
+              const cellColor = estadoColores[e.key] || e.color;
+              return (
+                <div key={e.key}>
+                  <button onClick={() => { if (!needNote) setEstado(e.key); else { setAsistencia(prev => { const md = { ...(prev[openCell.memberId] || {}) }; md[openCell.dateStr] = { status: e.key, note: noteInput }; return { ...prev, [openCell.memberId]: md }; }); } }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 8px', border: 'none', borderRadius: 6, background: isCurrent ? cellColor + '33' : 'none', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: cellColor, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: '#374151', flex: 1 }}>{e.emoji} {e.label}</span>
+                    {isCurrent && <span style={{ fontSize: 10, color: '#9ca3af' }}>✓</span>}
+                  </button>
+                  {isCurrent && needNote && (
+                    <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px 28px' }}>
+                      <input value={noteInput} onChange={ev => setNoteInput(ev.target.value)} placeholder="ej: 30min" style={{ flex: 1, border: '1px solid #ddd', borderRadius: 4, padding: '3px 6px', fontSize: 11, outline: 'none' }} onKeyDown={ev => ev.key === 'Enter' && confirmarNota(e.key)} />
+                      <button onClick={() => confirmarNota(e.key)} style={{ background: cellColor, border: 'none', borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>OK</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ padding: '6px 10px', borderTop: '1px solid #f3f4f6' }}>
+            <button onClick={() => setEstado(null)} style={{ width: '100%', padding: '5px', border: 'none', borderRadius: 6, background: 'none', cursor: 'pointer', fontSize: 11, color: '#ef4444' }}>
+              Limpiar celda
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Avatar Editor Modal */}
+      {avatarEditorId && previewM && (
+        <div onClick={e => { if (e.target === e.currentTarget) setAvatarEditorId(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 400 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Editar avatar</span>
+              <button onClick={() => setAvatarEditorId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ padding: '20px 20px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>{renderAvatar(previewM, 72)}</div>
+              <div style={{ display: 'flex', borderBottom: '1px solid #eee', marginBottom: 16 }}>
+                {[['color','Color de fondo'],['emoji','Emoji'],['foto','Foto']].map(([t, label]) => (
+                  <button key={t} onClick={() => setAvatarTab(t)} style={{ flex: 1, padding: '8px 0', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: avatarTab === t ? 600 : 400, color: avatarTab === t ? '#e53e3e' : '#6b7280', borderBottom: avatarTab === t ? '2px solid #e53e3e' : '2px solid transparent', marginBottom: -1 }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {avatarTab === 'color' && (
+                <div style={{ paddingBottom: 20 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8, marginBottom: 14 }}>
+                    {AVATAR_COLORS.map(c => (
+                      <button key={c} onClick={() => setAvatarDraft(d => ({ ...d, type: 'initials', bg: c }))} style={{ width: '100%', aspectRatio: '1', borderRadius: 8, background: c, border: avatarDraft.bg === c && avatarDraft.type === 'initials' ? '3px solid #e53e3e' : '2px solid transparent', cursor: 'pointer', outline: 'none' }} />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <label style={{ fontSize: 12, color: '#6b7280' }}>Color personalizado</label>
+                    <input type="color" value={avatarDraft.bg} onChange={e => setAvatarDraft(d => ({ ...d, type: 'initials', bg: e.target.value }))} style={{ width: 36, height: 30, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
+                  </div>
+                </div>
+              )}
+              {avatarTab === 'emoji' && (
+                <div style={{ paddingBottom: 20 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 4, marginBottom: 14, maxHeight: 220, overflowY: 'auto' }}>
+                    {EMOJIS.map(e => (
+                      <button key={e} onClick={() => setAvatarDraft(d => ({ ...d, type: 'emoji', emoji: e }))} style={{ fontSize: 22, padding: '4px 0', border: avatarDraft.emoji === e && avatarDraft.type === 'emoji' ? '2px solid #e53e3e' : '2px solid transparent', borderRadius: 8, background: avatarDraft.emoji === e && avatarDraft.type === 'emoji' ? '#fff5f5' : 'none', cursor: 'pointer' }}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <label style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap' }}>Fondo:</label>
+                    <input type="color" value={avatarDraft.bg} onChange={e => setAvatarDraft(d => ({ ...d, bg: e.target.value }))} style={{ width: 36, height: 30, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
+                  </div>
+                </div>
+              )}
+              {avatarTab === 'foto' && (
+                <div style={{ paddingBottom: 20 }}>
+                  <input ref={fileRef} type="file" accept="image/*" onChange={onFotoChange} style={{ display: 'none' }} />
+                  <div onClick={() => fileRef.current.click()} style={{ border: '2px dashed #ddd', borderRadius: 10, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: '#fafafa' }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
+                    <div style={{ fontSize: 13, color: '#6b7280' }}>Haz clic para seleccionar una imagen</div>
+                    <div style={{ fontSize: 11, color: '#bbb', marginTop: 4 }}>JPG, PNG, GIF</div>
+                  </div>
+                  {avatarDraft.type === 'photo' && avatarDraft.photo && (
+                    <button onClick={() => setAvatarDraft(d => ({ ...d, type: 'initials', photo: '' }))} style={{ marginTop: 10, width: '100%', padding: '7px', border: '1px solid #eee', borderRadius: 8, background: 'none', cursor: 'pointer', fontSize: 12, color: '#e53e3e' }}>
+                      Quitar foto
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 20px', borderTop: '1px solid #eee' }}>
+              <button onClick={() => setAvatarEditorId(null)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
+              <button onClick={guardarAvatar} style={{ padding: '8px 18px', border: 'none', borderRadius: 8, background: '#e53e3e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Member Modal */}
+      {showModal && (
+        <div onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #eee' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{editandoId ? 'Editar Miembro' : 'Nuevo Miembro'}</span>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Nombre completo</label>
+                <input value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} style={inp()} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Puesto</label>
+                <input value={form.puesto} onChange={e => setForm(p => ({ ...p, puesto: e.target.value }))} style={inp()} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Email</label>
+                <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} type="email" style={inp()} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Telefono</label>
+                  <input value={form.telefono} onChange={e => setForm(p => ({ ...p, telefono: e.target.value }))} style={inp()} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Departamento</label>
+                  <input value={form.departamento} onChange={e => setForm(p => ({ ...p, departamento: e.target.value }))}
+                    onFocus={() => setFocusDept(true)} onBlur={() => setFocusDept(false)}
+                    style={inp(focusDept ? { border: '2px solid #e53e3e' } : {})} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>🎂 Cumpleaños</label>
+                <input type="date" value={form.cumpleanos} onChange={e => setForm(p => ({ ...p, cumpleanos: e.target.value }))} style={inp()} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid #eee' }}>
+              <button onClick={() => setShowModal(false)} style={{ padding: '9px 18px', border: '1px solid #ddd', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
+              <button onClick={guardar} style={{ padding: '9px 20px', border: 'none', borderRadius: 8, background: '#e53e3e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                {editandoId ? 'Guardar cambios' : 'Agregar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
