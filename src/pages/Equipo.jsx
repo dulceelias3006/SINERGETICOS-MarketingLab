@@ -143,9 +143,25 @@ function EyeOffIcon() {
   );
 }
 
+const EQUIPO_DEFAULT = [
+  { id: 1,  nombre: 'David Jose Iriza Petit',              puesto: 'Director de Marketing',                           departamento: 'Marketing',              email: 'diriza@zigma3.com',    telefono: '7771868027', cumpleanos: '1993-06-29', avatarType: 'emoji', avatarBg: '#7c3aed', avatarEmoji: '🤠', avatarPhoto: '', enAsistencia: false },
+  { id: 2,  nombre: 'Saúl David Moreno Martinez',          puesto: 'Director de Edición',                             departamento: 'Marketing – Edición',    email: 'saulmm@zigma3.com',    telefono: '3313972845', cumpleanos: '2002-04-30', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: false },
+  { id: 3,  nombre: 'Dulce Lucero Elias Alvarez',          puesto: 'Asistente de Dirección',                          departamento: 'Marketing',              email: 'diriza@zigma3.com',    telefono: '3322580258', cumpleanos: '2001-06-30', avatarType: 'emoji', avatarBg: '#db2777', avatarEmoji: '😇', avatarPhoto: '', enAsistencia: false },
+  { id: 4,  nombre: 'Cintia Daniela Robles Pérez',         puesto: 'Proyect Manager',                                 departamento: 'Marketing',              email: 'crobles@zigma3.com',   telefono: '3334610893', cumpleanos: '1999-01-06', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 5,  nombre: 'Jorge Daniel Cano Urrutia',           puesto: 'Líder de Funnels',                                departamento: 'Marketing',              email: 'ycano@zigma3.com',     telefono: '5519472571', cumpleanos: '2003-04-09', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 6,  nombre: 'Juan Luis Mares Alvarado',            puesto: 'Lider de Programación',                           departamento: 'Marketing – Programación', email: 'jmares@zigma3.com', telefono: '3314370136', cumpleanos: '1996-01-02', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 7,  nombre: 'Angela Fernanada Bautista Morales',   puesto: 'Diseñadora Gráfica',                              departamento: 'Marketing – Diseño',     email: 'fbautista@zigma3.com', telefono: '6692166216', cumpleanos: '2001-02-16', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 8,  nombre: 'Itzia Monserrat Renteria Mendoza',    puesto: 'Community manager – Soporte de Programación',     departamento: 'Marketing – Programación', email: 'irenteria@zigma3.com', telefono: '3322585991', cumpleanos: '2000-07-27', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 9,  nombre: 'Guillermo García Sainz',              puesto: 'Programador Jr.',                                 departamento: 'Marketing – Programación', email: 'mgarcia@zigma3.com',  telefono: '3319025255', cumpleanos: '2003-06-20', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 10, nombre: 'Jorge Alberto Cardozo Zaragoza',      puesto: 'Diseñador Gráfico',                               departamento: 'Marketing – Diseño',     email: 'jzaragoza@zigma3.com', telefono: '4433321834', cumpleanos: '1998-05-24', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 11, nombre: 'Ernesto Alexander Larios Vázquez',    puesto: 'Control y Verificación de Errores',               departamento: 'Marketing',              email: 'elarios@zigma3.com',   telefono: '3331480844', cumpleanos: '2001-03-24', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+  { id: 12, nombre: 'Jesús Alejandro Dávalos Raygoza',     puesto: 'Editor',                                          departamento: 'Marketing – Edición',    email: 'jraygoza@zigma3.com',  telefono: '3310725543', cumpleanos: '',           avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: false },
+  { id: 13, nombre: 'Matías Ezequiel Villafañe',           puesto: 'Editor',                                          departamento: 'Marketing – Edición',    email: 'mvillafane@zigma3.com', telefono: '3325964705', cumpleanos: '1999-12-14', avatarType: 'initials', avatarBg: '#1c1c2a', avatarEmoji: '', avatarPhoto: '', enAsistencia: true },
+];
+
 export default function Equipo() {
   const [equipo, setEquipo] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('equipo') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('equipo') || 'null') || EQUIPO_DEFAULT; } catch { return EQUIPO_DEFAULT; }
   });
   const [asistencia, setAsistencia] = useState(() => {
     try { return JSON.parse(localStorage.getItem('equipo_asistencia') || '{}'); } catch { return {}; }

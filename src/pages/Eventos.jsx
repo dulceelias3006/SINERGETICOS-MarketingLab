@@ -190,10 +190,24 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
   );
 }
 
+const EVENTOS_DEFAULT = [
+  { id: 1, nombre: 'Hermosillo',           tipo: 'presencial', estado: 'activo',      region: 'MEX',   fecha: '2026-05-06', hora: '10:00', hora2: '18:00', ubicacion: 'EXPO FORUM',                       registrosMeta: 7033,  registrosActuales: 3238,  vipVendidas: 59,  presupuestoTotal: 400000, presupuestoGastado: 239903, divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 2, nombre: 'Querétaro',            tipo: 'presencial', estado: 'activo',      region: 'MEX',   fecha: '2026-05-12', hora: '10:00', hora2: '18:00', ubicacion: 'Grand Fiesta Americana',           registrosMeta: 6060,  registrosActuales: 3380,  vipVendidas: 35,  presupuestoTotal: 400000, presupuestoGastado: 134221, divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 3, nombre: 'CDMX',                tipo: 'presencial', estado: 'activo',      region: 'MEX',   fecha: '2026-05-16', hora: '10:00', hora2: '16:00', ubicacion: 'Hotel Royal Pedregal',             registrosMeta: 8000,  registrosActuales: 1405,  vipVendidas: 16,  presupuestoTotal: 400000, presupuestoGastado: 85185,  divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 4, nombre: 'Monterrey',           tipo: 'presencial', estado: 'activo',      region: 'MEX',   fecha: '2026-05-17', hora: '10:00', hora2: '',       ubicacion: 'Pabellón M',                      registrosMeta: 4000,  registrosActuales: 2582,  vipVendidas: 11,  presupuestoTotal: 200000, presupuestoGastado: 82649,  divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 5, nombre: 'Guadalajara',         tipo: 'presencial', estado: 'activo',      region: 'MEX',   fecha: '2026-05-23', hora: '10:00', hora2: '16:00', ubicacion: 'Barceló',                         registrosMeta: 3030,  registrosActuales: 2268,  vipVendidas: 10,  presupuestoTotal: 400000, presupuestoGastado: 103617, divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 6, nombre: 'Salt Lake City',      tipo: 'presencial', estado: 'planificado', region: 'USA',   fecha: '2026-05-26', hora: '18:00', hora2: '',       ubicacion: '',                                registrosMeta: 0,     registrosActuales: 0,     vipVendidas: 0,   presupuestoTotal: 300000, presupuestoGastado: 0,      divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 7, nombre: 'Denver',              tipo: 'presencial', estado: 'planificado', region: 'USA',   fecha: '2026-05-28', hora: '18:00', hora2: '',       ubicacion: 'Denver Marriott West',            registrosMeta: 0,     registrosActuales: 0,     vipVendidas: 0,   presupuestoTotal: 300000, presupuestoGastado: 0,      divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 8, nombre: 'San Diego',           tipo: 'presencial', estado: 'completado',  region: 'USA',   fecha: '2026-04-19', hora: '10:00', hora2: '',       ubicacion: 'Hilton La Jolla Torrey Pines',    registrosMeta: 3000,  registrosActuales: 2083,  vipVendidas: 85,  presupuestoTotal: 300000, presupuestoGastado: 327650, divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 9, nombre: 'Chicago',             tipo: 'presencial', estado: 'planificado', region: 'USA',   fecha: '2026-05-31', hora: '10:00', hora2: '',       ubicacion: "Hilton Rosemont / Chicago O'Hare", registrosMeta: 0,     registrosActuales: 0,     vipVendidas: 0,   presupuestoTotal: 300000, presupuestoGastado: 0,      divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 10, nombre: 'Newark',             tipo: 'presencial', estado: 'planificado', region: 'USA',   fecha: '2026-05-28', hora: '18:00', hora2: '',       ubicacion: '',                                registrosMeta: 0,     registrosActuales: 0,     vipVendidas: 0,   presupuestoTotal: 300000, presupuestoGastado: 0,      divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+  { id: 11, nombre: 'República Dominicana', tipo: 'presencial', estado: 'activo',    region: 'LATAM', fecha: '2026-04-25', hora: '10:00', hora2: '16:00', ubicacion: 'Sambil Santo Domingo',            registrosMeta: 15000, registrosActuales: 15556, vipVendidas: 448, presupuestoTotal: 400000, presupuestoGastado: 433740, divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
+];
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Eventos() {
   const [eventos, setEventos] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('eventos') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('eventos') || 'null') || EVENTOS_DEFAULT; } catch { return EVENTOS_DEFAULT; }
   });
   const [tipos, setTipos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos_tipos') || 'null') || TIPOS_DEFAULT; } catch { return TIPOS_DEFAULT; }
