@@ -35,7 +35,9 @@ const IcoLock    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="n
 // ── Role pill ─────────────────────────────────────────────────────────────────
 function RolPill({ usuario, onCambiarRol, canChange }) {
   const [open, setOpen] = useState(false);
+  const [dropPos, setDropPos] = useState({ top: 0, right: 0 });
   const ref = useRef(null);
+  const btnRef = useRef(null);
   const rol = ROLES.find(r => r.id === usuario.rol) || ROLES[0];
 
   useEffect(() => {
@@ -45,10 +47,20 @@ function RolPill({ usuario, onCambiarRol, canChange }) {
     return () => document.removeEventListener('mousedown', handle);
   }, [open]);
 
+  function handleOpen() {
+    if (!canChange) return;
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    }
+    setOpen(o => !o);
+  }
+
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button
-        onClick={() => canChange && setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, background: '#f9fafb', border: `1.5px solid ${open ? '#e53e3e' : '#e5e7eb'}`, cursor: canChange ? 'pointer' : 'default', fontSize: 13, fontWeight: 500, color: '#374151', transition: 'border-color 0.15s' }}>
         <IcoShield color={rol.color} />
         <IcoShield color={rol.color} />
@@ -57,7 +69,7 @@ function RolPill({ usuario, onCambiarRol, canChange }) {
       </button>
 
       {open && canChange && (
-        <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 148, overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', top: dropPos.top, right: dropPos.right, background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 9999, minWidth: 148, overflow: 'hidden' }}>
           {ROLES.map(r => {
             const selected = r.id === usuario.rol;
             return (
