@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { dbGet, dbSub } from '../lib/supabase';
 
 // ── Catalog ───────────────────────────────────────────────────────────────────
 const CATS = [
@@ -105,18 +106,28 @@ function iconForTipo(tipo) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Analiticas() {
-  const [eventos] = useState(() => {
+  const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || '[]'); } catch { return []; }
   });
-  const [tickets] = useState(() => {
+  const [tickets, setTickets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tickets') || '[]'); } catch { return []; }
   });
-  const [tiposEvento] = useState(() => {
+  const [tiposEvento, setTiposEvento] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('eventos_tipos') || 'null') ||
         [{ id: 'digital', label: 'Digital' }, { id: 'presencial', label: 'Presencial' }];
     } catch { return [{ id: 'digital', label: 'Digital' }, { id: 'presencial', label: 'Presencial' }]; }
   });
+
+  useEffect(() => {
+    dbGet('eventos').then(v => { if (v !== null) setEventos(v); });
+    dbGet('tickets').then(v => { if (v !== null) setTickets(v); });
+    dbGet('eventos_tipos').then(v => { if (v !== null) setTiposEvento(v); });
+    const s1 = dbSub('eventos', v => setEventos(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    const s2 = dbSub('tickets', v => setTickets(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    const s3 = dbSub('eventos_tipos', v => setTiposEvento(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); };
+  }, []);
 
   // ── Responsive columns ────────────────────────────────────────────────────────
   const [winWidth, setWinWidth] = useState(window.innerWidth);

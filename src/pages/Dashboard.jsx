@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { dbGet, dbSub } from '../lib/supabase';
 
 const BLOQUES_DEFAULT = [
   { id: 'd1', tipo: 'stat_proximo_evento', colSpan: 1 },
@@ -97,18 +98,28 @@ const pctColor = p => p >= 90 ? '#4ade80' : p >= 60 ? '#facc15' : '#ef4444';
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const [eventos] = useState(() => {
+  const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || '[]'); } catch { return []; }
   });
-  const [tickets] = useState(() => {
+  const [tickets, setTickets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tickets') || '[]'); } catch { return []; }
   });
-  const [enlaces] = useState(() => {
+  const [enlaces, setEnlaces] = useState(() => {
     try { return JSON.parse(localStorage.getItem('enlaces') || '[]'); } catch { return []; }
   });
   const [historial] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos_historial') || '[]').slice(0, 8); } catch { return []; }
   });
+
+  useEffect(() => {
+    dbGet('eventos').then(v => { if (v !== null) setEventos(v); });
+    dbGet('tickets').then(v => { if (v !== null) setTickets(v); });
+    dbGet('enlaces').then(v => { if (v !== null) setEnlaces(v); });
+    const s1 = dbSub('eventos', v => setEventos(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    const s2 = dbSub('tickets', v => setTickets(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    const s3 = dbSub('enlaces', v => setEnlaces(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); };
+  }, []);
 
   // ── Computed ──────────────────────────────────────────────────────────────────
   const totalRegistros   = eventos.reduce((s, e) => s + (Number(e.registrosActuales) || 0), 0);
