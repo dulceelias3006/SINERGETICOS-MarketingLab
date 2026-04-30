@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { dbGet, dbSet, dbSub } from '../lib/supabase';
 
 const CATEGORIAS = ['General', 'Redes Sociales', 'Plataformas', 'Herramientas', 'Email', 'Analytics', 'Almacenamiento', 'Otros'];
 const FORM_INIT = { nombre: '', url: '', usuario: '', contrasena: '', categoria: 'General', notas: '' };
@@ -130,8 +131,20 @@ export default function Accesos() {
   const [showCatDrop, setShowCatDrop] = useState(false);
   const [copiado, setCopiado] = useState(null);
   const [tamano, setTamano] = useState('medium');
+  const canSync = useRef(false);
+  const fbAc = useRef(false);
 
-  useEffect(() => { localStorage.setItem('accesos', JSON.stringify(accesos)); }, [accesos]);
+  useEffect(() => { if (fbAc.current) { fbAc.current = false; return; } localStorage.setItem('accesos', JSON.stringify(accesos)); if (canSync.current) dbSet('accesos', accesos); }, [accesos]);
+
+  useEffect(() => {
+    dbGet('accesos').then(val => {
+      canSync.current = true;
+      if (val !== null) { fbAc.current = true; setAccesos(val); }
+      else { let v; try { v = JSON.parse(localStorage.getItem('accesos')||'null'); } catch {} if (v?.length) dbSet('accesos', v); }
+    });
+    const sub = dbSub('accesos', v => { fbAc.current = true; setAccesos(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    return () => sub.unsubscribe();
+  }, []);
 
   const categoriasUsadas = [...new Set(accesos.map(a => a.categoria))];
 

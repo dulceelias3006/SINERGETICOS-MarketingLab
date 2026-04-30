@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { dbGet, dbSet, dbSub } from '../lib/supabase';
 
 const SUPER_ADMIN   = 'diriza@zigma3.com';
 const YO_EMAIL      = 'diriza@zigma3.com';
@@ -103,8 +104,19 @@ export default function Usuarios() {
   const [formError, setFormError]   = useState('');
 
   const esSuperAdmin = YO_EMAIL.toLowerCase() === SUPER_ADMIN.toLowerCase();
+  const canSync = useRef(false);
 
-  function save(next) { setUsuarios(next); localStorage.setItem('usuarios', JSON.stringify(next)); }
+  useEffect(() => {
+    dbGet('usuarios').then(val => {
+      canSync.current = true;
+      if (val !== null) setUsuarios(val);
+      else { let v; try { v = JSON.parse(localStorage.getItem('usuarios')||'null'); } catch {} dbSet('usuarios', v || USUARIOS_DEFAULT); }
+    });
+    const sub = dbSub('usuarios', v => setUsuarios(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    return () => sub.unsubscribe();
+  }, []);
+
+  function save(next) { setUsuarios(next); localStorage.setItem('usuarios', JSON.stringify(next)); if (canSync.current) dbSet('usuarios', next); }
 
   function getIniciales(nombre) {
     if (!nombre?.trim()) return '?';

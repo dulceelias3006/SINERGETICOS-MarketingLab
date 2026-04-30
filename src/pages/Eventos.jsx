@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { dbGet, dbSet, dbSub } from '../lib/supabase';
 
 const ESTADOS_CONFIG = [
   { key: 'planificado', label: 'Planificado', color: '#f59e0b' },
@@ -245,11 +246,13 @@ export default function Eventos() {
   const [undoToast, setUndoToast] = useState(null);
   const toastTimer = useRef(null);
   const dehacerRef = useRef(null);
+  const canSync = useRef(false);
 
   function saveEventos(next, desc = '') {
     setUndoStack(prev => [...prev, { snap: eventos, desc }].slice(-20));
     setEventos(next);
     localStorage.setItem('eventos', JSON.stringify(next));
+    if (canSync.current) dbSet('eventos', next);
   }
 
   function dehacer() {
@@ -258,6 +261,7 @@ export default function Eventos() {
       const entry = prev[prev.length - 1];
       setEventos(entry.snap);
       localStorage.setItem('eventos', JSON.stringify(entry.snap));
+      if (canSync.current) dbSet('eventos', entry.snap);
       if (toastTimer.current) clearTimeout(toastTimer.current);
       setUndoToast(entry.desc ? `Deshecho: ${entry.desc}` : 'Cambio deshecho');
       toastTimer.current = setTimeout(() => setUndoToast(null), 2800);
@@ -278,8 +282,25 @@ export default function Eventos() {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
-  function saveTipos(next) { setTipos(next); localStorage.setItem('eventos_tipos', JSON.stringify(next)); }
-  function saveRegiones(next) { setRegiones(next); localStorage.setItem('eventos_regiones', JSON.stringify(next)); }
+
+  useEffect(() => {
+    const localEv = () => { try { return JSON.parse(localStorage.getItem('eventos')||'null'); } catch { return null; } };
+    const localTi = () => { try { return JSON.parse(localStorage.getItem('eventos_tipos')||'null'); } catch { return null; } };
+    const localRe = () => { try { return JSON.parse(localStorage.getItem('eventos_regiones')||'null'); } catch { return null; } };
+    Promise.all([dbGet('eventos'), dbGet('eventos_tipos'), dbGet('eventos_regiones')]).then(([ev, ti, re]) => {
+      canSync.current = true;
+      if (ev !== null) setEventos(ev); else { const v = localEv(); dbSet('eventos', v || EVENTOS_DEFAULT); }
+      if (ti !== null) setTipos(ti); else { const v = localTi(); if (v) dbSet('eventos_tipos', v); }
+      if (re !== null) setRegiones(re); else { const v = localRe(); if (v) dbSet('eventos_regiones', v); }
+    });
+    const s1 = dbSub('eventos', v => setEventos(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
+    const s2 = dbSub('eventos_tipos', v => setTipos(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
+    const s3 = dbSub('eventos_regiones', v => setRegiones(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); };
+  }, []);
+
+  function saveTipos(next) { setTipos(next); localStorage.setItem('eventos_tipos', JSON.stringify(next)); if (canSync.current) dbSet('eventos_tipos', next); }
+  function saveRegiones(next) { setRegiones(next); localStorage.setItem('eventos_regiones', JSON.stringify(next)); if (canSync.current) dbSet('eventos_regiones', next); }
   function log(tipo, nombre) {
     const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const next = [{ id: Date.now(), tipo, nombre, ts: Date.now() }, ...historial]

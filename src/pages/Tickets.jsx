@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { dbGet, dbSet, dbSub } from '../lib/supabase';
 
 const COLUMNAS = [
   { id: 'backlog',    label: 'Backlog',       color: '#9ca3af' },
@@ -51,9 +52,9 @@ export default function Tickets() {
   const [tipos, setTipos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tickets_tipos') || 'null') || TIPOS_DEFAULT; } catch { return TIPOS_DEFAULT; }
   });
-  const equipo = (() => {
+  const [equipo, setEquipo] = useState(() => {
     try { return JSON.parse(localStorage.getItem('equipo') || '[]'); } catch { return []; }
-  })();
+  });
 
   const [showModal, setShowModal] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
@@ -64,14 +65,30 @@ export default function Tickets() {
   const [showTipoInput, setShowTipoInput] = useState(false);
   const [nuevoTipo, setNuevoTipo] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const canSync = useRef(false);
+
+  useEffect(() => {
+    Promise.all([dbGet('tickets'), dbGet('tickets_tipos'), dbGet('equipo')]).then(([tk, ti, eq]) => {
+      canSync.current = true;
+      if (tk !== null) setTickets(tk); else { let v; try { v = JSON.parse(localStorage.getItem('tickets')||'null'); } catch {} if (v?.length) dbSet('tickets', v); }
+      if (ti !== null) setTipos(ti); else { let v; try { v = JSON.parse(localStorage.getItem('tickets_tipos')||'null'); } catch {} if (v) dbSet('tickets_tipos', v); }
+      if (eq !== null) setEquipo(eq);
+    });
+    const s1 = dbSub('tickets', v => setTickets(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    const s2 = dbSub('tickets_tipos', v => setTipos(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    const s3 = dbSub('equipo', v => setEquipo(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); };
+  }, []);
 
   function saveTickets(next) {
     setTickets(next);
     localStorage.setItem('tickets', JSON.stringify(next));
+    if (canSync.current) dbSet('tickets', next);
   }
   function saveTipos(next) {
     setTipos(next);
     localStorage.setItem('tickets_tipos', JSON.stringify(next));
+    if (canSync.current) dbSet('tickets_tipos', next);
   }
 
   function abrir(columna = 'backlog') {

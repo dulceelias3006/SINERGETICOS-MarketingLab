@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { dbGet, dbSet, dbSub } from '../lib/supabase';
 
 const TIPOS = ['Archivo', 'Excel', 'Imagen', 'Enlace', 'Web', 'Carpeta'];
 const CATEGORIAS = ['General', 'Reportes', 'Campañas', 'Diseño', 'Analytics'];
@@ -91,9 +92,22 @@ export default function Enlaces() {
   });
   const [showCatModal, setShowCatModal] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(null);
+  const canSync = useRef(false);
+  const fbEn = useRef(false); const fbCc = useRef(false);
 
-  useEffect(() => { localStorage.setItem('enlaces', JSON.stringify(enlaces)); }, [enlaces]);
-  useEffect(() => { localStorage.setItem('enlaces_catColores', JSON.stringify(catColores)); }, [catColores]);
+  useEffect(() => { if (fbEn.current) { fbEn.current = false; return; } localStorage.setItem('enlaces', JSON.stringify(enlaces)); if (canSync.current) dbSet('enlaces', enlaces); }, [enlaces]);
+  useEffect(() => { if (fbCc.current) { fbCc.current = false; return; } localStorage.setItem('enlaces_catColores', JSON.stringify(catColores)); if (canSync.current) dbSet('enlaces_catColores', catColores); }, [catColores]);
+
+  useEffect(() => {
+    Promise.all([dbGet('enlaces'), dbGet('enlaces_catColores')]).then(([en, cc]) => {
+      canSync.current = true;
+      if (en !== null) { fbEn.current = true; setEnlaces(en); } else { let v; try { v = JSON.parse(localStorage.getItem('enlaces')||'null'); } catch {} if (v?.length) dbSet('enlaces', v); }
+      if (cc !== null) { fbCc.current = true; setCatColores(cc); } else { let v; try { v = JSON.parse(localStorage.getItem('enlaces_catColores')||'null'); } catch {} if (v) dbSet('enlaces_catColores', v); }
+    });
+    const s1 = dbSub('enlaces', v => { fbEn.current = true; setEnlaces(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    const s2 = dbSub('enlaces_catColores', v => { fbCc.current = true; setCatColores(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    return () => { s1.unsubscribe(); s2.unsubscribe(); };
+  }, []);
 
   const categoriasCon = [...new Set(enlaces.map(e => e.categoria))];
   const conteo = cat => enlaces.filter(e => e.categoria === cat).length;

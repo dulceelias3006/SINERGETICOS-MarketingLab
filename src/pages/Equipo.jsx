@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { dbGet, dbSet, dbSub } from '../lib/supabase';
 
 const FORM_INIT = { nombre: '', puesto: '', email: '', telefono: '', departamento: '', cumpleanos: '' };
 
@@ -201,11 +202,29 @@ export default function Equipo() {
   const [avatarTab, setAvatarTab] = useState('color');
   const [avatarDraft, setAvatarDraft] = useState({ type: 'initials', bg: '#1c1c2a', emoji: '', photo: '' });
   const fileRef = useRef();
+  const canSync = useRef(false);
+  const fbEq = useRef(false); const fbAs = useRef(false); const fbEc = useRef(false); const fbCe = useRef(false);
 
-  useEffect(() => { localStorage.setItem('equipo', JSON.stringify(equipo)); }, [equipo]);
-  useEffect(() => { localStorage.setItem('equipo_asistencia', JSON.stringify(asistencia)); }, [asistencia]);
-  useEffect(() => { localStorage.setItem('equipo_estado_colores', JSON.stringify(estadoColores)); }, [estadoColores]);
-  useEffect(() => { localStorage.setItem('equipo_estados_custom', JSON.stringify(customEstados)); }, [customEstados]);
+  useEffect(() => { if (fbEq.current) { fbEq.current = false; return; } localStorage.setItem('equipo', JSON.stringify(equipo)); if (canSync.current) dbSet('equipo', equipo); }, [equipo]);
+  useEffect(() => { if (fbAs.current) { fbAs.current = false; return; } localStorage.setItem('equipo_asistencia', JSON.stringify(asistencia)); if (canSync.current) dbSet('equipo_asistencia', asistencia); }, [asistencia]);
+  useEffect(() => { if (fbEc.current) { fbEc.current = false; return; } localStorage.setItem('equipo_estado_colores', JSON.stringify(estadoColores)); if (canSync.current) dbSet('equipo_estado_colores', estadoColores); }, [estadoColores]);
+  useEffect(() => { if (fbCe.current) { fbCe.current = false; return; } localStorage.setItem('equipo_estados_custom', JSON.stringify(customEstados)); if (canSync.current) dbSet('equipo_estados_custom', customEstados); }, [customEstados]);
+
+  useEffect(() => {
+    Promise.all([dbGet('equipo'), dbGet('equipo_asistencia'), dbGet('equipo_estado_colores'), dbGet('equipo_estados_custom')]).then(([eq, as, ec, ce]) => {
+      canSync.current = true;
+      const gl = k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch { return null; } };
+      if (eq !== null) { fbEq.current = true; setEquipo(eq); } else { const v = gl('equipo'); if (v?.length) dbSet('equipo', v); }
+      if (as !== null) { fbAs.current = true; setAsistencia(as); } else { const v = gl('equipo_asistencia'); if (v) dbSet('equipo_asistencia', v); }
+      if (ec !== null) { fbEc.current = true; setEstadoColores(ec); } else { const v = gl('equipo_estado_colores'); if (v) dbSet('equipo_estado_colores', v); }
+      if (ce !== null) { fbCe.current = true; setCustomEstados(ce); } else { const v = gl('equipo_estados_custom'); if (v?.length) dbSet('equipo_estados_custom', v); }
+    });
+    const s1 = dbSub('equipo', v => { fbEq.current = true; setEquipo(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    const s2 = dbSub('equipo_asistencia', v => { fbAs.current = true; setAsistencia(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    const s3 = dbSub('equipo_estado_colores', v => { fbEc.current = true; setEstadoColores(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    const s4 = dbSub('equipo_estados_custom', v => { fbCe.current = true; setCustomEstados(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); };
+  }, []);
 
   const todosEstados = [...ESTADOS, ...customEstados];
   const weekdays = getWeekdays(viewDate.year, viewDate.month);
