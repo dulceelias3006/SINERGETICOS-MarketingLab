@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const TIPOS = ['Archivo', 'Excel', 'Imagen', 'Enlace', 'Web', 'Carpeta'];
 const CATEGORIAS = ['General', 'Reportes', 'Campañas', 'Diseño', 'Analytics'];
@@ -78,6 +79,7 @@ function getDomain(url) {
 const FORM_INIT = { nombre: '', url: '', tipo: 'Archivo', categoria: 'General', color: '#3b82f6' };
 
 export default function Enlaces() {
+  const { can } = useAuth();
   const [enlaces, setEnlaces] = useState(() => {
     try { return JSON.parse(localStorage.getItem('enlaces') || '[]'); } catch { return []; }
   });
@@ -158,9 +160,11 @@ export default function Enlaces() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Enlaces</h1>
           <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, marginTop: 2 }}>{enlaces.length} enlaces · {categoriasCon.length} categorías</p>
         </div>
-        <button onClick={abrir} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          + Nuevo Enlace
-        </button>
+        {can('edit') && (
+          <button onClick={abrir} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            + Nuevo Enlace
+          </button>
+        )}
       </div>
 
       <div style={{ padding: '24px 28px' }}>
@@ -232,8 +236,8 @@ export default function Enlaces() {
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.nombre}</div>
                         <div style={{ fontSize: 12, color: '#9ca3af' }}>{getDomain(e.url)}</div>
                       </div>
-                      {/* Botón 3 puntos */}
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                      {/* Botón 3 puntos — solo para quien puede editar */}
+                      {can('edit') && <div style={{ position: 'relative', flexShrink: 0 }}>
                         <button onClick={() => setMenuAbierto(menuOpen ? null : e.id)}
                           style={{ background: menuOpen ? '#f3f4f6' : 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, color: '#9ca3af', display: 'flex', alignItems: 'center' }}
                           onMouseEnter={ev => { if (!menuOpen) ev.currentTarget.style.background = '#f3f4f6'; ev.currentTarget.style.color = '#374151'; }}
@@ -259,7 +263,7 @@ export default function Enlaces() {
                             </button>
                           </div>
                         )}
-                      </div>
+                      </div>}
                     </div>
 
                     {/* Footer: badge + Abrir */}

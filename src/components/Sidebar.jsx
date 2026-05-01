@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
 const IcoDashboard = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -71,18 +71,31 @@ const IcoChevronRight = () => (
   </svg>
 );
 
+const ROLE_LABELS = {
+  superadmin: 'Super Admin',
+  admin:      'Admin',
+  editor:     'Editor',
+  viewer:     'Viewer',
+};
+
 const navItems = [
-  { path: '/',          label: 'Dashboard',  icon: <IcoDashboard />, end: true },
-  { path: '/enlaces',   label: 'Enlaces',    icon: <IcoLink /> },
-  { path: '/accesos',   label: 'Accesos',    icon: <IcoKey /> },
-  { path: '/eventos',   label: 'Eventos',    icon: <IcoCal /> },
-  { path: '/analiticas',label: 'Analíticas', icon: <IcoBar /> },
-  { path: '/equipo',    label: 'Equipo',     icon: <IcoUsers /> },
-  { path: '/tickets',   label: 'Tickets',    icon: <IcoTicket /> },
-  { path: '/usuarios',  label: 'Usuarios',   icon: <IcoUserGear /> },
+  { path: '/',           label: 'Dashboard',  icon: <IcoDashboard />, end: true },
+  { path: '/enlaces',    label: 'Enlaces',    icon: <IcoLink /> },
+  { path: '/accesos',    label: 'Accesos',    icon: <IcoKey /> },
+  { path: '/eventos',    label: 'Eventos',    icon: <IcoCal /> },
+  { path: '/analiticas', label: 'Analíticas', icon: <IcoBar /> },
+  { path: '/equipo',     label: 'Equipo',     icon: <IcoUsers /> },
+  { path: '/tickets',    label: 'Tickets',    icon: <IcoTicket /> },
+  { path: '/usuarios',   label: 'Usuarios',   icon: <IcoUserGear /> },
 ];
 
 export default function Sidebar({ collapsed, isMobile, onToggle }) {
+  const { user, role, signOut } = useAuth();
+
+  const nombre = user?.email?.split('@')[0] || 'Usuario';
+  const inicial = nombre[0]?.toUpperCase() || 'U';
+  const roleLabel = ROLE_LABELS[role] || '';
+
   return (
     <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
 
@@ -108,21 +121,13 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             end={item.end}
             title={collapsed ? item.label : undefined}
             style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              gap: collapsed ? 0 : 12,
-              padding: collapsed ? '11px 0' : '11px 14px',
-              margin: collapsed ? '2px 6px' : '2px 10px',
-              borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
+              gap: collapsed ? 0 : 12, padding: collapsed ? '11px 0' : '11px 14px',
+              margin: collapsed ? '2px 6px' : '2px 10px', borderRadius: 10,
               color: isActive ? '#ffffff' : '#9ca3af',
               background: isActive ? '#e53e3e' : 'transparent',
-              textDecoration: 'none',
-              fontSize: 14,
-              fontWeight: isActive ? 600 : 400,
-              transition: 'background 0.15s, color 0.15s',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
+              textDecoration: 'none', fontSize: 14, fontWeight: isActive ? 600 : 400,
+              transition: 'background 0.15s, color 0.15s', overflow: 'hidden', whiteSpace: 'nowrap',
             })}
             onMouseEnter={e => { if (!e.currentTarget.style.background.includes('e53e3e')) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
             onMouseLeave={e => { if (!e.currentTarget.style.background.includes('e53e3e')) e.currentTarget.style.background = 'transparent'; }}
@@ -132,7 +137,6 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           </NavLink>
         ))}
 
-        {/* Collapse toggle — only on desktop */}
         {!isMobile && (
           <button
             onClick={onToggle}
@@ -141,7 +145,8 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
               gap: 10, padding: collapsed ? '10px 0' : '10px 14px',
               margin: collapsed ? '10px 6px 4px' : '10px 10px 4px',
-              borderRadius: 10, border: 'none', cursor: 'pointer', width: collapsed ? 'calc(100% - 12px)' : 'calc(100% - 20px)',
+              borderRadius: 10, border: 'none', cursor: 'pointer',
+              width: collapsed ? 'calc(100% - 12px)' : 'calc(100% - 20px)',
               background: 'transparent', color: '#4b5563', fontSize: 13,
               transition: 'background 0.15s, color 0.15s',
             }}
@@ -153,30 +158,35 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
         )}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — usuario + logout */}
       <div style={{ padding: collapsed ? '14px 0' : '14px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'stretch' }}>
         {collapsed ? (
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
-            D
-          </div>
+          <button
+            onClick={signOut}
+            title="Cerrar sesión"
+            style={{ width: 32, height: 32, borderRadius: '50%', background: '#e53e3e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}>
+            {inicial}
+          </button>
         ) : (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                D
-              </div>
-              <span style={{ fontSize: 13, color: '#9ca3af', flex: 1 }}>Admin</span>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: 0, display: 'flex', alignItems: 'center' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#9ca3af'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#6b7280'; }}>
-                <IcoLogout />
-              </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#e53e3e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+              {inicial}
             </div>
-            <div style={{ fontSize: 11, color: '#4b5563', fontFamily: 'Fira Code, monospace' }}>v2.0</div>
-          </>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, color: '#d1d5db', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{roleLabel}</div>
+            </div>
+            <button
+              onClick={signOut}
+              title="Cerrar sesión"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#9ca3af'}
+              onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}>
+              <IcoLogout />
+            </button>
+          </div>
         )}
       </div>
-
     </aside>
   );
 }

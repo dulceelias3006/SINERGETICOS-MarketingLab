@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIAS = ['General', 'Redes Sociales', 'Plataformas', 'Herramientas', 'Email', 'Analytics', 'Almacenamiento', 'Otros'];
 const FORM_INIT = { nombre: '', url: '', usuario: '', contrasena: '', categoria: 'General', notas: '' };
@@ -117,6 +118,7 @@ function SizeIcon({ size }) {
 }
 
 export default function Accesos() {
+  const { can } = useAuth();
   const [accesos, setAccesos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('accesos') || '[]'); } catch { return []; }
   });
@@ -212,9 +214,11 @@ export default function Accesos() {
             {accesos.length} accesos · {categoriasUsadas.length} categorías
           </p>
         </div>
-        <button onClick={abrir} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-          + Nuevo Acceso
-        </button>
+        {can('edit') && (
+          <button onClick={abrir} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+            + Nuevo Acceso
+          </button>
+        )}
       </div>
 
       <div style={{ padding: '20px 24px' }}>
@@ -265,16 +269,18 @@ export default function Accesos() {
                         <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre}</div>
                         <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#f0f0f4', color: '#666', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'inline-block', marginTop: 3 }}>{a.categoria}</span>
                       </div>
-                      {/* 3-dot menu */}
-                      <div style={{ position: 'relative', flexShrink: 0, zIndex: menuOpen ? 60 : 1 }}>
-                        <button onClick={() => setMenuAbierto(menuOpen ? null : a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 20, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }}>⋯</button>
-                        {menuOpen && (
-                          <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 130, overflow: 'hidden' }}>
-                            <button onClick={() => { abrirEditar(a); setMenuAbierto(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', textAlign: 'left', fontSize: 13, cursor: 'pointer', color: '#333' }}><PencilIcon /> Editar</button>
-                            <button onClick={() => { eliminar(a.id); setMenuAbierto(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', textAlign: 'left', fontSize: 13, cursor: 'pointer', color: '#e53e3e' }}><TrashIcon /> Eliminar</button>
-                          </div>
-                        )}
-                      </div>
+                      {/* 3-dot menu — solo para quien puede editar */}
+                      {can('edit') && (
+                        <div style={{ position: 'relative', flexShrink: 0, zIndex: menuOpen ? 60 : 1 }}>
+                          <button onClick={() => setMenuAbierto(menuOpen ? null : a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 20, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }}>⋯</button>
+                          {menuOpen && (
+                            <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 130, overflow: 'hidden' }}>
+                              <button onClick={() => { abrirEditar(a); setMenuAbierto(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', textAlign: 'left', fontSize: 13, cursor: 'pointer', color: '#333' }}><PencilIcon /> Editar</button>
+                              <button onClick={() => { eliminar(a.id); setMenuAbierto(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', textAlign: 'left', fontSize: 13, cursor: 'pointer', color: '#e53e3e' }}><TrashIcon /> Eliminar</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Card data */}
@@ -289,16 +295,18 @@ export default function Accesos() {
                           </button>
                         )}
                       </div>
-                      {/* Contraseña */}
+                      {/* Contraseña — oculta siempre para Viewer */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ color: '#bbb', display: 'flex', flexShrink: 0 }}><LockIcon /></span>
-                        <span style={{ fontSize: 12, color: '#6b7280', flex: 1, letterSpacing: showPassRow[a.id] ? 0 : 1 }}>
-                          {showPassRow[a.id] ? (a.contrasena || '—') : '•••••••'}
+                        <span style={{ fontSize: 12, color: '#6b7280', flex: 1, letterSpacing: (can('edit') && showPassRow[a.id]) ? 0 : 1 }}>
+                          {(can('edit') && showPassRow[a.id]) ? (a.contrasena || '—') : '•••••••'}
                         </span>
-                        <button onClick={() => setShowPassRow(prev => ({ ...prev, [a.id]: !prev[a.id] }))} title="Mostrar/Ocultar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', padding: '1px', display: 'flex', flexShrink: 0 }}>
-                          <EyeIcon open={showPassRow[a.id]} />
-                        </button>
-                        {a.contrasena && (
+                        {can('edit') && (
+                          <button onClick={() => setShowPassRow(prev => ({ ...prev, [a.id]: !prev[a.id] }))} title="Mostrar/Ocultar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', padding: '1px', display: 'flex', flexShrink: 0 }}>
+                            <EyeIcon open={showPassRow[a.id]} />
+                          </button>
+                        )}
+                        {can('edit') && a.contrasena && (
                           <button onClick={() => copiar(a.contrasena, `p-${a.id}`)} title="Copiar contraseña" style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiado === `p-${a.id}` ? '#4ade80' : '#bbb', padding: '1px', display: 'flex', flexShrink: 0 }}>
                             <CopyIcon />
                           </button>

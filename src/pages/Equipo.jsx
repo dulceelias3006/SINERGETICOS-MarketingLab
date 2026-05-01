@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const FORM_INIT = { nombre: '', puesto: '', email: '', telefono: '', departamento: '', cumpleanos: '' };
 
@@ -161,6 +162,7 @@ const EQUIPO_DEFAULT = [
 ];
 
 export default function Equipo() {
+  const { can } = useAuth();
   const [equipo, setEquipo] = useState(() => {
     try { return JSON.parse(localStorage.getItem('equipo') || 'null') || EQUIPO_DEFAULT; } catch { return EQUIPO_DEFAULT; }
   });
@@ -390,7 +392,7 @@ export default function Equipo() {
               </button>
             ))}
           </div>
-          {tab === 'miembros' && (
+          {tab === 'miembros' && can('edit') && (
             <button onClick={abrir} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
               + Agregar
             </button>
@@ -410,7 +412,7 @@ export default function Equipo() {
           ) : (
             <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               {equipo.map((m, i) => (
-                <div key={m.id} draggable onDragStart={() => onDragStart(i)} onDragOver={e => onDragOver(e, i)} onDrop={() => onDrop(i)} onDragEnd={onDragEnd}
+                <div key={m.id} draggable={can('edit')} onDragStart={() => can('edit') && onDragStart(i)} onDragOver={e => can('edit') && onDragOver(e, i)} onDrop={() => can('edit') && onDrop(i)} onDragEnd={onDragEnd}
                   style={{ opacity: dragIndex === i ? 0.4 : 1, borderTop: dragOver === i && dragIndex !== i ? '2px solid #e53e3e' : '2px solid transparent', transition: 'opacity 0.15s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: expandido === m.id || i === equipo.length - 1 ? 'none' : '1px solid #f3f4f6', cursor: 'grab' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
@@ -431,10 +433,10 @@ export default function Equipo() {
                       <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{[m.puesto, m.departamento].filter(Boolean).join(' · ')}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, cursor: 'default' }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => toggleAsistencia(m.id)} title={m.enAsistencia === false ? 'Excluido de asistencia (clic para incluir)' : 'Incluido en asistencia (clic para excluir)'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: m.enAsistencia === false ? '#ef4444' : '#bbb', display: 'flex', padding: 4 }}>{m.enAsistencia === false ? <EyeOffIcon /> : <EyeIcon />}</button>
+                      {can('edit') && <button onClick={() => toggleAsistencia(m.id)} title={m.enAsistencia === false ? 'Excluido de asistencia (clic para incluir)' : 'Incluido en asistencia (clic para excluir)'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: m.enAsistencia === false ? '#ef4444' : '#bbb', display: 'flex', padding: 4 }}>{m.enAsistencia === false ? <EyeOffIcon /> : <EyeIcon />}</button>}
                       <button onClick={() => setExpandido(expandido === m.id ? null : m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><ChevronIcon open={expandido === m.id} /></button>
-                      <button onClick={() => abrirEditar(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><PencilIcon /></button>
-                      <button onClick={() => eliminar(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><TrashIcon /></button>
+                      {can('edit') && <button onClick={() => abrirEditar(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><PencilIcon /></button>}
+                      {can('edit') && <button onClick={() => eliminar(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><TrashIcon /></button>}
                     </div>
                   </div>
                   {expandido === m.id && (
@@ -464,20 +466,26 @@ export default function Equipo() {
               <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 2 }}>Estados (clic en color para editar):</span>
               {todosEstados.map(e => (
                 <div key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 6, padding: '3px 7px 3px 5px' }}>
-                  <label title={`Editar color: ${e.label}`} style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
-                    <input type="color" value={estadoColores[e.key] || e.color}
-                      onChange={ev => setEstadoColores(prev => ({ ...prev, [e.key]: ev.target.value }))}
-                      style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
-                  </label>
+                  {can('edit_asistencia') ? (
+                    <label title={`Editar color: ${e.label}`} style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
+                      <input type="color" value={estadoColores[e.key] || e.color}
+                        onChange={ev => setEstadoColores(prev => ({ ...prev, [e.key]: ev.target.value }))}
+                        style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
+                    </label>
+                  ) : (
+                    <div style={{ width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
+                  )}
                   <span style={{ fontSize: 11, color: '#6b7280' }}>{e.emoji} {e.label}</span>
-                  {e.key.startsWith('custom_') && (
+                  {e.key.startsWith('custom_') && can('edit_asistencia') && (
                     <button onClick={() => eliminarEstado(e.key)} title="Eliminar estado" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 13, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
                   )}
                 </div>
               ))}
-              <button onClick={() => setShowNewEstado(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: showNewEstado ? '#f3f4f6' : '#fff', border: '1px dashed #d1d5db', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 11, color: '#6b7280', fontWeight: 500 }}>
-                + Estado
-              </button>
+              {can('edit_asistencia') && (
+                <button onClick={() => setShowNewEstado(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: showNewEstado ? '#f3f4f6' : '#fff', border: '1px dashed #d1d5db', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 11, color: '#6b7280', fontWeight: 500 }}>
+                  + Estado
+                </button>
+              )}
             </div>
             {showNewEstado && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px 12px', flexWrap: 'wrap' }}>
@@ -536,15 +544,15 @@ export default function Equipo() {
                       <td style={{ position: 'sticky', left: 0, background: mi % 2 === 0 ? '#fff' : '#fafafa', zIndex: 4, padding: '6px 12px', borderBottom: '1px solid #f3f4f6', borderRight: '2px solid #e8e8ee', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           {renderAvatar(m, 24)}
-                          {editingAlias === m.id ? (
+                          {editingAlias === m.id && can('edit_asistencia') ? (
                             <input autoFocus value={aliasInput} onChange={e => setAliasInput(e.target.value)}
                               onBlur={() => saveAlias(m.id)}
                               onKeyDown={e => { if (e.key === 'Enter') saveAlias(m.id); if (e.key === 'Escape') setEditingAlias(null); }}
                               onClick={e => e.stopPropagation()}
                               style={{ fontSize: 12, fontWeight: 600, color: '#111827', border: '1px solid #e53e3e', borderRadius: 4, padding: '1px 4px', outline: 'none', flex: 1, minWidth: 0, background: '#fff' }} />
                           ) : (
-                            <span onClick={e => { e.stopPropagation(); startEditAlias(m); }} title="Clic para editar nombre en asistencia"
-                              style={{ fontSize: 12, fontWeight: 600, color: '#111827', cursor: 'text', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span onClick={can('edit_asistencia') ? e => { e.stopPropagation(); startEditAlias(m); } : undefined} title={can('edit_asistencia') ? "Clic para editar nombre en asistencia" : undefined}
+                              style={{ fontSize: 12, fontWeight: 600, color: '#111827', cursor: can('edit_asistencia') ? 'text' : 'default', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {m.aliasAsistencia || m.nombre}
                             </span>
                           )}
@@ -566,10 +574,10 @@ export default function Equipo() {
                         if (esBirthday && m.cumpleanos) tooltipParts.push(`🎂 ${viewDate.year - parseInt(m.cumpleanos.slice(0, 4))} años`);
                         return (
                           <td key={d.dateStr}
-                            onClick={e => clickCell(e, m.id, d.dateStr)}
+                            onClick={can('edit_asistencia') ? e => clickCell(e, m.id, d.dateStr) : undefined}
                             onMouseEnter={tooltipParts.length ? e => { const r = e.currentTarget.getBoundingClientRect(); setFeriadoTooltip({ text: tooltipParts.join(' · '), x: r.left + r.width / 2, y: r.top - 6 }); } : undefined}
                             onMouseLeave={tooltipParts.length ? () => setFeriadoTooltip(null) : undefined}
-                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid #f3f4f6', borderLeft: d.isMonday ? '2px solid #e8e8ee' : '1px solid #f3f4f6', background: color || 'transparent', cursor: 'pointer', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle' }}>
+                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid #f3f4f6', borderLeft: d.isMonday ? '2px solid #e8e8ee' : '1px solid #f3f4f6', background: color || 'transparent', cursor: can('edit_asistencia') ? 'pointer' : 'default', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle' }}>
                             {(estado || esFeriado) && (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: 1 }}>
                                 {estado?.emoji ? <span style={{ fontSize: 15 }}>{estado.emoji}</span> : null}

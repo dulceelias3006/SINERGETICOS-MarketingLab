@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
-
-const SUPER_ADMIN   = 'diriza@zigma3.com';
-const YO_EMAIL      = 'diriza@zigma3.com';
+import { useAuth } from '../context/AuthContext';
 
 const ROLES = [
   { id: 'viewer', label: 'Viewer', color: '#9ca3af' },
@@ -92,6 +90,7 @@ function RolPill({ usuario, onCambiarRol, canChange }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Usuarios() {
+  const { user, role, can } = useAuth();
   const [usuarios, setUsuarios] = useState(() => {
     try { return JSON.parse(localStorage.getItem('usuarios') || 'null') || USUARIOS_DEFAULT; }
     catch { return USUARIOS_DEFAULT; }
@@ -103,7 +102,6 @@ export default function Usuarios() {
   const [nuevoForm, setNuevoForm]   = useState(FORM_INIT);
   const [formError, setFormError]   = useState('');
 
-  const esSuperAdmin = YO_EMAIL.toLowerCase() === SUPER_ADMIN.toLowerCase();
   const canSync = useRef(false);
 
   useEffect(() => {
@@ -117,6 +115,18 @@ export default function Usuarios() {
   }, []);
 
   function save(next) { setUsuarios(next); localStorage.setItem('usuarios', JSON.stringify(next)); if (canSync.current) dbSet('usuarios', next); }
+
+  async function cambiarRolYSincronizar(id, nuevoRol) {
+    const next = usuarios.map(u => u.id === id ? { ...u, rol: nuevoRol } : u);
+    save(next);
+    // Sincronizar también user_roles para el sistema de auth
+    const usuario = usuarios.find(u => u.id === id);
+    if (usuario?.email) {
+      const roles = await dbGet('user_roles') || {};
+      roles[usuario.email.toLowerCase()] = nuevoRol;
+      await dbSet('user_roles', roles);
+    }
+  }
 
   function getIniciales(nombre) {
     if (!nombre?.trim()) return '?';
@@ -134,8 +144,6 @@ export default function Usuarios() {
     save(usuarios.map(u => u.id === editandoId ? { ...u, nombre } : u));
     setEditandoId(null);
   }
-
-  function cambiarRol(id, rol) { save(usuarios.map(u => u.id === id ? { ...u, rol } : u)); }
 
   function eliminar(id) {
     if (!confirm('¿Eliminar este usuario?')) return;
@@ -171,7 +179,7 @@ export default function Usuarios() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Usuarios</h1>
           <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>Administra los nombres y roles de los usuarios</div>
         </div>
-        {esSuperAdmin && (
+        {can('add_users') && (
           <button onClick={abrirModal}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
             + Agregar usuario
@@ -181,7 +189,7 @@ export default function Usuarios() {
 
       {/* Table */}
       <div style={{ margin: '0 32px 32px', background: '#fff', borderRadius: 16, border: '1px solid #f0f0f5', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: `2fr 2fr 180px ${esSuperAdmin ? '76px' : '40px'}`, padding: '12px 24px', borderBottom: '1px solid #f0f0f5' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `2fr 2fr 180px ${can('add_users') ? '76px' : '40px'}`, padding: '12px 24px', borderBottom: '1px solid #f0f0f5' }}>
           {['USUARIO', 'EMAIL', 'ROL', ''].map((h, i) => (
             <span key={i} style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textAlign: i === 2 ? 'right' : 'left' }}>{h}</span>
           ))}
@@ -192,12 +200,12 @@ export default function Usuarios() {
         )}
 
         {usuarios.map(u => {
-          const esYo    = u.email?.toLowerCase() === YO_EMAIL.toLowerCase();
+          const esYo    = u.email?.toLowerCase() === user?.email?.toLowerCase();
           const editando = editandoId === u.id;
 
           return (
             <div key={u.id}
-              style={{ display: 'grid', gridTemplateColumns: `2fr 2fr 180px ${esSuperAdmin ? '76px' : '40px'}`, alignItems: 'center', padding: '14px 24px', borderBottom: '1px solid #f9fafb', transition: 'background 0.1s' }}
+              style={{ display: 'grid', gridTemplateColumns: `2fr 2fr 180px ${can('add_users') ? '76px' : '40px'}`, alignItems: 'center', padding: '14px 24px', borderBottom: '1px solid #f9fafb', transition: 'background 0.1s' }}
               onMouseEnter={e => { e.currentTarget.style.background = '#fafafa'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
 
@@ -229,12 +237,12 @@ export default function Usuarios() {
 
               {/* Rol */}
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <RolPill usuario={u} onCambiarRol={rol => cambiarRol(u.id, rol)} canChange={esSuperAdmin} />
+                <RolPill usuario={u} onCambiarRol={rol => cambiarRolYSincronizar(u.id, rol)} canChange={can('change_roles') && !esYo} />
               </div>
 
               {/* Acciones */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2 }}>
-                {!editando && (
+                {!editando && can('edit') && (
                   <button onClick={() => abrirEditar(u)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 4, borderRadius: 6, display: 'flex' }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#6b7280'; }}
@@ -242,7 +250,7 @@ export default function Usuarios() {
                     <IcoPencil />
                   </button>
                 )}
-                {esSuperAdmin && !esYo && !editando && (
+                {can('delete_user') && !esYo && !editando && (
                   <button onClick={() => eliminar(u.id)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 4, borderRadius: 6, display: 'flex' }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; }}

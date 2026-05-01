@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const ESTADOS_CONFIG = [
   { key: 'planificado', label: 'Planificado', color: '#f59e0b' },
@@ -102,7 +103,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
             </span>
           )}
         </div>
-        <button onClick={() => onEdit(ev)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 20, lineHeight: 1, letterSpacing: 2, padding: '0 2px', fontWeight: 700 }}>···</button>
+        {onEdit && <button onClick={() => onEdit(ev)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 20, lineHeight: 1, letterSpacing: 2, padding: '0 2px', fontWeight: 700 }}>···</button>}
       </div>
 
       {/* Title */}
@@ -121,13 +122,13 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>👥 Registros ({pct}%)</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <button onClick={() => onAjustar(ev.id, 'registrosActuales', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>
-            {editReg !== null
+            {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
+            {editReg !== null && onAjustar
               ? inlineInput(editReg, setEditReg, 'registrosActuales', ev.registrosActuales)
-              : <span onClick={() => setEditReg(String(ev.registrosActuales || 0))} title="Clic para editar" style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: 'text', minWidth: 24, textAlign: 'center' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
+              : <span onClick={onAjustar ? () => setEditReg(String(ev.registrosActuales || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
             }
             <span style={{ fontSize: 12, color: '#9ca3af' }}>/ {(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
-            <button onClick={() => onAjustar(ev.id, 'registrosActuales', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>
+            {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
           </div>
         </div>
         <div style={{ height: 4, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
@@ -171,10 +172,10 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: ev.urlRegistro || ev.urlDrive ? 8 : 0 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>🎟 VIP</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <button onClick={() => onAjustar(ev.id, 'vipVendidas', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>
-          {editVip !== null
+          {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
+          {editVip !== null && onAjustar
             ? inlineInput(editVip, setEditVip, 'vipVendidas', ev.vipVendidas)
-            : <span onClick={() => setEditVip(String(ev.vipVendidas || 0))} title="Clic para editar" style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: 'text', minWidth: 24, textAlign: 'center' }}>{ev.vipVendidas || 0}</span>
+            : <span onClick={onAjustar ? () => setEditVip(String(ev.vipVendidas || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{ev.vipVendidas || 0}</span>
           }
           <button onClick={() => onAjustar(ev.id, 'vipVendidas', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>
         </div>
@@ -207,6 +208,7 @@ const EVENTOS_DEFAULT = [
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Eventos() {
+  const { can } = useAuth();
   const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || 'null') || EVENTOS_DEFAULT; } catch { return EVENTOS_DEFAULT; }
   });
@@ -406,10 +408,12 @@ export default function Eventos() {
             Historial
           </button>
 
-          <button onClick={abrir}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-            + Nuevo Evento
-          </button>
+          {can('edit') && (
+            <button onClick={abrir}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              + Nuevo Evento
+            </button>
+          )}
         </div>
       </div>
 
@@ -439,7 +443,7 @@ export default function Eventos() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: 16 }}>
               {filtrados.map(ev => {
                 const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
-                return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={abrirEditar} onAjustar={ajustar} />;
+                return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} />;
               })}
             </div>
           )}
@@ -461,15 +465,15 @@ export default function Eventos() {
                       <span style={{ fontWeight: 800, fontSize: 14, color: region.color, letterSpacing: 0.5 }}>{region.label}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, background: region.color + '33', color: region.color, borderRadius: 10, padding: '1px 7px' }}>{cols.length}</span>
                     </div>
-                    <button onClick={() => { abrir(); }} title={`Agregar evento en ${region.label}`}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: region.color, fontSize: 20, lineHeight: 1, fontWeight: 700, opacity: 0.7 }}>+</button>
+                    {can('edit') && <button onClick={() => { abrir(); }} title={`Agregar evento en ${region.label}`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: region.color, fontSize: 20, lineHeight: 1, fontWeight: 700, opacity: 0.7 }}>+</button>}
                   </div>
 
                   {/* Events */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {cols.map(ev => {
                       const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
-                      return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={abrirEditar} onAjustar={ajustar} compact />;
+                      return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} compact />;
                     })}
                     {cols.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '24px 10px', color: '#d1d5db', fontSize: 12, border: `1px dashed ${region.color}44`, borderRadius: 10, background: '#fff' }}>
@@ -492,7 +496,7 @@ export default function Eventos() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {sinRegion.map(ev => {
                     const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
-                    return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={abrirEditar} onAjustar={ajustar} compact />;
+                    return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} compact />;
                   })}
                 </div>
               </div>

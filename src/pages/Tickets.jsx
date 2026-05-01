@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const COLUMNAS = [
   { id: 'backlog',    label: 'Backlog',       color: '#9ca3af' },
@@ -46,6 +47,7 @@ function CalendarIcon() {
 }
 
 export default function Tickets() {
+  const { can } = useAuth();
   const [tickets, setTickets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tickets') || '[]'); } catch { return []; }
   });
@@ -195,18 +197,20 @@ export default function Tickets() {
                   const vencido = vence && vence < hoy && ticket.columna !== 'completado';
                   return (
                     <div key={ticket.id}
-                      draggable
-                      onDragStart={e => onDragStart(e, ticket.id)}
-                      onDragEnd={onDragEnd}
+                      draggable={can('edit')}
+                      onDragStart={can('edit') ? e => onDragStart(e, ticket.id) : undefined}
+                      onDragEnd={can('edit') ? onDragEnd : undefined}
                       style={{ background: '#fff', borderRadius: 10, boxShadow: draggingId === ticket.id ? '0 4px 16px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e8e8ee', borderLeft: `4px solid ${ticket.color}`, opacity: draggingId === ticket.id ? 0.5 : 1, cursor: 'grab', transition: 'box-shadow 0.15s, opacity 0.15s' }}>
                       {/* Card main row */}
                       <div style={{ padding: '10px 12px 8px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', lineHeight: 1.4, flex: 1 }}>{ticket.titulo}</div>
-                          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                            <button onClick={() => abrirEditar(ticket)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 2, display: 'flex' }}><PencilIcon /></button>
-                            <button onClick={() => eliminar(ticket.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 2, display: 'flex' }}><TrashIcon /></button>
-                          </div>
+                          {can('edit') && (
+                            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                              <button onClick={() => abrirEditar(ticket)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 2, display: 'flex' }}><PencilIcon /></button>
+                              <button onClick={() => eliminar(ticket.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', padding: 2, display: 'flex' }}><TrashIcon /></button>
+                            </div>
+                          )}
                         </div>
 
                         {/* Tags row */}
