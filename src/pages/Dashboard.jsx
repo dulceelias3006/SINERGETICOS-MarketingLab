@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { dbGet, dbSub } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const BLOQUES_DEFAULT = [
   { id: 'd1', tipo: 'stat_proximo_evento', colSpan: 1 },
@@ -98,6 +99,7 @@ const pctColor = p => p >= 90 ? '#4ade80' : p >= 60 ? '#facc15' : '#ef4444';
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const { can } = useAuth();
   const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || '[]'); } catch { return []; }
   });
@@ -470,21 +472,25 @@ export default function Dashboard() {
           <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 3 }}>{fechaHoy} · {bloques.length} bloques</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {editando && (
+          {can('edit') && editando && (
             <button onClick={restablecer}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#9ca3af', padding: '7px 10px', borderRadius: 8 }}>
               Restablecer
             </button>
           )}
-          <button onClick={() => setEditando(!editando)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: editando ? '#111827' : '#fff', color: editando ? '#fff' : '#374151', border: `1px solid ${editando ? '#111827' : '#e8e8ee'}`, borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            {editando ? 'Listo' : 'Editar'}
-          </button>
-          <button onClick={() => { setShowPicker(true); setPickerQuery(''); setPickerCat('todos'); }}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-            + Agregar
-          </button>
+          {can('edit') && (
+            <button onClick={() => setEditando(!editando)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: editando ? '#111827' : '#fff', color: editando ? '#fff' : '#374151', border: `1px solid ${editando ? '#111827' : '#e8e8ee'}`, borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              {editando ? 'Listo' : 'Editar'}
+            </button>
+          )}
+          {can('edit') && (
+            <button onClick={() => { setShowPicker(true); setPickerQuery(''); setPickerCat('todos'); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              + Agregar
+            </button>
+          )}
         </div>
       </div>
 

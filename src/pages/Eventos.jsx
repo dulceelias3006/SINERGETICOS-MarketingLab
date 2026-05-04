@@ -156,7 +156,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
                   <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Gastado ({gastadoPct}%)</div>
                 </>
               : <>
-                  <div onClick={() => setEditGastado(String(ev.presupuestoGastado || 0))} title="Clic para editar" style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: '#111827', cursor: 'text' }}>{fmt(ev.presupuestoGastado, ev.divisa)}</div>
+                  <div onClick={onAjustar ? () => setEditGastado(String(ev.presupuestoGastado || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default' }}>{fmt(ev.presupuestoGastado, ev.divisa)}</div>
                   <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Gastado ({gastadoPct}%)</div>
                 </>
             }
@@ -177,7 +177,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
             ? inlineInput(editVip, setEditVip, 'vipVendidas', ev.vipVendidas)
             : <span onClick={onAjustar ? () => setEditVip(String(ev.vipVendidas || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{ev.vipVendidas || 0}</span>
           }
-          <button onClick={() => onAjustar(ev.id, 'vipVendidas', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>
+          {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
         </div>
       </div>
 
