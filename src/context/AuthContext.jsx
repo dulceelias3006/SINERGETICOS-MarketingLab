@@ -8,10 +8,14 @@ const AVATAR_COLORS = ['#9ca3af','#6b7280','#7c3aed','#2563eb','#0891b2','#16a34
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [role, setRole]       = useState(null);
+  const [nombre, setNombre]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadRole = useCallback(async (u) => {
-    if (!u) { setRole(null); setLoading(false); return; }
+    if (!u) { setRole(null); setNombre(null); setLoading(false); return; }
+    // Cargar nombre desde user_profiles
+    const profiles = await dbGet('user_profiles') || {};
+    setNombre(profiles[u.id]?.nombre || null);
     if (u.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
       setRole('superadmin'); setLoading(false); return;
     }
@@ -90,7 +94,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, signIn, signUp, signOut, can }}>
+    <AuthContext.Provider value={{ user, role, nombre, loading, signIn, signUp, signOut, can }}>
       {children}
     </AuthContext.Provider>
   );

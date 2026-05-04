@@ -90,9 +90,9 @@ const navItems = [
 ];
 
 export default function Sidebar({ collapsed, isMobile, onToggle }) {
-  const { user, role, signOut } = useAuth();
+  const { user, role, nombre: nombreAuth, signOut } = useAuth();
 
-  const nombre = user?.email?.split('@')[0] || 'Usuario';
+  const nombre = nombreAuth || user?.email?.split('@')[0] || 'Usuario';
   const inicial = nombre[0]?.toUpperCase() || 'U';
   const roleLabel = ROLE_LABELS[role] || '';
 
@@ -173,7 +173,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               {inicial}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, color: '#d1d5db', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
+              <div style={{ fontSize: 12, color: '#d1d5db', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nombre}</div>
               <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{roleLabel}</div>
             </div>
             <button
