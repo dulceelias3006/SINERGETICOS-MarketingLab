@@ -76,7 +76,7 @@ function getDomain(url) {
   try { return new URL(url).hostname.replace('www.', ''); } catch { return url; }
 }
 
-const FORM_INIT = { nombre: '', url: '', tipo: 'Archivo', categoria: 'General', color: '#3b82f6' };
+const FORM_INIT = { nombre: '', url: '', tipo: 'Archivo', categoria: 'General' };
 
 export default function Enlaces() {
   const { can } = useAuth();
@@ -125,7 +125,7 @@ export default function Enlaces() {
 
   function abrirEditar(enlace) {
     setEditandoId(enlace.id);
-    setForm({ nombre: enlace.nombre, url: enlace.url, tipo: enlace.tipo, categoria: enlace.categoria, color: enlace.color });
+    setForm({ nombre: enlace.nombre, url: enlace.url, tipo: enlace.tipo, categoria: enlace.categoria });
     setShowModal(true);
   }
 
@@ -227,11 +227,11 @@ export default function Enlaces() {
               const menuOpen = menuAbierto === e.id;
               return (
                 <div key={e.id} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', position: 'relative' }}>
-                  <div style={{ height: 4, background: e.color, borderRadius: '12px 12px 0 0' }} />
+                  <div style={{ height: 4, background: catStyle.color, borderRadius: '12px 12px 0 0' }} />
                   <div style={{ padding: '16px 18px' }}>
                     {/* Ícono + nombre + 3 puntos */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
-                      <TipoIcon tipo={e.tipo} color={e.color} />
+                      <TipoIcon tipo={e.tipo} color={catStyle.color} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.nombre}</div>
                         <div style={{ fontSize: 12, color: '#9ca3af' }}>{getDomain(e.url)}</div>
@@ -360,15 +360,6 @@ export default function Enlaces() {
                   <select value={form.categoria} onChange={e => setForm(p => ({ ...p, categoria: e.target.value }))} style={{ width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: '#111827', background: '#fff', cursor: 'pointer', boxSizing: 'border-box' }}>
                     {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
                   </select>
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 8 }}>Color</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {COLORES.map(col => (
-                    <button key={col.value} onClick={() => setForm(p => ({ ...p, color: col.value }))} title={col.label}
-                      style={{ width: 28, height: 28, borderRadius: '50%', background: col.value, border: form.color === col.value ? '3px solid #374151' : '2.5px solid transparent', outline: form.color === col.value ? '2px solid #fff' : 'none', cursor: 'pointer', flexShrink: 0, boxSizing: 'border-box' }} />
-                  ))}
                 </div>
               </div>
             </div>
