@@ -243,6 +243,15 @@ const EVENTOS_DEFAULT = [
   { id: 11, nombre: 'República Dominicana', tipo: 'presencial', estado: 'activo',    region: 'LATAM', fecha: '2026-04-25', hora: '10:00', hora2: '16:00', ubicacion: 'Sambil Santo Domingo',            registrosMeta: 15000, registrosActuales: 15556, vipVendidas: 448, presupuestoTotal: 400000, presupuestoGastado: 433740, divisa: 'MXN', urlRegistro: '', urlDrive: '', descripcion: '' },
 ];
 
+function autoCompletarEventos(lista) {
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  return lista.map(ev => {
+    if (ev.estado !== 'activo' || !ev.fecha) return ev;
+    const fechaEv = new Date(ev.fecha + 'T00:00:00');
+    return fechaEv < hoy ? { ...ev, estado: 'completado' } : ev;
+  });
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Eventos() {
   const { can } = useAuth();
@@ -328,7 +337,14 @@ export default function Eventos() {
     const localRe = () => { try { return JSON.parse(localStorage.getItem('eventos_regiones')||'null'); } catch { return null; } };
     Promise.all([dbGet('eventos'), dbGet('eventos_tipos'), dbGet('eventos_regiones')]).then(([ev, ti, re]) => {
       canSync.current = true;
-      if (ev !== null) setEventos(ev); else { const v = localEv(); dbSet('eventos', v || EVENTOS_DEFAULT); }
+      if (ev !== null) {
+        const completados = autoCompletarEventos(ev);
+        setEventos(completados);
+        if (JSON.stringify(completados) !== JSON.stringify(ev)) {
+          localStorage.setItem('eventos', JSON.stringify(completados));
+          dbSet('eventos', completados);
+        }
+      } else { const v = localEv(); dbSet('eventos', v || EVENTOS_DEFAULT); }
       if (ti !== null) setTipos(ti); else { const v = localTi(); if (v) dbSet('eventos_tipos', v); }
       if (re !== null) setRegiones(re); else { const v = localRe(); if (v) dbSet('eventos_regiones', v); }
     });
