@@ -124,7 +124,18 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
       {/* Registros */}
       <div style={{ marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>👥 Registros ({pct}%)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>👥 Registros ({pct}%)</span>
+            {ev.hora2 && (
+              <button onClick={() => setShowHorarios(p => !p)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9ca3af', display: 'flex', alignItems: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ transform: showHorarios ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            )}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
             {editReg !== null && onAjustar
@@ -139,37 +150,25 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
           <div style={{ height: '100%', width: `${pct}%`, background: '#facc15', borderRadius: 99 }} />
         </div>
 
-        {/* Registros por horario — solo si hay segundo horario */}
-        {ev.hora2 && (
-          <div style={{ marginTop: 6 }}>
-            <button onClick={() => setShowHorarios(p => !p)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 0', color: '#9ca3af' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ transform: showHorarios ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-              <span style={{ fontSize: 11, fontWeight: 600 }}>Por horario</span>
-            </button>
-            {showHorarios && (
-              <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {[
-                  ['registrosHora1', ev.hora,  editH1, setEditH1],
-                  ['registrosHora2', ev.hora2, editH2, setEditH2],
-                ].map(([campo, hora, editVal, setEditVal]) => (
-                  <div key={campo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f9fafb', borderRadius: 8, padding: '5px 10px' }}>
-                    <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{fmtHora(hora)}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {onAjustar && <button onClick={() => onAjustar(ev.id, campo, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>−</button>}
-                      {editVal !== null && onAjustar
-                        ? inlineInput(editVal, setEditVal, campo, ev[campo], setEditVal)
-                        : <span onClick={onAjustar ? () => setEditVal(String(ev[campo] || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: 13, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev[campo] || 0).toLocaleString('es-MX')}</span>
-                      }
-                      {onAjustar && <button onClick={() => onAjustar(ev.id, campo, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>+</button>}
-                    </div>
-                  </div>
-                ))}
+        {/* Registros por horario — solo si hay segundo horario y está expandido */}
+        {ev.hora2 && showHorarios && (
+          <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {[
+              ['registrosHora1', ev.hora,  editH1, setEditH1],
+              ['registrosHora2', ev.hora2, editH2, setEditH2],
+            ].map(([campo, hora, editVal, setEditVal]) => (
+              <div key={campo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f9fafb', borderRadius: 8, padding: '5px 10px' }}>
+                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{fmtHora(hora)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {onAjustar && <button onClick={() => onAjustar(ev.id, campo, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>−</button>}
+                  {editVal !== null && onAjustar
+                    ? inlineInput(editVal, setEditVal, campo, ev[campo], setEditVal)
+                    : <span onClick={onAjustar ? () => setEditVal(String(ev[campo] || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: 13, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev[campo] || 0).toLocaleString('es-MX')}</span>
+                  }
+                  {onAjustar && <button onClick={() => onAjustar(ev.id, campo, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>+</button>}
+                </div>
               </div>
-            )}
+            ))}
           </div>
         )}
       </div>
