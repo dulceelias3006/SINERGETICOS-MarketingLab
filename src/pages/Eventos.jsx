@@ -26,6 +26,7 @@ const FORM_INIT = {
   nombre: '', descripcion: '', tipo: 'digital', estado: 'planificado',
   region: '', fecha: '', hora: '', hora2: '', ubicacion: '',
   registrosMeta: 0, registrosActuales: 0, vipVendidas: 0,
+  registrosHora1: 0, registrosHora2: 0,
   presupuestoTotal: 0, presupuestoGastado: 0, divisa: 'MXN',
   urlRegistro: '', urlDrive: '',
 };
@@ -52,9 +53,12 @@ function fmtHora(hora) {
 
 // ── Mini event card used in both views ──────────────────────────────────────
 function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact = false }) {
-  const [editReg, setEditReg] = useState(null);
-  const [editVip, setEditVip] = useState(null);
+  const [editReg, setEditReg]         = useState(null);
+  const [editVip, setEditVip]         = useState(null);
   const [editGastado, setEditGastado] = useState(null);
+  const [editH1, setEditH1]           = useState(null);
+  const [editH2, setEditH2]           = useState(null);
+  const [showHorarios, setShowHorarios] = useState(false);
 
   const tipoObj = tipos.find(t => t.id === ev.tipo);
   const regionObj = regiones.find(r => r.id === ev.region);
@@ -74,14 +78,14 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
     closeFn(null);
   }
 
-  const inlineInput = (val, setVal, campo, current) => (
+  const inlineInput = (val, setVal, campo, current, closeFn) => (
     <input
       type="number" min="0" value={val} autoFocus
       onChange={e => setVal(e.target.value)}
-      onBlur={() => commitEdit(campo, val, current, campo === 'registrosActuales' ? setEditReg : campo === 'vipVendidas' ? setEditVip : setEditGastado)}
+      onBlur={() => commitEdit(campo, val, current, closeFn)}
       onKeyDown={e => {
         if (e.key === 'Enter') e.target.blur();
-        if (e.key === 'Escape') (campo === 'registrosActuales' ? setEditReg : campo === 'vipVendidas' ? setEditVip : setEditGastado)(null);
+        if (e.key === 'Escape') closeFn(null);
       }}
       style={{ width: 70, border: '1px solid #e879a0', borderRadius: 6, padding: '2px 6px', fontSize: 13, fontWeight: 700, color: '#111827', background: '#fff', outline: 'none', textAlign: 'center' }}
     />
@@ -124,7 +128,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
             {editReg !== null && onAjustar
-              ? inlineInput(editReg, setEditReg, 'registrosActuales', ev.registrosActuales)
+              ? inlineInput(editReg, setEditReg, 'registrosActuales', ev.registrosActuales, setEditReg)
               : <span onClick={onAjustar ? () => setEditReg(String(ev.registrosActuales || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
             }
             <span style={{ fontSize: 12, color: '#9ca3af' }}>/ {(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
@@ -134,6 +138,40 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
         <div style={{ height: 4, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: '#facc15', borderRadius: 99 }} />
         </div>
+
+        {/* Registros por horario — solo si hay segundo horario */}
+        {ev.hora2 && (
+          <div style={{ marginTop: 6 }}>
+            <button onClick={() => setShowHorarios(p => !p)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 0', color: '#9ca3af' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transform: showHorarios ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              <span style={{ fontSize: 11, fontWeight: 600 }}>Por horario</span>
+            </button>
+            {showHorarios && (
+              <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {[
+                  ['registrosHora1', ev.hora,  editH1, setEditH1],
+                  ['registrosHora2', ev.hora2, editH2, setEditH2],
+                ].map(([campo, hora, editVal, setEditVal]) => (
+                  <div key={campo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f9fafb', borderRadius: 8, padding: '5px 10px' }}>
+                    <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{fmtHora(hora)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {onAjustar && <button onClick={() => onAjustar(ev.id, campo, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>−</button>}
+                      {editVal !== null && onAjustar
+                        ? inlineInput(editVal, setEditVal, campo, ev[campo], setEditVal)
+                        : <span onClick={onAjustar ? () => setEditVal(String(ev[campo] || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: 13, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev[campo] || 0).toLocaleString('es-MX')}</span>
+                      }
+                      {onAjustar && <button onClick={() => onAjustar(ev.id, campo, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>+</button>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Budget */}
@@ -174,7 +212,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
           {editVip !== null && onAjustar
-            ? inlineInput(editVip, setEditVip, 'vipVendidas', ev.vipVendidas)
+            ? inlineInput(editVip, setEditVip, 'vipVendidas', ev.vipVendidas, setEditVip)
             : <span onClick={onAjustar ? () => setEditVip(String(ev.vipVendidas || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{ev.vipVendidas || 0}</span>
           }
           {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
@@ -671,10 +709,10 @@ export default function Eventos() {
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #f0f0f5', padding: '14px 16px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>👥 Registros</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                  {[['registrosMeta','Meta'],['registrosActuales','Actuales'],['vipVendidas','VIP vendidas']].map(([k, label]) => (
+                  {[['registrosMeta','Meta',1000],['registrosActuales','Actuales',1],['vipVendidas','VIP vendidas',1]].map(([k, label, step]) => (
                     <div key={k}>
                       <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>{label}</label>
-                      <input type="number" min="0" value={form[k] || 0} onChange={e => setForm(p => ({ ...p, [k]: Number(e.target.value) }))}
+                      <input type="number" min="0" step={step} value={form[k] || 0} onChange={e => setForm(p => ({ ...p, [k]: Number(e.target.value) }))}
                         style={{ width: '100%', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px', fontSize: 14, textAlign: 'center', outline: 'none', background: '#f9fafb', color: '#111827', boxSizing: 'border-box' }} />
                     </div>
                   ))}
@@ -688,7 +726,7 @@ export default function Eventos() {
                   {[['presupuestoTotal','Total'],['presupuestoGastado','Gastado']].map(([k, label]) => (
                     <div key={k}>
                       <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>{label}</label>
-                      <input type="number" min="0" value={form[k] || 0} onChange={e => setForm(p => ({ ...p, [k]: Number(e.target.value) }))}
+                      <input type="number" min="0" step={50000} value={form[k] || 0} onChange={e => setForm(p => ({ ...p, [k]: Number(e.target.value) }))}
                         style={{ width: '100%', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px', fontSize: 14, textAlign: 'center', outline: 'none', background: '#f9fafb', color: '#111827', boxSizing: 'border-box' }} />
                     </div>
                   ))}
