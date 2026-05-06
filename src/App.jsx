@@ -77,7 +77,7 @@ function AppContent() {
               <Route path="/analiticas" element={<Analiticas />} />
               <Route path="/equipo"    element={<Equipo />} />
               <Route path="/tickets"   element={<Tickets />} />
-              <Route path="/usuarios"  element={<Usuarios />} />
+              <Route path="/usuarios"  element={(role === 'admin' || role === 'superadmin') ? <Usuarios /> : <Dashboard />} />
             </Routes>
           </div>
         </main>

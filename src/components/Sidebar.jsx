@@ -96,6 +96,9 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const inicial = nombre[0]?.toUpperCase() || 'U';
   const roleLabel = ROLE_LABELS[role] || '';
 
+  const isAdmin = role === 'admin' || role === 'superadmin';
+  const visibleItems = navItems.filter(item => item.path !== '/usuarios' || isAdmin);
+
   return (
     <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
 
@@ -114,7 +117,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '4px 0' }}>
-        {navItems.map(item => (
+        {visibleItems.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
