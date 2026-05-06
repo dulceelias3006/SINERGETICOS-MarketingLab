@@ -6,21 +6,25 @@ const SUPER_ADMIN_EMAIL = 'diriza@zigma3.com';
 const AVATAR_COLORS = ['#9ca3af','#6b7280','#7c3aed','#2563eb','#0891b2','#16a34a','#ca8a04','#ea580c','#dc2626'];
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null);
-  const [role, setRole]       = useState(null);
-  const [nombre, setNombre]   = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser]         = useState(null);
+  const [role, setRole]         = useState(null);
+  const [nombre, setNombre]     = useState(null);
+  const [avatarColor, setAvatarColor] = useState(null);
+  const [loading, setLoading]   = useState(true);
 
   const loadRole = useCallback(async (u) => {
-    if (!u) { setRole(null); setNombre(null); setLoading(false); return; }
-    // Cargar nombre desde user_profiles
+    if (!u) { setRole(null); setNombre(null); setAvatarColor(null); setLoading(false); return; }
     const profiles = await dbGet('user_profiles') || {};
     setNombre(profiles[u.id]?.nombre || null);
-    if (u.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+    const usuarios = await dbGet('usuarios') || [];
+    const emailLower = u.email?.toLowerCase();
+    const uEntry = usuarios.find(x => x.email?.toLowerCase() === emailLower);
+    setAvatarColor(uEntry?.avatarBg || null);
+    if (emailLower === SUPER_ADMIN_EMAIL) {
       setRole('superadmin'); setLoading(false); return;
     }
     const roles = await dbGet('user_roles') || {};
-    setRole(roles[u.email?.toLowerCase()] || 'pending');
+    setRole(roles[emailLower] || 'pending');
     setLoading(false);
   }, []);
 
@@ -94,7 +98,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, nombre, loading, signIn, signUp, signOut, can }}>
+    <AuthContext.Provider value={{ user, role, nombre, avatarColor, loading, signIn, signUp, signOut, can }}>
       {children}
     </AuthContext.Provider>
   );

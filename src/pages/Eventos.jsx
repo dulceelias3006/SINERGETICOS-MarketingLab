@@ -254,7 +254,7 @@ function autoCompletarEventos(lista) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Eventos() {
-  const { can, nombre: nombreUsuario } = useAuth();
+  const { can, nombre: nombreUsuario, avatarColor } = useAuth();
   const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || 'null') || EVENTOS_DEFAULT; } catch { return EVENTOS_DEFAULT; }
   });
@@ -370,7 +370,8 @@ export default function Eventos() {
   async function log(tipo, eventoNombre, desc = '') {
     const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const usuario = nombreUsuario || 'Usuario';
-    const entry = { id: Date.now(), tipo, nombre: eventoNombre, desc, usuario, color: colorForUser(usuario), ts: Date.now() };
+    const color = avatarColor || colorForUser(usuario);
+    const entry = { id: Date.now(), tipo, nombre: eventoNombre, desc, usuario, color, ts: Date.now() };
     const current = canSync.current ? (await dbGet('eventos_historial') || []) : [];
     const next = [entry, ...current].filter(e => e.ts >= limite).slice(0, 300);
     setHistorial(next);
