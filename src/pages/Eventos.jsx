@@ -254,7 +254,7 @@ function autoCompletarEventos(lista) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Eventos() {
-  const { can } = useAuth();
+  const { can, nombre: nombreUsuario } = useAuth();
   const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || 'null') || EVENTOS_DEFAULT; } catch { return EVENTOS_DEFAULT; }
   });
@@ -271,13 +271,7 @@ export default function Eventos() {
     } catch { return REGIONES_DEFAULT; }
   });
 
-  const [historial, setHistorial] = useState(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem('eventos_historial') || '[]');
-      const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      return raw.filter(e => e.ts >= limite);
-    } catch { return []; }
-  });
+  const [historial, setHistorial] = useState([]);
 
   const [vista, setVista] = useState('grid');
   const [filtro, setFiltro] = useState('todos');
@@ -335,7 +329,7 @@ export default function Eventos() {
     const localEv = () => { try { return JSON.parse(localStorage.getItem('eventos')||'null'); } catch { return null; } };
     const localTi = () => { try { return JSON.parse(localStorage.getItem('eventos_tipos')||'null'); } catch { return null; } };
     const localRe = () => { try { return JSON.parse(localStorage.getItem('eventos_regiones')||'null'); } catch { return null; } };
-    Promise.all([dbGet('eventos'), dbGet('eventos_tipos'), dbGet('eventos_regiones')]).then(([ev, ti, re]) => {
+    Promise.all([dbGet('eventos'), dbGet('eventos_tipos'), dbGet('eventos_regiones'), dbGet('eventos_historial')]).then(([ev, ti, re, hist]) => {
       canSync.current = true;
       if (ev !== null) {
         const completados = autoCompletarEventos(ev);
@@ -347,22 +341,41 @@ export default function Eventos() {
       } else { const v = localEv(); dbSet('eventos', v || EVENTOS_DEFAULT); }
       if (ti !== null) setTipos(ti); else { const v = localTi(); if (v) dbSet('eventos_tipos', v); }
       if (re !== null) setRegiones(re); else { const v = localRe(); if (v) dbSet('eventos_regiones', v); }
+      if (hist !== null) {
+        const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        setHistorial(hist.filter(e => e.ts >= limite));
+      }
     });
     const s1 = dbSub('eventos', v => setEventos(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
     const s2 = dbSub('eventos_tipos', v => setTipos(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
     const s3 = dbSub('eventos_regiones', v => setRegiones(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
-    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); };
+    const s4 = dbSub('eventos_historial', v => {
+      const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const filtrado = (v || []).filter(e => e.ts >= limite);
+      setHistorial(p => JSON.stringify(p) === JSON.stringify(filtrado) ? p : filtrado);
+    });
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); };
   }, []);
 
   function saveTipos(next) { setTipos(next); localStorage.setItem('eventos_tipos', JSON.stringify(next)); if (canSync.current) dbSet('eventos_tipos', next); }
   function saveRegiones(next) { setRegiones(next); localStorage.setItem('eventos_regiones', JSON.stringify(next)); if (canSync.current) dbSet('eventos_regiones', next); }
-  function log(tipo, nombre) {
+
+  const USER_COLORS = ['#e53e3e','#4a9eff','#4ade80','#f59e0b','#a78bfa','#f472b6','#34d399','#fb923c','#60a5fa','#e879f9'];
+  function colorForUser(name = '') {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+    return USER_COLORS[Math.abs(h) % USER_COLORS.length];
+  }
+
+  function log(tipo, eventoNombre, desc = '') {
     const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const next = [{ id: Date.now(), tipo, nombre, ts: Date.now() }, ...historial]
-      .filter(e => e.ts >= limite)
-      .slice(0, 200);
-    setHistorial(next);
-    localStorage.setItem('eventos_historial', JSON.stringify(next));
+    const usuario = nombreUsuario || 'Usuario';
+    const entry = { id: Date.now(), tipo, nombre: eventoNombre, desc, usuario, color: colorForUser(usuario), ts: Date.now() };
+    setHistorial(prev => {
+      const next = [entry, ...prev].filter(e => e.ts >= limite).slice(0, 300);
+      if (canSync.current) dbSet('eventos_historial', next);
+      return next;
+    });
   }
 
   const filtrados = eventos.filter(e => filtro === 'todos' || e.estado === filtro);
@@ -375,14 +388,27 @@ export default function Eventos() {
 
   function abrir() { setEditandoId(null); setForm(FORM_INIT); setFormError(false); setShowModal(true); }
   function abrirEditar(ev) { setEditandoId(ev.id); setForm({ ...FORM_INIT, ...ev }); setFormError(false); setShowModal(true); }
+  const CAMPO_LABELS = {
+    nombre: 'nombre', tipo: 'tipo', estado: 'estado', region: 'región',
+    fecha: 'fecha', hora: 'hora', hora2: '2° horario', ubicacion: 'ubicación',
+    registrosMeta: 'meta', registrosActuales: 'registros', vipVendidas: 'VIP',
+    presupuestoTotal: 'presupuesto', presupuestoGastado: 'gasto', divisa: 'divisa',
+    urlRegistro: 'url registro', urlDrive: 'url drive',
+  };
+
   function guardar() {
     if (!form.nombre.trim()) { setFormError(true); return; }
     if (editandoId) {
+      const old = eventos.find(e => e.id === editandoId);
+      const cambios = Object.keys(CAMPO_LABELS)
+        .filter(k => String(old?.[k] ?? '') !== String(form[k] ?? ''))
+        .map(k => CAMPO_LABELS[k]);
+      const desc = cambios.length > 0 ? `Modificó: ${cambios.join(', ')}` : 'Sin cambios';
       saveEventos(eventos.map(e => e.id === editandoId ? { ...e, ...form } : e), `edición de "${form.nombre.trim()}"`);
-      log('editado', form.nombre.trim());
+      log('editado', form.nombre.trim(), desc);
     } else {
       saveEventos([...eventos, { ...form, id: Date.now() }], `creación de "${form.nombre.trim()}"`);
-      log('creado', form.nombre.trim());
+      log('creado', form.nombre.trim(), 'Evento creado');
     }
     setShowModal(false);
   }
@@ -390,13 +416,18 @@ export default function Eventos() {
     const ev = eventos.find(e => e.id === id);
     if (confirm('¿Eliminar este evento?')) {
       saveEventos(eventos.filter(e => e.id !== id), `eliminación de "${ev?.nombre || 'Evento'}"`);
-      log('eliminado', ev?.nombre || 'Evento');
+      log('eliminado', ev?.nombre || 'Evento', 'Evento eliminado');
+      setShowModal(false);
     }
   }
   function ajustar(id, campo, delta) {
     const ev = eventos.find(e => e.id === id);
-    const label = campo === 'registrosActuales' ? 'registros' : campo === 'presupuestoGastado' ? 'gasto' : campo;
-    saveEventos(eventos.map(e => e.id === id ? { ...e, [campo]: Math.max(0, (Number(e[campo]) || 0) + delta) } : e), `ajuste de ${label} en "${ev?.nombre}"`);
+    const oldVal = Number(ev?.[campo]) || 0;
+    const newVal = Math.max(0, oldVal + delta);
+    const AJUSTE_LABELS = { registrosActuales: 'Registros', vipVendidas: 'VIP', presupuestoGastado: 'Gasto', registrosHora1: 'Reg. H1', registrosHora2: 'Reg. H2' };
+    const label = AJUSTE_LABELS[campo] || campo;
+    saveEventos(eventos.map(e => e.id === id ? { ...e, [campo]: newVal } : e), `ajuste de ${label} en "${ev?.nombre}"`);
+    log('ajustado', ev?.nombre || 'Evento', `${label}: ${oldVal.toLocaleString('es-MX')} → ${newVal.toLocaleString('es-MX')}`);
   }
 
   function agregarTipo() {
@@ -787,13 +818,14 @@ export default function Eventos() {
       {/* ── HISTORIAL PANEL ── */}
       {showHistorial && (() => {
         const TIPO_CFG = {
-          creado:    { label: 'Creado',   color: '#fff', bg: '#4ade80' },
-          editado:   { label: 'Editado',  color: '#fff', bg: '#4a9eff' },
-          eliminado: { label: 'Eliminado',color: '#fff', bg: '#f87171' },
+          creado:    { label: 'Creado',   bg: '#dcfce7', color: '#16a34a' },
+          editado:   { label: 'Editado',  bg: '#dbeafe', color: '#2563eb' },
+          eliminado: { label: 'Eliminado',bg: '#fee2e2', color: '#dc2626' },
+          ajustado:  { label: 'Ajustado', bg: '#ede9fe', color: '#7c3aed' },
         };
+
         const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
         const ayer = new Date(hoy); ayer.setDate(ayer.getDate() - 1);
-        const semana = new Date(hoy); semana.setDate(semana.getDate() - 7);
 
         function getGrupo(ts) {
           const d = new Date(ts); d.setHours(0, 0, 0, 0);
@@ -801,8 +833,8 @@ export default function Eventos() {
           if (d.getTime() === ayer.getTime()) return 'Ayer';
           return 'Esta semana';
         }
-        function fmtEntryTime(ts) {
-          return new Date(ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+        function fmtFechaHora(ts) {
+          return new Date(ts).toLocaleString('es-MX', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hour12: true });
         }
 
         const grupos = ['Hoy', 'Ayer', 'Esta semana'];
@@ -816,7 +848,7 @@ export default function Eventos() {
         return (
           <div onClick={e => { if (e.target === e.currentTarget) setShowHistorial(false); }}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ width: 380, maxWidth: '92vw', background: '#f4f5f7', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 28px rgba(0,0,0,0.14)' }}>
+            <div style={{ width: 400, maxWidth: '94vw', background: '#f4f5f7', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 28px rgba(0,0,0,0.14)' }}>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 22px 18px', background: '#fff', borderBottom: '1px solid #e8e8ee' }}>
                 <div>
@@ -825,7 +857,7 @@ export default function Eventos() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   {historial.length > 0 && (
-                    <button onClick={() => { setHistorial([]); localStorage.setItem('eventos_historial', '[]'); }}
+                    <button onClick={() => { setHistorial([]); if (canSync.current) dbSet('eventos_historial', []); }}
                       style={{ background: 'none', border: '1px solid #e8e8ee', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '4px 10px', borderRadius: 6 }}>
                       Limpiar
                     </button>
@@ -835,7 +867,7 @@ export default function Eventos() {
                 </div>
               </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
                 {historial.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block' }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -846,22 +878,34 @@ export default function Eventos() {
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10, paddingLeft: 2 }}>
                       {grupo}
                     </div>
-                    <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e8e8ee', overflow: 'hidden' }}>
-                      {porGrupo[grupo].map((entry, i) => {
-                        const cfg = TIPO_CFG[entry.tipo] || { label: entry.tipo, color: '#fff', bg: '#9ca3af' };
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {porGrupo[grupo].map(entry => {
+                        const cfg = TIPO_CFG[entry.tipo] || { label: entry.tipo, bg: '#f3f4f6', color: '#6b7280' };
+                        const dotColor = entry.color || colorForUser(entry.usuario || '');
                         return (
-                          <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < porGrupo[grupo].length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div key={entry.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e8e8ee', padding: '14px 16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', lineHeight: 1.3 }}>
+                                {fmtFechaHora(entry.ts)}
+                              </div>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '3px 8px', borderRadius: 20, flexShrink: 0, letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
+                                {cfg.label}
+                              </span>
+                            </div>
+                            {entry.nombre && (
+                              <div style={{ fontSize: 12, color: '#374151', fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {entry.nombre}
                               </div>
-                              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
-                                {fmtEntryTime(entry.ts)}
+                            )}
+                            {entry.desc && (
+                              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 8, lineHeight: 1.4 }}>
+                                {entry.desc}
                               </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                              <span style={{ fontSize: 12, color: '#6b7280' }}>{entry.usuario || 'Usuario'}</span>
                             </div>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '3px 9px', borderRadius: 20, flexShrink: 0, letterSpacing: 0.3 }}>
-                              {cfg.label}
-                            </span>
                           </div>
                         );
                       })}
