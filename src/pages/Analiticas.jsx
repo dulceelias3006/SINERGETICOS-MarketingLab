@@ -165,6 +165,7 @@ export default function Analiticas() {
     .filter(e => (Number(e.registrosActuales) || 0) > 0 && (Number(e.presupuestoGastado) || 0) > 0)
     .map(e => ({ ...e, costoReg: Math.round(e.presupuestoGastado / e.registrosActuales) }));
 
+  const activos        = eventos.filter(e => e.estado === 'activo');
   const mejorCostoEv   = conCosto.length > 0 ? conCosto.reduce((a, b) => a.costoReg < b.costoReg ? a : b) : null;
   const mayorCostoEv   = conCosto.length > 0 ? conCosto.reduce((a, b) => a.costoReg > b.costoReg ? a : b) : null;
   const masRegistrosEv = eventos.length > 0 ? [...eventos].sort((a, b) => (b.registrosActuales || 0) - (a.registrosActuales || 0))[0] : null;
@@ -174,7 +175,6 @@ export default function Analiticas() {
     .map(e => ({ ...e, costoReg: Math.round(e.presupuestoGastado / e.registrosActuales) }));
   const mejorCostoActivo  = conCostoActivos.length > 0 ? conCostoActivos.reduce((a, b) => a.costoReg < b.costoReg ? a : b) : null;
   const masRegistrosActivo = activos.length > 0 ? [...activos].sort((a, b) => (b.registrosActuales || 0) - (a.registrosActuales || 0))[0] : null;
-  const activos        = eventos.filter(e => e.estado === 'activo');
   const menosRegistrosEv = activos.length > 0 ? [...activos].sort((a, b) => (a.registrosActuales || 0) - (b.registrosActuales || 0))[0] : null;
 
   const promedioReg = activos.length > 0 ? Math.round(activos.reduce((s, e) => s + (e.registrosActuales || 0), 0) / activos.length) : 0;
