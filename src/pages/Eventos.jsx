@@ -367,15 +367,14 @@ export default function Eventos() {
     return USER_COLORS[Math.abs(h) % USER_COLORS.length];
   }
 
-  function log(tipo, eventoNombre, desc = '') {
+  async function log(tipo, eventoNombre, desc = '') {
     const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const usuario = nombreUsuario || 'Usuario';
     const entry = { id: Date.now(), tipo, nombre: eventoNombre, desc, usuario, color: colorForUser(usuario), ts: Date.now() };
-    setHistorial(prev => {
-      const next = [entry, ...prev].filter(e => e.ts >= limite).slice(0, 300);
-      if (canSync.current) dbSet('eventos_historial', next);
-      return next;
-    });
+    const current = canSync.current ? (await dbGet('eventos_historial') || []) : [];
+    const next = [entry, ...current].filter(e => e.ts >= limite).slice(0, 300);
+    setHistorial(next);
+    if (canSync.current) dbSet('eventos_historial', next);
   }
 
   const filtrados = eventos.filter(e => filtro === 'todos' || e.estado === filtro);
