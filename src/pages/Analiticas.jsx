@@ -168,6 +168,12 @@ export default function Analiticas() {
   const mejorCostoEv   = conCosto.length > 0 ? conCosto.reduce((a, b) => a.costoReg < b.costoReg ? a : b) : null;
   const mayorCostoEv   = conCosto.length > 0 ? conCosto.reduce((a, b) => a.costoReg > b.costoReg ? a : b) : null;
   const masRegistrosEv = eventos.length > 0 ? [...eventos].sort((a, b) => (b.registrosActuales || 0) - (a.registrosActuales || 0))[0] : null;
+
+  const conCostoActivos = activos
+    .filter(e => (Number(e.registrosActuales) || 0) > 0 && (Number(e.presupuestoGastado) || 0) > 0)
+    .map(e => ({ ...e, costoReg: Math.round(e.presupuestoGastado / e.registrosActuales) }));
+  const mejorCostoActivo  = conCostoActivos.length > 0 ? conCostoActivos.reduce((a, b) => a.costoReg < b.costoReg ? a : b) : null;
+  const masRegistrosActivo = activos.length > 0 ? [...activos].sort((a, b) => (b.registrosActuales || 0) - (a.registrosActuales || 0))[0] : null;
   const activos        = eventos.filter(e => e.estado === 'activo');
   const menosRegistrosEv = activos.length > 0 ? [...activos].sort((a, b) => (a.registrosActuales || 0) - (b.registrosActuales || 0))[0] : null;
 
@@ -400,17 +406,19 @@ export default function Analiticas() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-                  <IcoDown /><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mejor Costo/Registro</span>
+                  <span style={{ color: '#4ade80' }}><IcoDown /></span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mejor Costo/Registro</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{mejorCostoEv?.nombre || '—'}</div>
-                {mejorCostoEv && <div style={{ fontSize: 13, color: '#4ade80', fontWeight: 600, marginTop: 2 }}>{fmtMXN(mejorCostoEv.costoReg)} / registro</div>}
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{mejorCostoActivo?.nombre || '—'}</div>
+                {mejorCostoActivo && <div style={{ fontSize: 13, color: '#4ade80', fontWeight: 600, marginTop: 2 }}>{fmtMXN(mejorCostoActivo.costoReg)} / registro</div>}
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-                  <IcoUp /><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Más Registros</span>
+                  <span style={{ color: '#f59e0b' }}><IcoUp /></span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Más Registros</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{masRegistrosEv?.nombre || '—'}</div>
-                {masRegistrosEv && <div style={{ fontSize: 13, color: '#f59e0b', fontWeight: 600, marginTop: 2 }}>{fmtN(masRegistrosEv.registrosActuales)} registros</div>}
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{masRegistrosActivo?.nombre || '—'}</div>
+                {masRegistrosActivo && <div style={{ fontSize: 13, color: '#f59e0b', fontWeight: 600, marginTop: 2 }}>{fmtN(masRegistrosActivo.registrosActuales)} registros</div>}
               </div>
             </div>
           </div>
