@@ -551,12 +551,12 @@ export default function Analiticas() {
                             <span style={{ fontWeight: 500, color: '#111827' }}>{e.nombre}</span>
                           </div>
                         </td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtN(e.registrosActuales)}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right', color: '#9ca3af' }}>{fmtN(e.registrosMeta)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: '#111827' }}>{fmtN(e.registrosActuales)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{fmtN(e.registrosMeta)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: pctColor(pct) }}>{pct}%</td>
-                        <td style={{ ...tdStyle, textAlign: 'right' }}>{(e.presupuestoGastado || 0) > 0 ? fmtMXN(e.presupuestoGastado) : '—'}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{(e.presupuestoGastado || 0) > 0 ? fmtMXN(e.presupuestoGastado) : '—'}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: '#4ade80' }}>{costoR ? fmtMXN(costoR) : '—'}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right' }}>{e.vipVendidas || 0}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{e.vipVendidas || 0}</td>
                       </tr>
                     );
                   })}
