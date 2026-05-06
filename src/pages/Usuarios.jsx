@@ -100,10 +100,11 @@ export default function Usuarios() {
     catch { return USUARIOS_DEFAULT; }
   });
 
-  const [editandoId, setEditandoId]     = useState(null);
-  const [editForm, setEditForm]         = useState({ nombre: '', apellido: '' });
+  const [editandoId, setEditandoId]       = useState(null);
+  const [editForm, setEditForm]           = useState({ nombre: '', apellido: '' });
   const [colorPickerId, setColorPickerId] = useState(null);
-  const [showModal, setShowModal]       = useState(false);
+  const [colorPickerPos, setColorPickerPos] = useState({ top: 0, left: 0 });
+  const [showModal, setShowModal]         = useState(false);
   const [nuevoForm, setNuevoForm]   = useState(FORM_INIT);
   const [formError, setFormError]   = useState('');
 
@@ -218,24 +219,24 @@ export default function Usuarios() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <div
-                    onClick={() => can('edit') && setColorPickerId(colorPickerId === u.id ? null : u.id)}
+                    onClick={e => {
+                      if (!can('edit')) return;
+                      if (colorPickerId === u.id) { setColorPickerId(null); return; }
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const pickerW = 162; // 5 cols × 24px + gaps + padding
+                      const pickerH = 112;
+                      const left = rect.left + rect.width / 2 - pickerW / 2;
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      const top = spaceBelow >= pickerH + 8 ? rect.bottom + 6 : rect.top - pickerH - 6;
+                      setColorPickerPos({ top, left: Math.max(8, Math.min(left, window.innerWidth - pickerW - 8)) });
+                      setColorPickerId(u.id);
+                    }}
                     title={can('edit') ? 'Cambiar color' : undefined}
                     style={{ width: 34, height: 34, borderRadius: '50%', background: u.avatarBg || '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', cursor: can('edit') ? 'pointer' : 'default' }}>
                     {u.avatarPhoto
                       ? <img src={u.avatarPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       : getIniciales(u.nombre)}
                   </div>
-                  {colorPickerId === u.id && (
-                    <>
-                      <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setColorPickerId(null)} />
-                      <div style={{ position: 'absolute', top: 40, left: 0, background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', padding: 10, zIndex: 999, display: 'grid', gridTemplateColumns: 'repeat(5, 24px)', gap: 6 }}>
-                        {AVATAR_COLORS.map(c => (
-                          <button key={c} onClick={() => { save(usuarios.map(x => x.id === u.id ? { ...x, avatarBg: c } : x)); setColorPickerId(null); }}
-                            style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: (u.avatarBg || '#9ca3af') === c ? '3px solid #111827' : '2px solid transparent', outline: (u.avatarBg || '#9ca3af') === c ? '2px solid #fff' : 'none', cursor: 'pointer', boxSizing: 'border-box' }} />
-                        ))}
-                      </div>
-                    </>
-                  )}
                 </div>
                 {editando ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -284,6 +285,23 @@ export default function Usuarios() {
           );
         })}
       </div>
+
+      {/* Color picker — posición fixed para no quedar cortado */}
+      {colorPickerId !== null && (() => {
+        const u = usuarios.find(x => x.id === colorPickerId);
+        if (!u) return null;
+        return (
+          <>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setColorPickerId(null)} />
+            <div style={{ position: 'fixed', top: colorPickerPos.top, left: colorPickerPos.left, background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', padding: 10, zIndex: 999, display: 'grid', gridTemplateColumns: 'repeat(5, 24px)', gap: 6 }}>
+              {AVATAR_COLORS.map(c => (
+                <button key={c} onClick={() => { save(usuarios.map(x => x.id === u.id ? { ...x, avatarBg: c } : x)); setColorPickerId(null); }}
+                  style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: (u.avatarBg || '#9ca3af') === c ? '3px solid #111827' : '2px solid transparent', outline: (u.avatarBg || '#9ca3af') === c ? '2px solid #fff' : 'none', cursor: 'pointer', boxSizing: 'border-box' }} />
+              ))}
+            </div>
+          </>
+        );
+      })()}
 
       {/* Add user modal */}
       {showModal && (
