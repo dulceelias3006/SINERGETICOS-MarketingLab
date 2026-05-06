@@ -8,7 +8,11 @@ const ROLES = [
   { id: 'admin',  label: 'Admin',  color: '#e53e3e' },
 ];
 
-const AVATAR_COLORS = ['#9ca3af','#6b7280','#7c3aed','#2563eb','#0891b2','#16a34a','#ca8a04','#ea580c','#dc2626'];
+const AVATAR_COLORS = [
+  '#6b7280','#ef4444','#f97316','#eab308','#22c55e',
+  '#14b8a6','#3b82f6','#6366f1','#8b5cf6','#ec4899',
+  '#0891b2','#16a34a','#7c3aed','#dc2626','#1a1a2e',
+];
 
 const USUARIOS_DEFAULT = [
   { id: 1, nombre: 'Dulce Elias',    email: 'dulceelias3006@gmail.com', rol: 'editor', avatarBg: '#9ca3af' },
@@ -96,9 +100,10 @@ export default function Usuarios() {
     catch { return USUARIOS_DEFAULT; }
   });
 
-  const [editandoId, setEditandoId] = useState(null);
-  const [editForm, setEditForm]     = useState({ nombre: '', apellido: '' });
-  const [showModal, setShowModal]   = useState(false);
+  const [editandoId, setEditandoId]     = useState(null);
+  const [editForm, setEditForm]         = useState({ nombre: '', apellido: '' });
+  const [colorPickerId, setColorPickerId] = useState(null);
+  const [showModal, setShowModal]       = useState(false);
   const [nuevoForm, setNuevoForm]   = useState(FORM_INIT);
   const [formError, setFormError]   = useState('');
 
@@ -211,10 +216,26 @@ export default function Usuarios() {
 
               {/* Avatar + nombre */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: u.avatarBg || '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                  {u.avatarPhoto
-                    ? <img src={u.avatarPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : getIniciales(u.nombre)}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <div
+                    onClick={() => can('edit') && setColorPickerId(colorPickerId === u.id ? null : u.id)}
+                    title={can('edit') ? 'Cambiar color' : undefined}
+                    style={{ width: 34, height: 34, borderRadius: '50%', background: u.avatarBg || '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', cursor: can('edit') ? 'pointer' : 'default' }}>
+                    {u.avatarPhoto
+                      ? <img src={u.avatarPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : getIniciales(u.nombre)}
+                  </div>
+                  {colorPickerId === u.id && (
+                    <>
+                      <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setColorPickerId(null)} />
+                      <div style={{ position: 'absolute', top: 40, left: 0, background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', padding: 10, zIndex: 999, display: 'grid', gridTemplateColumns: 'repeat(5, 24px)', gap: 6 }}>
+                        {AVATAR_COLORS.map(c => (
+                          <button key={c} onClick={() => { save(usuarios.map(x => x.id === u.id ? { ...x, avatarBg: c } : x)); setColorPickerId(null); }}
+                            style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: (u.avatarBg || '#9ca3af') === c ? '3px solid #111827' : '2px solid transparent', outline: (u.avatarBg || '#9ca3af') === c ? '2px solid #fff' : 'none', cursor: 'pointer', boxSizing: 'border-box' }} />
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
                 {editando ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
