@@ -133,7 +133,7 @@ export default function Dashboard() {
   const costoPromedio    = totalRegistros > 0 ? Math.round(totalGastado / totalRegistros) : 0;
   const activos          = eventos.filter(e => e.estado === 'activo');
 
-  const conCosto = eventos
+  const conCosto = activos
     .filter(e => (Number(e.registrosActuales) || 0) > 0 && (Number(e.presupuestoGastado) || 0) > 0)
     .map(e => ({ ...e, costoReg: Math.round(e.presupuestoGastado / e.registrosActuales) }));
   const mejorCostoEv = conCosto.length > 0 ? conCosto.reduce((a, b) => a.costoReg < b.costoReg ? a : b) : null;
@@ -383,14 +383,14 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7 }}>
-                  <IcoDown /><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mejor Costo/Registro</span>
+                  <span style={{ color: '#4ade80' }}><IcoDown /></span><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mejor Costo/Registro</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{mejorCostoEv?.nombre || '—'}</div>
                 {mejorCostoEv && <div style={{ fontSize: 22, fontWeight: 800, color: '#4ade80', marginTop: 3 }}>{fmtMXN(mejorCostoEv.costoReg)}</div>}
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7 }}>
-                  <IcoUp /><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mayor Costo/Registro</span>
+                  <span style={{ color: '#ef4444' }}><IcoUp /></span><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mayor Costo/Registro</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{mayorCostoEv?.nombre || '—'}</div>
                 {mayorCostoEv && <div style={{ fontSize: 22, fontWeight: 800, color: '#ef4444', marginTop: 3 }}>{fmtMXN(mayorCostoEv.costoReg)}</div>}
