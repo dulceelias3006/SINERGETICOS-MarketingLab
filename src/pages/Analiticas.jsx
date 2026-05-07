@@ -526,6 +526,29 @@ export default function Analiticas() {
         const sorted = [...eventos].sort((a, b) => (b.registrosActuales || 0) - (a.registrosActuales || 0));
         const thStyle = { textAlign: 'left', padding: '8px 12px', fontSize: 11, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #f0f0f5', whiteSpace: 'nowrap' };
         const tdStyle = { padding: '10px 12px', fontSize: 13, borderBottom: '1px solid #f9fafb', verticalAlign: 'middle' };
+
+        function diasRestantes(e) {
+          if (!e.fecha) return null;
+          const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+          const fecha = new Date(e.fecha + 'T00:00:00');
+          return Math.round((fecha - hoy) / 86400000);
+        }
+        function diasColor(dias) {
+          if (dias > 14) return '#4ade80';
+          if (dias > 7)  return '#facc15';
+          if (dias > 3)  return '#fb923c';
+          return '#ef4444';
+        }
+        function diasLabel(e) {
+          if (e.estado === 'completado' || e.estado === 'cancelado') return null;
+          const d = diasRestantes(e);
+          if (d === null) return null;
+          if (d < 0)  return { text: 'Pasado', color: '#9ca3af' };
+          if (d === 0) return { text: 'Hoy', color: '#ef4444' };
+          if (d === 1) return { text: '1 día', color: diasColor(d) };
+          return { text: `${d}d`, color: diasColor(d) };
+        }
+
         return (
           <div>
             {sectionHeader(<IcoTable />, 'Comparativa General')}
@@ -534,6 +557,7 @@ export default function Analiticas() {
                 <thead>
                   <tr>
                     <th style={thStyle}>Evento</th>
+                    <th style={{ ...thStyle, textAlign: 'center' }}>Días</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>Registros</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>Meta</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>% Logrado</th>
@@ -544,13 +568,15 @@ export default function Analiticas() {
                 </thead>
                 <tbody>
                   {sorted.length === 0 && (
-                    <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#9ca3af' }}>Sin eventos</td></tr>
+                    <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: '#9ca3af' }}>Sin eventos</td></tr>
                   )}
                   {sorted.map(e => {
                     const pct = (e.registrosMeta || 0) > 0 ? Math.round((e.registrosActuales || 0) / e.registrosMeta * 100) : 0;
                     const costoR = (e.registrosActuales || 0) > 0 && (e.presupuestoGastado || 0) > 0
                       ? Math.round(e.presupuestoGastado / e.registrosActuales) : null;
                     const dotColor = ESTADO_CFG[e.estado]?.color || '#9ca3af';
+                    const dias = diasLabel(e);
+                    const esTerminado = e.estado === 'completado' || e.estado === 'cancelado';
                     return (
                       <tr key={e.id}>
                         <td style={tdStyle}>
@@ -558,6 +584,14 @@ export default function Analiticas() {
                             <div style={{ width: 7, height: 7, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
                             <span style={{ fontWeight: 500, color: '#111827' }}>{e.nombre}</span>
                           </div>
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'center' }}>
+                          {esTerminado
+                            ? <span title={e.estado === 'completado' ? 'Completado' : 'Cancelado'} style={{ fontSize: 15 }}>{e.estado === 'completado' ? '✅' : '🚫'}</span>
+                            : dias
+                              ? <span style={{ fontSize: 12, fontWeight: 700, color: dias.color, background: dias.color + '18', padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{dias.text}</span>
+                              : <span style={{ color: '#d1d5db' }}>—</span>
+                          }
                         </td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: '#111827' }}>{fmtN(e.registrosActuales)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{fmtN(e.registrosMeta)}</td>
