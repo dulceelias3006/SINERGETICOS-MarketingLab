@@ -63,6 +63,20 @@ function fmtHora(hora) {
   return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, '0')}${ampm}`;
 }
 
+function costoColor(costo, region) {
+  if (!costo) return '#9ca3af';
+  const isUSA = region === 'USA' || region === 'CAN';
+  if (isUSA) {
+    if (costo <= 90) return '#4ade80';
+    if (costo <= 95) return '#fb923c';
+    return '#ef4444';
+  } else {
+    if (costo <= 30) return '#4ade80';
+    if (costo <= 60) return '#fb923c';
+    return '#ef4444';
+  }
+}
+
 // ── Mini event card used in both views ──────────────────────────────────────
 function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact = false }) {
   const [editReg, setEditReg]         = useState(null);
@@ -76,9 +90,10 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
   const regionObj = regiones.find(r => r.id === ev.region);
   const pct = ev.registrosMeta > 0 ? Math.min(100, Math.round((ev.registrosActuales || 0) / ev.registrosMeta * 100)) : 0;
   const gastadoPct = ev.presupuestoTotal > 0 ? Math.min(100, Math.round((ev.presupuestoGastado || 0) / ev.presupuestoTotal * 100)) : 0;
-  const costoReg = ev.registrosActuales > 0 && ev.presupuestoGastado > 0
-    ? `$${Math.round(ev.presupuestoGastado / ev.registrosActuales).toLocaleString('es-MX')} ${ev.divisa || 'MXN'}`
-    : '—';
+  const costoRegNum = ev.registrosActuales > 0 && ev.presupuestoGastado > 0
+    ? Math.round(ev.presupuestoGastado / ev.registrosActuales) : null;
+  const costoReg = costoRegNum !== null
+    ? `$${costoRegNum.toLocaleString('es-MX')} ${ev.divisa || 'MXN'}` : '—';
   const fechaFmt = ev.fecha
     ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
     : null;
@@ -211,7 +226,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
             }
           </div>
           <div>
-            <div style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: '#4ade80' }}>{costoReg}</div>
+            <div style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: costoColor(costoRegNum, ev.region) }}>{costoReg}</div>
             <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Costo/Reg.</div>
           </div>
         </div>

@@ -527,6 +527,20 @@ export default function Analiticas() {
         const thStyle = { textAlign: 'left', padding: '8px 12px', fontSize: 11, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #f0f0f5', whiteSpace: 'nowrap' };
         const tdStyle = { padding: '10px 12px', fontSize: 13, borderBottom: '1px solid #f9fafb', verticalAlign: 'middle' };
 
+        function costoColor(costo, region) {
+          if (!costo) return '#9ca3af';
+          const isUSA = region === 'USA' || region === 'CAN';
+          if (isUSA) {
+            if (costo <= 90) return '#4ade80';
+            if (costo <= 95) return '#fb923c';
+            return '#ef4444';
+          } else {
+            if (costo <= 30) return '#4ade80';
+            if (costo <= 60) return '#fb923c';
+            return '#ef4444';
+          }
+        }
+
         function diasRestantes(e) {
           if (!e.fecha) return null;
           const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
@@ -597,7 +611,7 @@ export default function Analiticas() {
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{fmtN(e.registrosMeta)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: pctColor(pct) }}>{pct}%</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{(e.presupuestoGastado || 0) > 0 ? fmtMXN(e.presupuestoGastado) : '—'}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: '#4ade80' }}>{costoR ? fmtMXN(costoR) : '—'}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: costoR ? costoColor(costoR, e.region) : '#9ca3af' }}>{costoR ? fmtMXN(costoR) : '—'}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: '#374151' }}>{e.vipVendidas || 0}</td>
                       </tr>
                     );
