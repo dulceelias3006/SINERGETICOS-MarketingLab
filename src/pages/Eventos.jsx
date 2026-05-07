@@ -72,7 +72,7 @@ function costoColor(costo, region) {
     return '#ef4444';
   } else {
     if (costo <= 30) return '#4ade80';
-    if (costo <= 60) return '#fb923c';
+    if (costo <= 60) return '#facc15';
     return '#ef4444';
   }
 }
