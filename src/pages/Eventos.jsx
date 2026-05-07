@@ -378,7 +378,14 @@ export default function Eventos() {
     if (canSync.current) dbSet('eventos_historial', next);
   }
 
-  const filtrados = eventos.filter(e => filtro === 'todos' || e.estado === filtro);
+  const filtrados = eventos
+    .filter(e => filtro === 'todos' || e.estado === filtro)
+    .sort((a, b) => {
+      if (!a.fecha && !b.fecha) return 0;
+      if (!a.fecha) return 1;
+      if (!b.fecha) return -1;
+      return new Date(a.fecha) - new Date(b.fecha);
+    });
   const counts = {
     todos: eventos.length,
     activo: eventos.filter(e => e.estado === 'activo').length,
