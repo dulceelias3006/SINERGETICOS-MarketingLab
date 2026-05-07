@@ -68,7 +68,7 @@ function costoColor(costo, region) {
   const isUSA = region === 'USA' || region === 'CAN';
   if (isUSA) {
     if (costo <= 90) return '#4ade80';
-    if (costo <= 95) return '#fb923c';
+    if (costo <= 95) return '#facc15';
     return '#ef4444';
   } else {
     if (costo <= 30) return '#4ade80';
