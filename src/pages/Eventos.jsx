@@ -43,6 +43,18 @@ function relTime(ts) {
   return new Date(ts).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function fmtActualizado(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const ayer = new Date(hoy); ayer.setDate(ayer.getDate() - 1);
+  const dm = new Date(d); dm.setHours(0, 0, 0, 0);
+  const hora = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+  if (dm.getTime() === hoy.getTime()) return `hoy ${hora}`;
+  if (dm.getTime() === ayer.getTime()) return `ayer ${hora}`;
+  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) + ' ' + hora;
+}
+
 function fmtHora(hora) {
   if (!hora) return '';
   const [h, m] = hora.split(':').map(Number);
@@ -218,11 +230,18 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
         </div>
       </div>
 
-      {/* Links */}
-      {(ev.urlRegistro || ev.urlDrive) && (
-        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 8, display: 'flex', gap: 14 }}>
-          {ev.urlRegistro && <a href={ev.urlRegistro} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#e53e3e', fontWeight: 600, textDecoration: 'none' }}>🔗 Registro</a>}
-          {ev.urlDrive && <a href={ev.urlDrive} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#4a9eff', fontWeight: 600, textDecoration: 'none' }}>📁 Drive</a>}
+      {/* Links + actualizado */}
+      {(ev.urlRegistro || ev.urlDrive || ev.updatedAt) && (
+        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 14 }}>
+            {ev.urlRegistro && <a href={ev.urlRegistro} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#e53e3e', fontWeight: 600, textDecoration: 'none' }}>🔗 Registro</a>}
+            {ev.urlDrive && <a href={ev.urlDrive} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#4a9eff', fontWeight: 600, textDecoration: 'none' }}>📁 Drive</a>}
+          </div>
+          {ev.updatedAt && (
+            <span style={{ fontSize: 11, color: '#c4c9d4', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
+              actualizado {fmtActualizado(ev.updatedAt)}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -411,10 +430,10 @@ export default function Eventos() {
         .filter(k => String(old?.[k] ?? '') !== String(form[k] ?? ''))
         .map(k => CAMPO_LABELS[k]);
       const desc = cambios.length > 0 ? `Modificó: ${cambios.join(', ')}` : 'Sin cambios';
-      saveEventos(eventos.map(e => e.id === editandoId ? { ...e, ...form } : e), `edición de "${form.nombre.trim()}"`);
+      saveEventos(eventos.map(e => e.id === editandoId ? { ...e, ...form, updatedAt: Date.now() } : e), `edición de "${form.nombre.trim()}"`);
       log('editado', form.nombre.trim(), desc);
     } else {
-      saveEventos([...eventos, { ...form, id: Date.now() }], `creación de "${form.nombre.trim()}"`);
+      saveEventos([...eventos, { ...form, id: Date.now(), updatedAt: Date.now() }], `creación de "${form.nombre.trim()}"`);
       log('creado', form.nombre.trim(), 'Evento creado');
     }
     setShowModal(false);
@@ -433,7 +452,7 @@ export default function Eventos() {
     const newVal = Math.max(0, oldVal + delta);
     const AJUSTE_LABELS = { registrosActuales: 'Registros', vipVendidas: 'VIP', presupuestoGastado: 'Gasto', registrosHora1: 'Reg. H1', registrosHora2: 'Reg. H2' };
     const label = AJUSTE_LABELS[campo] || campo;
-    saveEventos(eventos.map(e => e.id === id ? { ...e, [campo]: newVal } : e), `ajuste de ${label} en "${ev?.nombre}"`);
+    saveEventos(eventos.map(e => e.id === id ? { ...e, [campo]: newVal, updatedAt: Date.now() } : e), `ajuste de ${label} en "${ev?.nombre}"`);
     log('ajustado', ev?.nombre || 'Evento', `${label}: ${oldVal.toLocaleString('es-MX')} → ${newVal.toLocaleString('es-MX')}`);
   }
 
