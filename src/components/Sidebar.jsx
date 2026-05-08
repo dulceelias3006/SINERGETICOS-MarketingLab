@@ -127,8 +127,8 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           </div>
           {!collapsed && (
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#f1f1f5', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>SINERGÉTICOS</div>
-              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Marketing Lab</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--sidebar-title)', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>SINERGÉTICOS</div>
+              <div style={{ fontSize: 11, color: 'var(--sidebar-text-muted)', marginTop: 2 }}>Marketing Lab</div>
             </div>
           )}
         </div>
@@ -191,7 +191,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
               gap: collapsed ? 0 : 12, padding: collapsed ? '11px 0' : '11px 14px',
               margin: collapsed ? '2px 6px' : '2px 10px', borderRadius: 10,
-              color: isActive ? '#ffffff' : '#9ca3af',
+              color: isActive ? '#ffffff' : 'var(--sidebar-text)',
               background: isActive ? '#e53e3e' : 'transparent',
               textDecoration: 'none', fontSize: 14, fontWeight: isActive ? 600 : 400,
               transition: 'background 0.15s, color 0.15s', overflow: 'hidden', whiteSpace: 'nowrap',
@@ -217,7 +217,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               background: 'transparent', color: '#4b5563', fontSize: 13,
               transition: 'background 0.15s, color 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#9ca3af'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--sidebar-hover)'; e.currentTarget.style.color = 'var(--sidebar-text)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563'; }}
           >
             {collapsed ? <IcoChevronRight /> : <><IcoChevronLeft /><span>Colapsar</span></>}
@@ -226,7 +226,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
       </nav>
 
       {/* Footer — usuario + logout */}
-      <div style={{ padding: collapsed ? '14px 0' : '14px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'stretch' }}>
+      <div style={{ padding: collapsed ? '14px 0' : '14px 16px', borderTop: '1px solid var(--sidebar-footer-border)', display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'stretch' }}>
         {collapsed ? (
           <button
             onClick={signOut}
@@ -240,7 +240,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               {inicial}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, color: '#d1d5db', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nombre}</div>
+              <div style={{ fontSize: 12, color: 'var(--sidebar-title)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nombre}</div>
               <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{roleLabel}</div>
             </div>
             <button
