@@ -199,7 +199,7 @@ export default function Dashboard() {
           <div style={{ color: 'var(--app-text-subtle)' }}>{icon}</div>
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</span>
         </div>
-        <div style={{ fontSize: 34, fontWeight: 800, color: valueColor || '#111827', lineHeight: 1.1, letterSpacing: -0.5 }}>{value}</div>
+        <div style={{ fontSize: 34, fontWeight: 800, color: valueColor || 'var(--app-text)', lineHeight: 1.1, letterSpacing: -0.5 }}>{value}</div>
         {sub && <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 6 }}>{sub}</div>}
         {extra}
       </div>
@@ -233,7 +233,7 @@ export default function Dashboard() {
         const sub = proximoEvento
           ? `${proximoEvento.nombre}${proximoEvento.hora ? ' ' + fmtHora(proximoEvento.hora) : ''}`
           : 'Sin eventos próximos';
-        return statBlock(<IcoCal />, 'Próximo Evento', rel, '#111827', sub);
+        return statBlock(<IcoCal />, 'Próximo Evento', rel, 'var(--app-text)', sub);
       }
 
       case 'stat_presupuesto': {
@@ -246,12 +246,12 @@ export default function Dashboard() {
             <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 5 }}>{fmtMXN(totalGastado)} de {fmtMXN(totalPresupuesto)}</div>
           </div>
         );
-        return statBlock(<IcoDollar />, 'Presupuesto', `${pctPresupuesto}%`, '#111827', null, extra);
+        return statBlock(<IcoDollar />, 'Presupuesto', `${pctPresupuesto}%`, 'var(--app-text)', null, extra);
       }
 
       case 'stat_tickets':
         return statBlock(
-          <IcoTicket />, 'Tickets Abiertos', fmtN(ticketsAbiertos), '#111827',
+          <IcoTicket />, 'Tickets Abiertos', fmtN(ticketsAbiertos), 'var(--app-text)',
           ticketsUrgentes > 0
             ? <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 12 }}>{ticketsUrgentes} urgentes</span>
             : 'sin urgentes'
@@ -261,16 +261,16 @@ export default function Dashboard() {
         return statBlock(<IcoTarget />, 'Costo/Registro', fmtMXN(costoPromedio), '#4ade80', `${fmtN(totalRegistros)} registros totales`);
 
       case 'stat_total_reg':
-        return statBlock(<IcoUsers />, 'Total Registros', fmtN(totalRegistros), '#111827', `Meta: ${fmtN(metaTotal)}`);
+        return statBlock(<IcoUsers />, 'Total Registros', fmtN(totalRegistros), 'var(--app-text)', `Meta: ${fmtN(metaTotal)}`);
 
       case 'stat_eventos_activos':
         return statBlock(<IcoBolt />, 'Eventos Activos', fmtN(activos.length), '#e53e3e', 'con estado activo');
 
       case 'stat_total_eventos':
-        return statBlock(<IcoCal />, 'Total Eventos', fmtN(eventos.length), '#111827', 'registrados');
+        return statBlock(<IcoCal />, 'Total Eventos', fmtN(eventos.length), 'var(--app-text)', 'registrados');
 
       case 'stat_vip':
-        return statBlock(<IcoCrown />, 'VIP Vendidos', fmtN(totalVip), '#111827',
+        return statBlock(<IcoCrown />, 'VIP Vendidos', fmtN(totalVip), 'var(--app-text)',
           `en ${eventos.filter(e => (e.vipVendidas || 0) > 0).length} eventos`);
 
       case 'proximos_eventos':
