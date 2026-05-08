@@ -544,7 +544,7 @@ export default function Eventos() {
             <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Fecha</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Registros</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Meta</th>
-            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">%</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">%Reg</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">VIP</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Presupuesto</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Gastado</th>
