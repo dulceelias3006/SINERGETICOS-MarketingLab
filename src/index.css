@@ -16,13 +16,13 @@
   --app-text-2: #374151;
   --app-text-muted: #6b7280;
   --app-text-subtle: #9ca3af;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #e8e8ee;
-  --sidebar-text: #374151;
+  --sidebar-bg: #111118;
+  --sidebar-border: #2a2a3a;
+  --sidebar-text: #9ca3af;
   --sidebar-text-muted: #6b7280;
-  --sidebar-hover: rgba(0,0,0,0.05);
-  --sidebar-footer-border: rgba(0,0,0,0.08);
-  --sidebar-title: #111827;
+  --sidebar-hover: rgba(255,255,255,0.05);
+  --sidebar-footer-border: rgba(255,255,255,0.06);
+  --sidebar-title: #f1f1f5;
 }
 
 [data-theme="dark"] {
@@ -36,13 +36,13 @@
   --app-text-2: #c4c9dc;
   --app-text-muted: #8590b0;
   --app-text-subtle: #6b7290;
-  --sidebar-bg: #111118;
-  --sidebar-border: #2a2a3a;
-  --sidebar-text: #9ca3af;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e8e8ee;
+  --sidebar-text: #374151;
   --sidebar-text-muted: #6b7280;
-  --sidebar-hover: rgba(255,255,255,0.05);
-  --sidebar-footer-border: rgba(255,255,255,0.06);
-  --sidebar-title: #f1f1f5;
+  --sidebar-hover: rgba(0,0,0,0.05);
+  --sidebar-footer-border: rgba(0,0,0,0.08);
+  --sidebar-title: #111827;
 }
 
 :root {

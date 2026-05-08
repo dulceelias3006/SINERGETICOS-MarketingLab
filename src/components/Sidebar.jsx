@@ -142,7 +142,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             width: collapsed ? 44 : 60,
             height: collapsed ? 24 : 28,
             borderRadius: 99,
-            background: isDark ? '#252840' : '#e53e3e',
+            background: isDark ? '#e53e3e' : '#252840',
             border: 'none',
             cursor: 'pointer',
             padding: 0,
@@ -151,13 +151,13 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           }}>
           {/* Sun icon */}
           {!collapsed && (
-            <span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#555d7a' : '#fff', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
+            <span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? 'rgba(255,255,255,0.45)' : '#fff', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
               <IcoSun />
             </span>
           )}
           {/* Moon icon */}
           {!collapsed && (
-            <span style={{ position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#f0f1f5' : 'rgba(255,255,255,0.45)', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
+            <span style={{ position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#fff' : 'rgba(255,255,255,0.35)', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
               <IcoMoon />
             </span>
           )}
