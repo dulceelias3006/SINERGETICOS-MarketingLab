@@ -471,6 +471,91 @@ export default function Eventos() {
     log('ajustado', ev?.nombre || 'Evento', `${label}: ${oldVal.toLocaleString('es-MX')} → ${newVal.toLocaleString('es-MX')}`);
   }
 
+  function exportarPDF() {
+    const TIPO_CFG_PDF = {
+      creado:    { label: 'Creado',    color: '#16a34a', bg: '#dcfce7' },
+      editado:   { label: 'Editado',  color: '#2563eb', bg: '#dbeafe' },
+      eliminado: { label: 'Eliminado',color: '#dc2626', bg: '#fee2e2' },
+      ajustado:  { label: 'Ajustado', color: '#7c3aed', bg: '#ede9fe' },
+    };
+    const hoy = new Date();
+    const hoyStr = hoy.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const hoyM = new Date(hoy); hoyM.setHours(0, 0, 0, 0);
+    const ayerM = new Date(hoyM); ayerM.setDate(ayerM.getDate() - 1);
+
+    function grupoLabel(ts) {
+      const d = new Date(ts); d.setHours(0, 0, 0, 0);
+      if (d.getTime() === hoyM.getTime()) return 'Hoy';
+      if (d.getTime() === ayerM.getTime()) return 'Ayer';
+      return new Date(ts).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
+    const gruposOrden = [];
+    const porGrupo = {};
+    historial.forEach(e => {
+      const g = grupoLabel(e.ts);
+      if (!porGrupo[g]) { porGrupo[g] = []; gruposOrden.push(g); }
+      porGrupo[g].push(e);
+    });
+    const gruposUniq = [...new Set(gruposOrden)];
+
+    const sections = gruposUniq.map(grupo => {
+      const rows = porGrupo[grupo].map(e => {
+        const cfg = TIPO_CFG_PDF[e.tipo] || { label: e.tipo, color: '#6b7280', bg: '#f3f4f6' };
+        const hora = new Date(e.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dot = e.color || colorForUser(e.usuario || '');
+        return `<tr>
+          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;white-space:nowrap;">${hora}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;">${e.nombre || '—'}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;"><span style="font-size:11px;font-weight:700;color:${cfg.color};background:${cfg.bg};padding:3px 9px;border-radius:20px;">${cfg.label}</span></td>
+          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;">${e.desc || '—'}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;white-space:nowrap;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dot};margin-right:5px;vertical-align:middle;"></span>${e.usuario || 'Usuario'}</td>
+        </tr>`;
+      }).join('');
+      return `<div style="margin-bottom:28px;">
+        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #e8e8ee;">${grupo}</div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Hora</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Evento</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Acción</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Descripción</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Usuario</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte de Cambios</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; margin: 0; padding: 40px 48px; background: #fff; color: #111827; }
+      @media print { body { padding: 24px 32px; } }
+    </style></head><body>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #111827;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Sinergeticos · Marketing Lab</div>
+        <h1 style="font-size:24px;font-weight:800;color:#111827;margin:0 0 4px;">Reporte de Cambios en Eventos</h1>
+        <p style="font-size:13px;color:#6b7280;margin:0;">${hoyStr} · ${historial.length} ${historial.length === 1 ? 'registro' : 'registros'}</p>
+      </div>
+    </div>
+    ${historial.length === 0
+      ? '<p style="text-align:center;color:#9ca3af;padding:60px 0;font-size:14px;">Sin cambios registrados en los últimos 7 días</p>'
+      : sections}
+    <div style="margin-top:40px;padding-top:14px;border-top:1px solid #e8e8ee;font-size:11px;color:#9ca3af;display:flex;justify-content:space-between;">
+      <span>Generado el ${hoy.toLocaleString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+      <span>marketinglab.sinergeticos.mx</span>
+    </div>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { alert('Activa las ventanas emergentes en tu navegador para exportar el PDF'); return; }
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 400);
+  }
+
   function agregarTipo() {
     if (!nuevoTipo.label.trim()) return;
     saveTipos([...tipos, { id: 'tipo_' + Date.now(), label: nuevoTipo.label.trim(), color: nuevoTipo.color }]);
@@ -897,6 +982,11 @@ export default function Eventos() {
                   <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Últimos 7 días · {historial.length} {historial.length === 1 ? 'registro' : 'registros'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button onClick={exportarPDF}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#e53e3e', border: 'none', cursor: 'pointer', fontSize: 11, color: '#fff', padding: '5px 11px', borderRadius: 6, fontWeight: 600 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    PDF
+                  </button>
                   {historial.length > 0 && (
                     <button onClick={() => { setHistorial([]); if (canSync.current) dbSet('eventos_historial', []); }}
                       style={{ background: 'none', border: '1px solid #e8e8ee', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '4px 10px', borderRadius: 6 }}>
