@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Enlaces from './pages/Enlaces';
@@ -30,7 +31,7 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f6fa' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-bg)' }}>
         <div style={{ width: 46, height: 46, background: '#e53e3e', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🐝</div>
       </div>
     );
@@ -53,7 +54,7 @@ function AppContent() {
 
         <main className="main-content">
           {collapsed && (
-            <div style={{ height: 48, background: '#fff', borderBottom: '1px solid #e8e8ee', display: 'flex', alignItems: 'center', paddingLeft: 14, flexShrink: 0 }}>
+            <div style={{ height: 48, background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', paddingLeft: 14, flexShrink: 0 }}>
               <button
                 onClick={() => setCollapsed(false)}
                 title="Mostrar sidebar"
@@ -88,8 +89,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

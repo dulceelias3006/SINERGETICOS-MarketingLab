@@ -114,18 +114,18 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
         if (e.key === 'Enter') e.target.blur();
         if (e.key === 'Escape') closeFn(null);
       }}
-      style={{ width: 70, border: '1px solid #e879a0', borderRadius: 6, padding: '2px 6px', fontSize: 13, fontWeight: 700, color: '#111827', background: '#fff', outline: 'none', textAlign: 'center' }}
+      style={{ width: 70, border: '1px solid #e879a0', borderRadius: 6, padding: '2px 6px', fontSize: 13, fontWeight: 700, color: 'var(--app-text)', background: 'var(--app-surface)', outline: 'none', textAlign: 'center' }}
     />
   );
 
   return (
-    <div style={{ background: '#fff', borderRadius: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #f0f0f5', padding: compact ? '14px 16px' : '18px 20px' }}>
+    <div style={{ background: 'var(--app-surface)', borderRadius: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid var(--app-border-light)', padding: compact ? '14px 16px' : '18px 20px' }}>
 
       {/* Status row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: estadoObj.color }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
             {estadoObj.label}{tipoObj ? ` · ${tipoObj.label}` : ''}
           </span>
           {regionObj && !compact && (
@@ -138,13 +138,13 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
       </div>
 
       {/* Title */}
-      <div style={{ fontSize: compact ? 15 : 19, fontWeight: 700, color: '#111827', marginBottom: 8, lineHeight: 1.3 }}>{ev.nombre}</div>
+      <div style={{ fontSize: compact ? 15 : 19, fontWeight: 700, color: 'var(--app-text)', marginBottom: 8, lineHeight: 1.3 }}>{ev.nombre}</div>
 
       {/* Date + location */}
       {(fechaFmt || ev.ubicacion) && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
-          {fechaFmt && <span style={{ fontSize: 12, color: '#6b7280' }}>📅 {fechaFmt}{ev.hora ? ` · ${fmtHora(ev.hora)}${ev.hora2 ? ` – ${fmtHora(ev.hora2)}` : ''}` : ''}</span>}
-          {ev.ubicacion && <span style={{ fontSize: 12, color: '#6b7280' }}>📍 {ev.ubicacion}</span>}
+          {fechaFmt && <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>📅 {fechaFmt}{ev.hora ? ` · ${fmtHora(ev.hora)}${ev.hora2 ? ` – ${fmtHora(ev.hora2)}` : ''}` : ''}</span>}
+          {ev.ubicacion && <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>📍 {ev.ubicacion}</span>}
         </div>
       )}
 
@@ -152,10 +152,10 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
       <div style={{ marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>👥 Registros ({pct}%)</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase' }}>👥 Registros ({pct}%)</span>
             {ev.hora2 && (
               <button onClick={() => setShowHorarios(p => !p)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9ca3af', display: 'flex', alignItems: 'center' }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--app-text-subtle)', display: 'flex', alignItems: 'center' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                   style={{ transform: showHorarios ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }}>
                   <polyline points="6 9 12 15 18 9"/>
@@ -164,16 +164,16 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
+            {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
             {editReg !== null && onAjustar
               ? inlineInput(editReg, setEditReg, 'registrosActuales', ev.registrosActuales, setEditReg)
-              : <span onClick={onAjustar ? () => setEditReg(String(ev.registrosActuales || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
+              : <span onClick={onAjustar ? () => setEditReg(String(ev.registrosActuales || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
             }
-            <span style={{ fontSize: 12, color: '#9ca3af' }}>/ {(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
-            {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
+            <span style={{ fontSize: 12, color: 'var(--app-text-subtle)' }}>/ {(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
+            {onAjustar && <button onClick={() => onAjustar(ev.id, 'registrosActuales', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
           </div>
         </div>
-        <div style={{ height: 4, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{ height: 4, background: 'var(--app-surface-2)', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: '#facc15', borderRadius: 99 }} />
         </div>
 
@@ -184,15 +184,15 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
               ['registrosHora1', ev.hora,  editH1, setEditH1],
               ['registrosHora2', ev.hora2, editH2, setEditH2],
             ].map(([campo, hora, editVal, setEditVal]) => (
-              <div key={campo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f9fafb', borderRadius: 8, padding: '5px 10px' }}>
-                <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{fmtHora(hora)}</span>
+              <div key={campo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--app-surface-alt)', borderRadius: 8, padding: '5px 10px' }}>
+                <span style={{ fontSize: 11, color: 'var(--app-text-muted)', fontWeight: 600 }}>{fmtHora(hora)}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {onAjustar && <button onClick={() => onAjustar(ev.id, campo, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>−</button>}
+                  {onAjustar && <button onClick={() => onAjustar(ev.id, campo, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 14, lineHeight: 1, padding: 0 }}>−</button>}
                   {editVal !== null && onAjustar
                     ? inlineInput(editVal, setEditVal, campo, ev[campo], setEditVal)
-                    : <span onClick={onAjustar ? () => setEditVal(String(ev[campo] || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: 13, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev[campo] || 0).toLocaleString('es-MX')}</span>
+                    : <span onClick={onAjustar ? () => setEditVal(String(ev[campo] || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{(ev[campo] || 0).toLocaleString('es-MX')}</span>
                   }
-                  {onAjustar && <button onClick={() => onAjustar(ev.id, campo, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 14, lineHeight: 1, padding: 0 }}>+</button>}
+                  {onAjustar && <button onClick={() => onAjustar(ev.id, campo, 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 14, lineHeight: 1, padding: 0 }}>+</button>}
                 </div>
               </div>
             ))}
@@ -202,10 +202,10 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
 
       {/* Budget */}
       {tienePres && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, padding: '10px 0', borderTop: '1px solid #f3f4f6', borderBottom: '1px solid #f3f4f6', marginBottom: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, padding: '10px 0', borderTop: '1px solid var(--app-border-light)', borderBottom: '1px solid var(--app-border-light)', marginBottom: 8 }}>
           <div>
-            <div style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: '#111827' }}>{fmt(ev.presupuestoTotal, ev.divisa)}</div>
-            <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Presupuesto</div>
+            <div style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: 'var(--app-text)' }}>{fmt(ev.presupuestoTotal, ev.divisa)}</div>
+            <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 1 }}>Presupuesto</div>
           </div>
           <div>
             {editGastado !== null
@@ -215,39 +215,39 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
                     onChange={e => setEditGastado(e.target.value)}
                     onBlur={() => commitEdit('presupuestoGastado', editGastado, ev.presupuestoGastado, setEditGastado)}
                     onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditGastado(null); }}
-                    style={{ width: '100%', border: '1px solid #e879a0', borderRadius: 6, padding: '2px 6px', fontSize: compact ? 12 : 13, fontWeight: 700, color: '#111827', background: '#fff', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid #e879a0', borderRadius: 6, padding: '2px 6px', fontSize: compact ? 12 : 13, fontWeight: 700, color: 'var(--app-text)', background: 'var(--app-surface)', outline: 'none', boxSizing: 'border-box' }}
                   />
-                  <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Gastado ({gastadoPct}%)</div>
+                  <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 1 }}>Gastado ({gastadoPct}%)</div>
                 </>
               : <>
-                  <div onClick={onAjustar ? () => setEditGastado(String(ev.presupuestoGastado || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default' }}>{fmt(ev.presupuestoGastado, ev.divisa)}</div>
-                  <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Gastado ({gastadoPct}%)</div>
+                  <div onClick={onAjustar ? () => setEditGastado(String(ev.presupuestoGastado || 0)) : undefined} title={onAjustar ? 'Clic para editar' : undefined} style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: 'var(--app-text)', cursor: onAjustar ? 'text' : 'default' }}>{fmt(ev.presupuestoGastado, ev.divisa)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 1 }}>Gastado ({gastadoPct}%)</div>
                 </>
             }
           </div>
           <div>
             <div style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: costoColor(costoRegNum, ev.region) }}>{costoReg}</div>
-            <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>Costo/Reg.</div>
+            <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 1 }}>Costo/Reg.</div>
           </div>
         </div>
       )}
 
       {/* VIP */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: ev.urlRegistro || ev.urlDrive ? 8 : 0 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase' }}>🎟 VIP</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase' }}>🎟 VIP</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
+          {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 16, lineHeight: 1, padding: 0 }}>−</button>}
           {editVip !== null && onAjustar
             ? inlineInput(editVip, setEditVip, 'vipVendidas', ev.vipVendidas, setEditVip)
-            : <span onClick={onAjustar ? () => setEditVip(String(ev.vipVendidas || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{ev.vipVendidas || 0}</span>
+            : <span onClick={onAjustar ? () => setEditVip(String(ev.vipVendidas || 0)) : undefined} title={onAjustar ? "Clic para editar" : undefined} style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)', cursor: onAjustar ? 'text' : 'default', minWidth: 24, textAlign: 'center' }}>{ev.vipVendidas || 0}</span>
           }
-          {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
+          {onAjustar && <button onClick={() => onAjustar(ev.id, 'vipVendidas', 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 16, lineHeight: 1, padding: 0 }}>+</button>}
         </div>
       </div>
 
       {/* Links + actualizado */}
       {(ev.urlRegistro || ev.urlDrive || ev.updatedAt) && (
-        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ borderTop: '1px solid var(--app-border-light)', paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ display: 'flex', gap: 14 }}>
             {ev.urlRegistro && <a href={ev.urlRegistro} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#e53e3e', fontWeight: 600, textDecoration: 'none' }}>🔗 Registro</a>}
             {ev.urlDrive && <a href={ev.urlDrive} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#4a9eff', fontWeight: 600, textDecoration: 'none' }}>📁 Drive</a>}
@@ -491,7 +491,7 @@ export default function Eventos() {
         label: r.label, color: r.color,
         evs: eventosActivos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')),
       })),
-      ...(sinRegion.length > 0 ? [{ label: 'Sin región', color: '#9ca3af', evs: sinRegion }] : []),
+      ...(sinRegion.length > 0 ? [{ label: 'Sin región', color: 'var(--app-text-subtle)', evs: sinRegion }] : []),
     ].filter(g => g.evs.length > 0);
 
     function fmtNum(n, div = 'MXN') {
@@ -614,34 +614,34 @@ export default function Eventos() {
   function eliminarTipo(id) { saveTipos(tipos.filter(t => t.id !== id)); }
 
   const inp = (extra = {}) => ({
-    width: '100%', border: '1px solid #e8e8ee', borderRadius: 10, padding: '10px 14px',
-    fontSize: 14, outline: 'none', background: '#fff', color: '#111827', boxSizing: 'border-box', ...extra,
+    width: '100%', border: '1px solid var(--app-border)', borderRadius: 10, padding: '10px 14px',
+    fontSize: 14, outline: 'none', background: 'var(--app-surface)', color: 'var(--app-text)', boxSizing: 'border-box', ...extra,
   });
 
   const sinRegion = filtrados.filter(e => !e.region);
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%' }}>
+    <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
 
       {/* ── Undo toast ── */}
       {undoToast && (
         <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', background: '#1f2937', color: '#fff', padding: '11px 20px', borderRadius: 10, fontSize: 13, fontWeight: 500, zIndex: 9999, boxShadow: '0 4px 16px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           {undoToast}
-          {undoStack.length > 0 && <span style={{ color: '#9ca3af', fontSize: 11 }}>({undoStack.length} más)</span>}
+          {undoStack.length > 0 && <span style={{ color: 'var(--app-text-subtle)', fontSize: 11 }}>({undoStack.length} más)</span>}
         </div>
       )}
 
       {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 0', background: '#fff', borderBottom: '1px solid #e8e8ee', position: 'sticky', top: 0, zIndex: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Eventos</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 20 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: '0 0 16px' }}>Eventos</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
 
           {/* Vista toggle */}
-          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
+          <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
             {[['grid','⊞ Todos'],['regiones','⊟ Regiones']].map(([key, label]) => (
               <button key={key} onClick={() => setVista(key)}
-                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: vista === key ? 700 : 400, background: vista === key ? '#fff' : 'transparent', color: vista === key ? '#111827' : '#6b7280', boxShadow: vista === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: vista === key ? 700 : 400, background: vista === key ? 'var(--app-surface)' : 'transparent', color: vista === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: vista === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                 {label}
               </button>
             ))}
@@ -650,26 +650,26 @@ export default function Eventos() {
           {/* Regiones config */}
           {vista === 'regiones' && (
             <button onClick={() => setShowRegionesConfig(true)} title="Editar colores de regiones"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: '#fff', color: '#374151', border: '1px solid #e8e8ee', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               {regiones.map(r => <span key={r.id} style={{ width: 8, height: 8, borderRadius: '50%', background: r.color, display: 'inline-block' }} />)}
               Regiones
             </button>
           )}
 
           <button onClick={() => setShowTiposModal(true)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#fff', color: '#374151', border: '1px solid #e8e8ee', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             Tipos
           </button>
 
           <button onClick={() => setShowHistorial(true)} title="Ver historial"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#fff', color: '#374151', border: '1px solid #e8e8ee', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Historial
           </button>
 
           <button onClick={exportarPDF} title="Exportar reporte PDF"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#fff', color: '#374151', border: '1px solid #e8e8ee', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
             Reporte PDF
           </button>
@@ -684,13 +684,13 @@ export default function Eventos() {
       </div>
 
       {/* ── Filter tabs ── */}
-      <div style={{ padding: '12px 28px 0', background: '#fff', borderBottom: '1px solid #e8e8ee' }}>
+      <div style={{ padding: '12px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {[['todos','Todos'],['activo','Activos'],['planificado','Planificados'],['completado','Completados']].map(([key, label]) => (
               <button key={key} onClick={() => setFiltro(key)}
-                style={{ padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: filtro === key ? 700 : 500, background: filtro === key ? '#111827' : '#f3f4f6', color: filtro === key ? '#fff' : '#6b7280', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                style={{ padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: filtro === key ? 700 : 500, background: filtro === key ? '#111827' : 'var(--app-surface-2)', color: filtro === key ? '#fff' : 'var(--app-text-muted)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 {label}
-                <span style={{ fontSize: 11, background: filtro === key ? 'rgba(255,255,255,0.2)' : '#e5e7eb', color: filtro === key ? '#fff' : '#9ca3af', borderRadius: 10, padding: '1px 6px', fontWeight: 600 }}>{counts[key]}</span>
+                <span style={{ fontSize: 11, background: filtro === key ? 'rgba(255,255,255,0.2)' : 'var(--app-border)', color: filtro === key ? '#fff' : 'var(--app-text-subtle)', borderRadius: 10, padding: '1px 6px', fontWeight: 600 }}>{counts[key]}</span>
               </button>
             ))}
           </div>
@@ -700,9 +700,9 @@ export default function Eventos() {
       {vista === 'grid' && (
         <div style={{ padding: '20px 28px' }}>
           {filtrados.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--app-text-subtle)' }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>📅</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Sin eventos</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Sin eventos</div>
               <div style={{ fontSize: 13 }}>Crea el primer evento con "+ Nuevo Evento"</div>
             </div>
           ) : (
@@ -742,7 +742,7 @@ export default function Eventos() {
                       return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} compact />;
                     })}
                     {cols.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '24px 10px', color: '#d1d5db', fontSize: 12, border: `1px dashed ${region.color}44`, borderRadius: 10, background: '#fff' }}>
+                      <div style={{ textAlign: 'center', padding: '24px 10px', color: '#d1d5db', fontSize: 12, border: `1px dashed ${region.color}44`, borderRadius: 10, background: 'var(--app-surface)' }}>
                         Sin eventos
                       </div>
                     )}
@@ -754,10 +754,10 @@ export default function Eventos() {
             {/* Sin región column */}
             {sinRegion.length > 0 && (
               <div style={{ flex: 1, minWidth: 260 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '10px 14px', background: '#f3f4f6', borderRadius: 10, border: '1.5px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '10px 14px', background: 'var(--app-surface-2)', borderRadius: 10, border: '1.5px solid var(--app-border)' }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#9ca3af' }} />
-                  <span style={{ fontWeight: 700, fontSize: 14, color: '#9ca3af' }}>Sin región</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, background: '#e5e7eb', color: '#9ca3af', borderRadius: 10, padding: '1px 7px' }}>{sinRegion.length}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--app-text-subtle)' }}>Sin región</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, background: '#e5e7eb', color: 'var(--app-text-subtle)', borderRadius: 10, padding: '1px 7px' }}>{sinRegion.length}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {sinRegion.map(ev => {
@@ -774,11 +774,11 @@ export default function Eventos() {
       {/* ── REGIONES CONFIG MODAL ── */}
       {showRegionesConfig && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowRegionesConfig(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 400 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 16, width: '100%', maxWidth: 400 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--app-border-light)' }}>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>Colores de Regiones</div>
-                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Haz clic en el color para cambiarlo</div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)' }}>Colores de Regiones</div>
+                <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Haz clic en el color para cambiarlo</div>
               </div>
               <button onClick={() => setShowRegionesConfig(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
             </div>
@@ -791,7 +791,7 @@ export default function Eventos() {
                       style={{ opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', border: 'none', padding: 0 }} />
                   </label>
                   <span style={{ fontSize: 15, fontWeight: 800, color: r.color, letterSpacing: 1 }}>{r.label}</span>
-                  <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 'auto' }}>{eventos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')).length} eventos</span>
+                  <span style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginLeft: 'auto' }}>{eventos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')).length} eventos</span>
                 </div>
               ))}
             </div>
@@ -802,21 +802,21 @@ export default function Eventos() {
       {/* ── TIPOS MODAL ── */}
       {showTiposModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowTiposModal(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 420 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 16, width: '100%', maxWidth: 420 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--app-border-light)' }}>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>Tipos de Evento</div>
-                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Crea, edita o elimina tipos de evento</div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)' }}>Tipos de Evento</div>
+                <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Crea, edita o elimina tipos de evento</div>
               </div>
               <button onClick={() => setShowTiposModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
             </div>
             <div style={{ padding: '16px 22px 20px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
                 {tipos.map(t => (
-                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f9fafb', borderRadius: 10, border: '1px solid #f0f0f5' }}>
+                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--app-surface-alt)', borderRadius: 10, border: '1px solid var(--app-border-light)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ width: 13, height: 13, borderRadius: '50%', background: t.color }} />
-                      <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{t.label}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--app-text)' }}>{t.label}</span>
                     </div>
                     {!TIPOS_DEFAULT.find(d => d.id === t.id) && (
                       <button onClick={() => eliminarTipo(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 18, lineHeight: 1 }}>×</button>
@@ -824,12 +824,12 @@ export default function Eventos() {
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Nuevo Tipo</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Nuevo Tipo</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <label style={{ position: 'relative', width: 38, height: 38, borderRadius: 8, background: nuevoTipo.color, cursor: 'pointer', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}>
                   <input type="color" value={nuevoTipo.color} onChange={e => setNuevoTipo(p => ({ ...p, color: e.target.value }))} style={{ opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', border: 'none', padding: 0 }} />
                 </label>
-                <input value={nuevoTipo.label} onChange={e => setNuevoTipo(p => ({ ...p, label: e.target.value }))} onKeyDown={e => e.key === 'Enter' && agregarTipo()} placeholder="Ej: conferencia" style={{ flex: 1, border: '1px solid #e8e8ee', borderRadius: 10, padding: '10px 14px', fontSize: 13, outline: 'none', background: '#f9fafb', color: '#111827' }} />
+                <input value={nuevoTipo.label} onChange={e => setNuevoTipo(p => ({ ...p, label: e.target.value }))} onKeyDown={e => e.key === 'Enter' && agregarTipo()} placeholder="Ej: conferencia" style={{ flex: 1, border: '1px solid var(--app-border)', borderRadius: 10, padding: '10px 14px', fontSize: 13, outline: 'none', background: 'var(--app-surface-alt)', color: 'var(--app-text)' }} />
                 <button onClick={agregarTipo} style={{ padding: '10px 16px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>+ Crear</button>
               </div>
             </div>
@@ -840,11 +840,11 @@ export default function Eventos() {
       {/* ── EVENTO MODAL ── */}
       {showModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#f9fafb', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 14px', background: '#f9fafb', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 5, borderRadius: '16px 16px 0 0' }}>
+          <div style={{ background: 'var(--app-surface-alt)', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 14px', background: 'var(--app-surface-alt)', borderBottom: '1px solid var(--app-border-light)', position: 'sticky', top: 0, zIndex: 5, borderRadius: '16px 16px 0 0' }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>{editandoId ? 'Editar Evento' : 'Nuevo Evento'}</div>
-                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Completa la información del nuevo evento</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--app-text)' }}>{editandoId ? 'Editar Evento' : 'Nuevo Evento'}</div>
+                <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Completa la información del nuevo evento</div>
               </div>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
             </div>
@@ -853,27 +853,27 @@ export default function Eventos() {
 
               {/* Nombre */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Nombre del evento</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Nombre del evento</label>
                 <input value={form.nombre} onChange={e => { setForm(p => ({ ...p, nombre: e.target.value })); setFormError(false); }}
                   style={inp(formError && !form.nombre.trim() ? { border: '2px solid #e53e3e' } : {})} autoFocus />
               </div>
 
               {/* Descripción */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Descripción</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Descripción</label>
                 <textarea value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} style={inp({ resize: 'vertical', minHeight: 80 })} />
               </div>
 
               {/* Tipo + Estado */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Tipo</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Tipo</label>
                   <select value={form.tipo} onChange={e => setForm(p => ({ ...p, tipo: e.target.value }))} style={inp()}>
                     {tipos.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Estado</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Estado</label>
                   <select value={form.estado} onChange={e => setForm(p => ({ ...p, estado: e.target.value }))} style={inp()}>
                     {ESTADOS_CONFIG.map(e => <option key={e.key} value={e.key}>{e.label}</option>)}
                   </select>
@@ -882,10 +882,10 @@ export default function Eventos() {
 
               {/* Región */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8 }}>Región</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 8 }}>Región</label>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button type="button" onClick={() => setForm(p => ({ ...p, region: '' }))}
-                    style={{ padding: '7px 16px', borderRadius: 8, border: `2px solid ${!form.region ? '#374151' : '#e8e8ee'}`, background: !form.region ? '#111827' : '#fff', color: !form.region ? '#fff' : '#9ca3af', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ padding: '7px 16px', borderRadius: 8, border: `2px solid ${!form.region ? '#374151' : 'var(--app-border)'}`, background: !form.region ? '#111827' : 'var(--app-surface)', color: !form.region ? '#fff' : 'var(--app-text-subtle)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                     Sin región
                   </button>
                   {regiones.map(r => (
@@ -900,15 +900,15 @@ export default function Eventos() {
               {/* Fecha + Hora + Ubicación */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Fecha</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Fecha</label>
                   <input type="date" value={form.fecha} onChange={e => setForm(p => ({ ...p, fecha: e.target.value }))} style={inp()} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Hora</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Hora</label>
                   <input type="time" value={form.hora} onChange={e => setForm(p => ({ ...p, hora: e.target.value }))} style={inp()} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Ubicación</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Ubicación</label>
                   <input value={form.ubicacion} onChange={e => setForm(p => ({ ...p, ubicacion: e.target.value }))} placeholder="Ciudad o plataforma" style={inp()} />
                 </div>
               </div>
@@ -917,9 +917,9 @@ export default function Eventos() {
               {form.hora2
                 ? <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>
                         Segundo horario
-                        <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af', marginLeft: 6 }}>opcional</span>
+                        <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--app-text-subtle)', marginLeft: 6 }}>opcional</span>
                       </label>
                       <input type="time" value={form.hora2} onChange={e => setForm(p => ({ ...p, hora2: e.target.value }))} style={inp({ maxWidth: 180 })} />
                     </div>
@@ -928,40 +928,40 @@ export default function Eventos() {
                       title="Quitar segundo horario">×</button>
                   </div>
                 : <button type="button" onClick={() => setForm(p => ({ ...p, hora2: '00:00' }))}
-                    style={{ alignSelf: 'flex-start', background: 'none', border: '1px dashed #e8e8ee', borderRadius: 8, padding: '7px 14px', fontSize: 12, color: '#9ca3af', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    style={{ alignSelf: 'flex-start', background: 'none', border: '1px dashed #e8e8ee', borderRadius: 8, padding: '7px 14px', fontSize: 12, color: 'var(--app-text-subtle)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                     + Agregar segundo horario
                   </button>
               }
 
               {/* Registros */}
-              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #f0f0f5', padding: '14px 16px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>👥 Registros</div>
+              <div style={{ background: 'var(--app-surface)', borderRadius: 12, border: '1px solid var(--app-border-light)', padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>👥 Registros</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                   {[['registrosMeta','Meta',1000],['registrosActuales','Actuales',1],['vipVendidas','VIP vendidas',1]].map(([k, label, step]) => (
                     <div key={k}>
-                      <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>{label}</label>
+                      <label style={{ display: 'block', fontSize: 12, color: 'var(--app-text-2)', marginBottom: 5 }}>{label}</label>
                       <input type="number" min="0" step={step} value={form[k] || 0} onChange={e => setForm(p => ({ ...p, [k]: Number(e.target.value) }))}
-                        style={{ width: '100%', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px', fontSize: 14, textAlign: 'center', outline: 'none', background: '#f9fafb', color: '#111827', boxSizing: 'border-box' }} />
+                        style={{ width: '100%', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px', fontSize: 14, textAlign: 'center', outline: 'none', background: 'var(--app-surface-alt)', color: 'var(--app-text)', boxSizing: 'border-box' }} />
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Presupuesto */}
-              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #f0f0f5', padding: '14px 16px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>$ Presupuesto</div>
+              <div style={{ background: 'var(--app-surface)', borderRadius: 12, border: '1px solid var(--app-border-light)', padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>$ Presupuesto</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                   {[['presupuestoTotal','Total'],['presupuestoGastado','Gastado']].map(([k, label]) => (
                     <div key={k}>
-                      <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>{label}</label>
+                      <label style={{ display: 'block', fontSize: 12, color: 'var(--app-text-2)', marginBottom: 5 }}>{label}</label>
                       <input type="number" min="0" step={50000} value={form[k] || 0} onChange={e => setForm(p => ({ ...p, [k]: Number(e.target.value) }))}
-                        style={{ width: '100%', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px', fontSize: 14, textAlign: 'center', outline: 'none', background: '#f9fafb', color: '#111827', boxSizing: 'border-box' }} />
+                        style={{ width: '100%', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px', fontSize: 14, textAlign: 'center', outline: 'none', background: 'var(--app-surface-alt)', color: 'var(--app-text)', boxSizing: 'border-box' }} />
                     </div>
                   ))}
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>Divisa</label>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--app-text-2)', marginBottom: 5 }}>Divisa</label>
                     <select value={form.divisa} onChange={e => setForm(p => ({ ...p, divisa: e.target.value }))}
-                      style={{ width: '100%', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px', fontSize: 14, outline: 'none', background: '#f9fafb', color: '#111827', boxSizing: 'border-box' }}>
+                      style={{ width: '100%', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px', fontSize: 14, outline: 'none', background: 'var(--app-surface-alt)', color: 'var(--app-text)', boxSizing: 'border-box' }}>
                       {DIVISAS.map(d => <option key={d}>{d}</option>)}
                     </select>
                   </div>
@@ -969,27 +969,27 @@ export default function Eventos() {
               </div>
 
               {/* Enlaces */}
-              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #f0f0f5', padding: '14px 16px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>🔗 Enlaces</div>
+              <div style={{ background: 'var(--app-surface)', borderRadius: 12, border: '1px solid var(--app-border-light)', padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>🔗 Enlaces</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>Página de registro</label>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--app-text-2)', marginBottom: 5 }}>Página de registro</label>
                     <input value={form.urlRegistro} onChange={e => setForm(p => ({ ...p, urlRegistro: e.target.value }))} placeholder="https://..." style={inp()} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 5 }}>Carpeta de Drive</label>
+                    <label style={{ display: 'block', fontSize: 12, color: 'var(--app-text-2)', marginBottom: 5 }}>Carpeta de Drive</label>
                     <input value={form.urlDrive} onChange={e => setForm(p => ({ ...p, urlDrive: e.target.value }))} placeholder="https://drive.google.com/..." style={inp()} />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 24px', borderTop: '1px solid #eee', background: '#f9fafb', borderRadius: '0 0 16px 16px', position: 'sticky', bottom: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 24px', borderTop: '1px solid var(--app-border-light)', background: 'var(--app-surface-alt)', borderRadius: '0 0 16px 16px', position: 'sticky', bottom: 0 }}>
               <div>
                 {editandoId && <button onClick={() => { eliminar(editandoId); setShowModal(false); }} style={{ padding: '9px 16px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Eliminar</button>}
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setShowModal(false)} style={{ padding: '9px 18px', border: '1px solid #e8e8ee', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
+                <button onClick={() => setShowModal(false)} style={{ padding: '9px 18px', border: '1px solid var(--app-border)', borderRadius: 8, background: 'var(--app-surface)', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
                 <button onClick={guardar} style={{ padding: '9px 20px', border: 'none', borderRadius: 8, background: '#e53e3e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{editandoId ? 'Guardar cambios' : 'Crear Evento'}</button>
               </div>
             </div>
@@ -1032,15 +1032,15 @@ export default function Eventos() {
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ width: 400, maxWidth: '94vw', background: '#f4f5f7', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 28px rgba(0,0,0,0.14)' }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 22px 18px', background: '#fff', borderBottom: '1px solid #e8e8ee' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 22px 18px', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>Historial de cambios</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Últimos 7 días · {historial.length} {historial.length === 1 ? 'registro' : 'registros'}</div>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)' }}>Historial de cambios</div>
+                  <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Últimos 7 días · {historial.length} {historial.length === 1 ? 'registro' : 'registros'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   {historial.length > 0 && (
                     <button onClick={() => { setHistorial([]); if (canSync.current) dbSet('eventos_historial', []); }}
-                      style={{ background: 'none', border: '1px solid #e8e8ee', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '4px 10px', borderRadius: 6 }}>
+                      style={{ background: 'none', border: '1px solid var(--app-border)', cursor: 'pointer', fontSize: 11, color: 'var(--app-text-subtle)', padding: '4px 10px', borderRadius: 6 }}>
                       Limpiar
                     </button>
                   )}
@@ -1053,21 +1053,21 @@ export default function Eventos() {
                 {historial.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block' }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <div style={{ fontSize: 13, color: '#9ca3af' }}>Sin cambios registrados</div>
+                    <div style={{ fontSize: 13, color: 'var(--app-text-subtle)' }}>Sin cambios registrados</div>
                   </div>
                 ) : grupos.filter(g => porGrupo[g]?.length).map(grupo => (
                   <div key={grupo}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10, paddingLeft: 2 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10, paddingLeft: 2 }}>
                       {grupo}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {porGrupo[grupo].map(entry => {
-                        const cfg = TIPO_CFG[entry.tipo] || { label: entry.tipo, bg: '#f3f4f6', color: '#6b7280' };
+                        const cfg = TIPO_CFG[entry.tipo] || { label: entry.tipo, bg: '#f3f4f6', color: 'var(--app-text-muted)' };
                         const dotColor = entry.color || colorForUser(entry.usuario || '');
                         return (
-                          <div key={entry.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e8e8ee', padding: '14px 16px' }}>
+                          <div key={entry.id} style={{ background: 'var(--app-surface)', borderRadius: 12, border: '1px solid var(--app-border)', padding: '14px 16px' }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', lineHeight: 1.3 }}>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)', lineHeight: 1.3 }}>
                                 {fmtFechaHora(entry.ts)}
                               </div>
                               <span style={{ fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: '3px 8px', borderRadius: 20, flexShrink: 0, letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
@@ -1075,18 +1075,18 @@ export default function Eventos() {
                               </span>
                             </div>
                             {entry.nombre && (
-                              <div style={{ fontSize: 12, color: '#374151', fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {entry.nombre}
                               </div>
                             )}
                             {entry.desc && (
-                              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 8, lineHeight: 1.4 }}>
+                              <div style={{ fontSize: 12, color: 'var(--app-text-muted)', marginBottom: 8, lineHeight: 1.4 }}>
                                 {entry.desc}
                               </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
-                              <span style={{ fontSize: 12, color: '#6b7280' }}>{entry.usuario || 'Usuario'}</span>
+                              <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>{entry.usuario || 'Usuario'}</span>
                             </div>
                           </div>
                         );

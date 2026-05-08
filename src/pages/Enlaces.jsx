@@ -153,12 +153,12 @@ export default function Enlaces() {
   }
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%' }}>
+    <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+      <div style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Enlaces</h1>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, marginTop: 2 }}>{enlaces.length} enlaces · {categoriasCon.length} categorías</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Enlaces</h1>
+          <p style={{ fontSize: 13, color: 'var(--app-text-subtle)', margin: 0, marginTop: 2 }}>{enlaces.length} enlaces · {categoriasCon.length} categorías</p>
         </div>
         {can('edit') && (
           <button onClick={abrir} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -171,9 +171,9 @@ export default function Enlaces() {
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           {/* Búsqueda */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 14px', minWidth: 220 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '7px 14px', minWidth: 220 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar enlaces..." style={{ border: 'none', outline: 'none', background: 'none', fontSize: 13, color: '#374151', width: '100%' }} />
+            <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar enlaces..." style={{ border: 'none', outline: 'none', background: 'none', fontSize: 13, color: 'var(--app-text-2)', width: '100%' }} />
           </div>
 
           {/* Filtros */}
@@ -182,7 +182,7 @@ export default function Enlaces() {
               const active = filtro === cat;
               const count = cat === 'Todos' ? enlaces.length : conteo(cat);
               return (
-                <button key={cat} onClick={() => setFiltro(cat)} style={{ border: active ? 'none' : '1px solid #e5e7eb', background: active ? '#111827' : '#fff', color: active ? '#fff' : '#6b7280', borderRadius: 20, padding: '5px 14px', fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer' }}>
+                <button key={cat} onClick={() => setFiltro(cat)} style={{ border: active ? 'none' : '1px solid var(--app-border)', background: active ? '#111827' : '#fff', color: active ? '#fff' : '#6b7280', borderRadius: 20, padding: '5px 14px', fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer' }}>
                   {cat}{count > 0 ? ` (${count})` : ''}
                 </button>
               );
@@ -191,7 +191,7 @@ export default function Enlaces() {
 
           {/* Botón colores de categorías */}
           <button onClick={() => setShowCatModal(true)} title="Personalizar colores de categorías"
-            style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#6b7280' }}
+            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--app-text-muted)' }}
             onMouseEnter={ev => ev.currentTarget.style.color = '#111827'}
             onMouseLeave={ev => ev.currentTarget.style.color = '#6b7280'}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -201,7 +201,7 @@ export default function Enlaces() {
           </button>
 
           {/* Control de tamaño */}
-          <div style={{ display: 'flex', gap: 2, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 3 }}>
+          <div style={{ display: 'flex', gap: 2, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: 3 }}>
             {['small', 'medium', 'large'].map(t => (
               <button key={t} onClick={() => setTamano(t)} title={t === 'small' ? 'Compacto' : t === 'medium' ? 'Normal' : 'Grande'}
                 style={{ background: tamano === t ? '#111827' : 'transparent', color: tamano === t ? '#fff' : '#9ca3af', border: 'none', borderRadius: 6, padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -213,7 +213,7 @@ export default function Enlaces() {
 
         {/* Grid o empty state */}
         {filtrados.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--app-text-subtle)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🔗</div>
             <p style={{ fontSize: 15, marginBottom: 4 }}>{enlaces.length === 0 ? 'Aún no hay enlaces' : 'No hay resultados'}</p>
             {enlaces.length === 0 && <p style={{ fontSize: 13 }}>Crea tu primer enlace con el botón "+ Nuevo Enlace"</p>}
@@ -226,29 +226,29 @@ export default function Enlaces() {
               const catStyle = getCatStyle(e.categoria);
               const menuOpen = menuAbierto === e.id;
               return (
-                <div key={e.id} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', position: 'relative' }}>
+                <div key={e.id} style={{ background: 'var(--app-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid var(--app-border)', position: 'relative' }}>
                   <div style={{ height: 4, background: catStyle.color, borderRadius: '12px 12px 0 0' }} />
                   <div style={{ padding: '16px 18px' }}>
                     {/* Ícono + nombre + 3 puntos */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
                       <TipoIcon tipo={e.tipo} color={catStyle.color} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.nombre}</div>
-                        <div style={{ fontSize: 12, color: '#9ca3af' }}>{getDomain(e.url)}</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--app-text)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.nombre}</div>
+                        <div style={{ fontSize: 12, color: 'var(--app-text-subtle)' }}>{getDomain(e.url)}</div>
                       </div>
                       {/* Botón 3 puntos — solo para quien puede editar */}
                       {can('edit') && <div style={{ position: 'relative', flexShrink: 0 }}>
                         <button onClick={() => setMenuAbierto(menuOpen ? null : e.id)}
-                          style={{ background: menuOpen ? '#f3f4f6' : 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, color: '#9ca3af', display: 'flex', alignItems: 'center' }}
+                          style={{ background: menuOpen ? '#f3f4f6' : 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 6, color: 'var(--app-text-subtle)', display: 'flex', alignItems: 'center' }}
                           onMouseEnter={ev => { if (!menuOpen) ev.currentTarget.style.background = '#f3f4f6'; ev.currentTarget.style.color = '#374151'; }}
                           onMouseLeave={ev => { if (!menuOpen) ev.currentTarget.style.background = 'none'; ev.currentTarget.style.color = '#9ca3af'; }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                         </button>
                         {/* Dropdown */}
                         {menuOpen && (
-                          <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', minWidth: 130, zIndex: 100, overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', minWidth: 130, zIndex: 100, overflow: 'hidden' }}>
                             <button onClick={() => { abrirEditar(e); setMenuAbierto(null); }}
-                              style={{ width: '100%', background: 'none', border: 'none', padding: '9px 14px', fontSize: 13, color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}
+                              style={{ width: '100%', background: 'none', border: 'none', padding: '9px 14px', fontSize: 13, color: 'var(--app-text-2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}
                               onMouseEnter={ev => ev.currentTarget.style.background = '#f9fafb'}
                               onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -271,7 +271,7 @@ export default function Enlaces() {
                       <span style={{ background: catStyle.bg, color: catStyle.color, fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 5, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {e.categoria}
                       </span>
-                      <a href={e.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+                      <a href={e.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: 'var(--app-text-subtle)', display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
                         onMouseEnter={ev => ev.currentTarget.style.color = '#374151'}
                         onMouseLeave={ev => ev.currentTarget.style.color = '#9ca3af'}>
                         Abrir
@@ -290,16 +290,16 @@ export default function Enlaces() {
       {/* Modal: colores de categorías */}
       {showCatModal && (
         <div onClick={ev => ev.target === ev.currentTarget && setShowCatModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Colores de Categorías</span>
-              <button onClick={() => setShowCatModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#9ca3af', cursor: 'pointer', lineHeight: 1 }}>×</button>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 14, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--app-border-light)' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--app-text)' }}>Colores de Categorías</span>
+              <button onClick={() => setShowCatModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: 'var(--app-text-subtle)', cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {CATEGORIAS.map(cat => (
                 <div key={cat}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{cat}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)' }}>{cat}</span>
                     <span style={{ background: (catColores[cat] || '#6b7280') + '22', color: catColores[cat] || '#6b7280', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 5, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {cat}
                     </span>
@@ -313,8 +313,8 @@ export default function Enlaces() {
                 </div>
               ))}
             </div>
-            <div style={{ padding: '12px 22px', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button onClick={() => setCatColores(CAT_COLORES_INIT)} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 13, cursor: 'pointer' }}>
+            <div style={{ padding: '12px 22px', borderTop: '1px solid var(--app-border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button onClick={() => setCatColores(CAT_COLORES_INIT)} style={{ background: 'none', border: 'none', color: 'var(--app-text-subtle)', fontSize: 13, cursor: 'pointer' }}>
                 Restaurar por defecto
               </button>
               <button onClick={() => setShowCatModal(false)} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
@@ -328,43 +328,43 @@ export default function Enlaces() {
       {/* Modal: nuevo / editar enlace */}
       {showModal && (
         <div onClick={ev => ev.target === ev.currentTarget && setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 500, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>{editandoId ? 'Editar Enlace' : 'Nuevo Enlace'}</span>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#9ca3af', cursor: 'pointer', lineHeight: 1, padding: '2px 4px' }}>×</button>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 14, width: '100%', maxWidth: 500, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--app-border-light)' }}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)' }}>{editandoId ? 'Editar Enlace' : 'Nuevo Enlace'}</span>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: 'var(--app-text-subtle)', cursor: 'pointer', lineHeight: 1, padding: '2px 4px' }}>×</button>
             </div>
             <div style={{ padding: '20px 22px' }}>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Nombre</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--app-text-2)', marginBottom: 5 }}>Nombre</label>
                 <input autoFocus value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} placeholder="Ej: Reporte Mensual Q4"
-                  style={{ width: '100%', border: `1.5px solid ${form.nombre ? '#dc2626' : '#e5e7eb'}`, borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: '#111827', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: `1.5px solid ${form.nombre ? '#dc2626' : '#e5e7eb'}`, borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: 'var(--app-text)', boxSizing: 'border-box' }}
                   onFocus={e => e.target.style.borderColor = '#dc2626'}
                   onBlur={e => { if (!form.nombre) e.target.style.borderColor = '#e5e7eb'; }} />
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>URL</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--app-text-2)', marginBottom: 5 }}>URL</label>
                 <input value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} placeholder="https://docs.google.com/..."
-                  style={{ width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: '#111827', background: '#f9fafb', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1.5px solid var(--app-border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: 'var(--app-text)', background: 'var(--app-surface-alt)', boxSizing: 'border-box' }}
                   onFocus={e => e.target.style.borderColor = '#dc2626'}
                   onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Tipo</label>
-                  <select value={form.tipo} onChange={e => setForm(p => ({ ...p, tipo: e.target.value }))} style={{ width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: '#111827', background: '#fff', cursor: 'pointer', boxSizing: 'border-box' }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--app-text-2)', marginBottom: 5 }}>Tipo</label>
+                  <select value={form.tipo} onChange={e => setForm(p => ({ ...p, tipo: e.target.value }))} style={{ width: '100%', border: '1.5px solid var(--app-border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: 'var(--app-text)', background: 'var(--app-surface)', cursor: 'pointer', boxSizing: 'border-box' }}>
                     {TIPOS.map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Categoría</label>
-                  <select value={form.categoria} onChange={e => setForm(p => ({ ...p, categoria: e.target.value }))} style={{ width: '100%', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: '#111827', background: '#fff', cursor: 'pointer', boxSizing: 'border-box' }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--app-text-2)', marginBottom: 5 }}>Categoría</label>
+                  <select value={form.categoria} onChange={e => setForm(p => ({ ...p, categoria: e.target.value }))} style={{ width: '100%', border: '1.5px solid var(--app-border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', color: 'var(--app-text)', background: 'var(--app-surface)', cursor: 'pointer', boxSizing: 'border-box' }}>
                     {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid #f3f4f6' }}>
-              <button onClick={() => setShowModal(false)} style={{ background: '#fff', border: '1.5px solid #e5e7eb', color: '#374151', borderRadius: 8, padding: '9px 20px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid var(--app-border-light)' }}>
+              <button onClick={() => setShowModal(false)} style={{ background: 'var(--app-surface)', border: '1.5px solid var(--app-border)', color: 'var(--app-text-2)', borderRadius: 8, padding: '9px 20px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
                 Cancelar
               </button>
               <button onClick={guardar} disabled={!form.nombre.trim() || !form.url.trim()}

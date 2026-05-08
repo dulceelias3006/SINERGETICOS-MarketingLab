@@ -4,6 +4,33 @@
   padding: 0;
 }
 
+/* ── App theme tokens ──────────────────────────────────────────────────────── */
+:root {
+  --app-bg: #f5f6fa;
+  --app-surface: #ffffff;
+  --app-surface-alt: #f9fafb;
+  --app-surface-2: #f3f4f6;
+  --app-border: #e8e8ee;
+  --app-border-light: #f0f0f5;
+  --app-text: #111827;
+  --app-text-2: #374151;
+  --app-text-muted: #6b7280;
+  --app-text-subtle: #9ca3af;
+}
+
+[data-theme="dark"] {
+  --app-bg: #0d0f17;
+  --app-surface: #161928;
+  --app-surface-alt: #111422;
+  --app-surface-2: #1c2035;
+  --app-border: #2a2f4a;
+  --app-border-light: #1e2238;
+  --app-text: #f0f1f5;
+  --app-text-2: #c4c9dc;
+  --app-text-muted: #8590b0;
+  --app-text-subtle: #6b7290;
+}
+
 :root {
   --bg-dark: #0a0a0f;
   --bg-card: #111118;
@@ -214,7 +241,7 @@ a { text-decoration: none; color: inherit; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #f5f6fa;
+  background: var(--app-bg);
   min-width: 0;
 }
 

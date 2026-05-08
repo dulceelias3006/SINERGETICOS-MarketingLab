@@ -196,11 +196,11 @@ export default function Dashboard() {
     return (
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <div style={{ color: '#9ca3af' }}>{icon}</div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</span>
+          <div style={{ color: 'var(--app-text-subtle)' }}>{icon}</div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</span>
         </div>
         <div style={{ fontSize: 34, fontWeight: 800, color: valueColor || '#111827', lineHeight: 1.1, letterSpacing: -0.5 }}>{value}</div>
-        {sub && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 6 }}>{sub}</div>}
         {extra}
       </div>
     );
@@ -210,10 +210,10 @@ export default function Dashboard() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ color: '#9ca3af' }}>{icon}</div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</span>
+          <div style={{ color: 'var(--app-text-subtle)' }}>{icon}</div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</span>
         </div>
-        {link && <a href={link} style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'none' }}>{linkLabel} →</a>}
+        {link && <a href={link} style={{ fontSize: 12, color: 'var(--app-text-subtle)', textDecoration: 'none' }}>{linkLabel} →</a>}
       </div>
     );
   }
@@ -240,10 +240,10 @@ export default function Dashboard() {
         const barColor = pctPresupuesto >= 100 ? '#ef4444' : '#4a9eff';
         const extra = (
           <div style={{ marginTop: 12 }}>
-            <div style={{ height: 5, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: 5, background: 'var(--app-surface-2)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${Math.min(pctPresupuesto, 100)}%`, background: barColor, borderRadius: 99 }} />
             </div>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 5 }}>{fmtMXN(totalGastado)} de {fmtMXN(totalPresupuesto)}</div>
+            <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 5 }}>{fmtMXN(totalGastado)} de {fmtMXN(totalPresupuesto)}</div>
           </div>
         );
         return statBlock(<IcoDollar />, 'Presupuesto', `${pctPresupuesto}%`, '#111827', null, extra);
@@ -278,7 +278,7 @@ export default function Dashboard() {
           <div>
             {panelHeader(<IcoCal />, 'Proximos Eventos', '/eventos', 'Ver todos')}
             {proximosFiltrados.length === 0
-              ? <div style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '24px 0' }}>Sin eventos próximos</div>
+              ? <div style={{ fontSize: 13, color: 'var(--app-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Sin eventos próximos</div>
               : (
                 <div style={{ display: 'grid', gridTemplateColumns: winWidth >= 700 ? '1fr 1fr' : '1fr', gap: 14 }}>
                   {proximosFiltrados.map(ev => {
@@ -289,31 +289,31 @@ export default function Dashboard() {
                       ? Math.min(100, Math.round((ev.presupuestoGastado || 0) / ev.presupuestoTotal * 100)) : 0;
                     const gasColor = (ev.presupuestoGastado || 0) > (ev.presupuestoTotal || 0) ? '#ef4444' : '#4a9eff';
                     return (
-                      <div key={ev.id} style={{ padding: 14, background: '#f9fafb', borderRadius: 12, border: '1px solid #f0f0f5' }}>
+                      <div key={ev.id} style={{ padding: 14, background: 'var(--app-surface-alt)', borderRadius: 12, border: '1px solid var(--app-border-light)' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', lineHeight: 1.3 }}>{ev.nombre}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)', lineHeight: 1.3 }}>{ev.nombre}</span>
                           {dias !== null && dias >= 0 && badgeDias(dias)}
                         </div>
-                        <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>
+                        <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginBottom: 12 }}>
                           {fmtFecha(ev.fecha)}{ev.tipo ? ` · ${ev.tipo.charAt(0).toUpperCase() + ev.tipo.slice(1)}` : ''}
                         </div>
                         <div style={{ display: 'flex', gap: 14 }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                              <span style={{ fontSize: 11, color: '#9ca3af' }}>Registros</span>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: '#374151' }}>{fmtN(ev.registrosActuales)}/{fmtN(ev.registrosMeta)}</span>
+                              <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>Registros</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-2)' }}>{fmtN(ev.registrosActuales)}/{fmtN(ev.registrosMeta)}</span>
                             </div>
-                            <div style={{ height: 4, background: '#e8e8ee', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ height: 4, background: 'var(--app-border)', borderRadius: 99, overflow: 'hidden' }}>
                               <div style={{ height: '100%', width: `${regPct}%`, background: pctColor(regPct), borderRadius: 99 }} />
                             </div>
                           </div>
                           {(ev.presupuestoTotal || 0) > 0 && (
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                                <span style={{ fontSize: 11, color: '#9ca3af' }}>Gastado</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: '#374151' }}>{fmtMXN(ev.presupuestoGastado)}</span>
+                                <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>Gastado</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-2)' }}>{fmtMXN(ev.presupuestoGastado)}</span>
                               </div>
-                              <div style={{ height: 4, background: '#e8e8ee', borderRadius: 99, overflow: 'hidden' }}>
+                              <div style={{ height: 4, background: 'var(--app-border)', borderRadius: 99, overflow: 'hidden' }}>
                                 <div style={{ height: '100%', width: `${gasW}%`, background: gasColor, borderRadius: 99 }} />
                               </div>
                             </div>
@@ -331,7 +331,7 @@ export default function Dashboard() {
         return (
           <div>
             {panelHeader(<IcoBar />, 'Avance General', '/eventos', 'Ver todos')}
-            {eventos.length === 0 && <div style={{ fontSize: 13, color: '#9ca3af' }}>Sin eventos</div>}
+            {eventos.length === 0 && <div style={{ fontSize: 13, color: 'var(--app-text-subtle)' }}>Sin eventos</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {eventos.map(e => {
                 const pct = (e.registrosMeta || 0) > 0
@@ -339,10 +339,10 @@ export default function Dashboard() {
                 return (
                   <div key={e.id}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>{e.nombre}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>{e.nombre}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: pctColor(pct) }}>{pct}%</span>
                     </div>
-                    <div style={{ height: 5, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 5, background: 'var(--app-surface-2)', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: pctColor(pct), borderRadius: 99 }} />
                     </div>
                   </div>
@@ -357,15 +357,15 @@ export default function Dashboard() {
           <div>
             {panelHeader(<IcoAlert />, 'Atencion Requerida', '/tickets', 'Tickets')}
             {ticketsUrgentesLista.length === 0
-              ? <div style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '20px 0' }}>Sin tickets urgentes</div>
+              ? <div style={{ fontSize: 13, color: 'var(--app-text-subtle)', textAlign: 'center', padding: '20px 0' }}>Sin tickets urgentes</div>
               : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {ticketsUrgentesLista.map(t => (
                     <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                       <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444', flexShrink: 0, marginTop: 4 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.titulo}</div>
-                        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--app-text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.titulo}</div>
+                        <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.3 }}>
                           {t.tipo || 'General'} · Urgente
                         </div>
                       </div>
@@ -383,16 +383,16 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7 }}>
-                  <span style={{ color: '#4ade80' }}><IcoDown /></span><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mejor Costo/Registro</span>
+                  <span style={{ color: '#4ade80' }}><IcoDown /></span><span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mejor Costo/Registro</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{mejorCostoEv?.nombre || '—'}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)' }}>{mejorCostoEv?.nombre || '—'}</div>
                 {mejorCostoEv && <div style={{ fontSize: 22, fontWeight: 800, color: '#4ade80', marginTop: 3 }}>{fmtMXN(mejorCostoEv.costoReg)}</div>}
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7 }}>
-                  <span style={{ color: '#ef4444' }}><IcoUp /></span><span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mayor Costo/Registro</span>
+                  <span style={{ color: '#ef4444' }}><IcoUp /></span><span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Mayor Costo/Registro</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{mayorCostoEv?.nombre || '—'}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)' }}>{mayorCostoEv?.nombre || '—'}</div>
                 {mayorCostoEv && <div style={{ fontSize: 22, fontWeight: 800, color: '#ef4444', marginTop: 3 }}>{fmtMXN(mayorCostoEv.costoReg)}</div>}
               </div>
             </div>
@@ -404,14 +404,14 @@ export default function Dashboard() {
           <div>
             {panelHeader(<IcoLink />, 'Accesos Rapidos', '/enlaces', 'Ver todos')}
             {enlaces.length === 0
-              ? <div style={{ fontSize: 13, color: '#9ca3af' }}>Sin enlaces guardados</div>
+              ? <div style={{ fontSize: 13, color: 'var(--app-text-subtle)' }}>Sin enlaces guardados</div>
               : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {enlaces.slice(0, 16).map(e => (
                     <a key={e.id} href={e.url} target="_blank" rel="noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px', background: '#f9fafb', border: '1px solid #f0f0f5', borderRadius: 20, fontSize: 12, fontWeight: 500, color: '#374151', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px', background: 'var(--app-surface-alt)', border: '1px solid var(--app-border-light)', borderRadius: 20, fontSize: 12, fontWeight: 500, color: 'var(--app-text-2)', textDecoration: 'none', whiteSpace: 'nowrap' }}
                       onMouseEnter={ev => { ev.currentTarget.style.background = '#f0f0f5'; }}
-                      onMouseLeave={ev => { ev.currentTarget.style.background = '#f9fafb'; }}>
+                      onMouseLeave={ev => { ev.currentTarget.style.background = 'var(--app-surface-alt)'; }}>
                       <div style={{ width: 7, height: 7, borderRadius: '50%', background: e.color || '#9ca3af', flexShrink: 0 }} />
                       {e.nombre}
                     </a>
@@ -426,7 +426,7 @@ export default function Dashboard() {
           <div>
             {panelHeader(<IcoClock />, 'Actividad Reciente', '/eventos', 'Eventos')}
             {historial.length === 0
-              ? <div style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', padding: '20px 0' }}>Sin actividad registrada</div>
+              ? <div style={{ fontSize: 13, color: 'var(--app-text-subtle)', textAlign: 'center', padding: '20px 0' }}>Sin actividad registrada</div>
               : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {historial.map(h => {
@@ -434,13 +434,13 @@ export default function Dashboard() {
                       creado:    { icon: '✨', color: '#4ade80', label: 'Creado'    },
                       editado:   { icon: '✏️', color: '#4a9eff', label: 'Editado'   },
                       eliminado: { icon: '🗑',  color: '#ef4444', label: 'Eliminado' },
-                    }[h.tipo] || { icon: '·', color: '#9ca3af', label: h.tipo };
+                    }[h.tipo] || { icon: '·', color: 'var(--app-text-subtle)', label: h.tipo };
                     return (
                       <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 28, height: 28, borderRadius: 8, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>{cfg.icon}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.nombre}</div>
-                          <div style={{ fontSize: 11, color: '#9ca3af' }}>{cfg.label} · {relTime(h.ts)}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.nombre}</div>
+                          <div style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>{cfg.label} · {relTime(h.ts)}</div>
                         </div>
                       </div>
                     );
@@ -451,7 +451,7 @@ export default function Dashboard() {
         );
 
       default:
-        return <div style={{ fontSize: 13, color: '#9ca3af' }}>Bloque no disponible</div>;
+        return <div style={{ fontSize: 13, color: 'var(--app-text-subtle)' }}>Bloque no disponible</div>;
     }
   }
 
@@ -463,24 +463,24 @@ export default function Dashboard() {
   const fechaHoy = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%' }}>
+    <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: winWidth < 600 ? '14px 16px 12px' : '20px 28px 16px', background: '#fff', borderBottom: '1px solid #e8e8ee', position: 'sticky', top: 0, zIndex: 20 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: winWidth < 600 ? '14px 16px 12px' : '20px 28px 16px', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 20 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: 0 }}>Centro de Control</h1>
-          <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 3 }}>{fechaHoy} · {bloques.length} bloques</div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Centro de Control</h1>
+          <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 3 }}>{fechaHoy} · {bloques.length} bloques</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {can('edit') && editando && (
             <button onClick={restablecer}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#9ca3af', padding: '7px 10px', borderRadius: 8 }}>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--app-text-subtle)', padding: '7px 10px', borderRadius: 8 }}>
               Restablecer
             </button>
           )}
           {can('edit') && (
             <button onClick={() => setEditando(!editando)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: editando ? '#111827' : '#fff', color: editando ? '#fff' : '#374151', border: `1px solid ${editando ? '#111827' : '#e8e8ee'}`, borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: editando ? '#111827' : 'var(--app-surface)', color: editando ? '#fff' : 'var(--app-text-2)', border: `1px solid ${editando ? '#111827' : 'var(--app-border)'}`, borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               {editando ? 'Listo' : 'Editar'}
             </button>
@@ -497,9 +497,9 @@ export default function Dashboard() {
       {/* Grid */}
       <div style={{ padding: winWidth < 600 ? '16px' : '24px 28px' }}>
         {bloques.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--app-text-subtle)' }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Sin bloques</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Sin bloques</div>
             <div style={{ fontSize: 13 }}>Agrega bloques con el botón "+ Agregar"</div>
           </div>
         ) : (
@@ -513,7 +513,7 @@ export default function Dashboard() {
                 onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
                 style={{
                   gridColumn: `span ${Math.min(b.colSpan, cols)}`,
-                  background: '#fff',
+                  background: 'var(--app-surface)',
                   borderRadius: 16,
                   padding: '22px 24px',
                   border: `1.5px solid ${dragOverId === b.id ? '#e53e3e' : '#f0f0f5'}`,
@@ -524,16 +524,16 @@ export default function Dashboard() {
                   transition: 'border-color 0.15s',
                 }}>
                 {editando && (
-                  <div style={{ position: 'absolute', top: -15, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 20, padding: '4px 8px', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}>
-                    <span style={{ color: '#9ca3af', fontSize: 12, padding: '0 3px', cursor: 'grab' }}>⠿</span>
+                  <div style={{ position: 'absolute', top: -15, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 20, padding: '4px 8px', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: 'var(--app-text-subtle)', fontSize: 12, padding: '0 3px', cursor: 'grab' }}>⠿</span>
                     {[1, 2, 3, 4].map(n => (
                       <button key={n} onClick={() => cambiarSpan(b.id, n)}
-                        style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, background: b.colSpan === n ? '#e53e3e' : 'transparent', color: b.colSpan === n ? '#fff' : '#374151', lineHeight: 1 }}>
+                        style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, background: b.colSpan === n ? '#e53e3e' : 'transparent', color: b.colSpan === n ? '#fff' : 'var(--app-text-2)', lineHeight: 1 }}>
                         {n}
                       </button>
                     ))}
                     <button onClick={() => eliminarBloque(b.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1, padding: '0 3px', marginLeft: 2 }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 16, lineHeight: 1, padding: '0 3px', marginLeft: 2 }}>
                       ×
                     </button>
                   </div>
@@ -549,39 +549,39 @@ export default function Dashboard() {
       {showPicker && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowPicker(false); }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 540, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 20, width: '100%', maxWidth: 540, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '22px 24px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <span style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Agregar Bloque</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--app-text)' }}>Agregar Bloque</span>
                 <button onClick={() => setShowPicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#f9fafb', border: '2px solid #e53e3e', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--app-surface-alt)', border: '2px solid #e53e3e', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input value={pickerQuery} onChange={e => setPickerQuery(e.target.value)} placeholder="Buscar bloques..."
-                  autoFocus style={{ background: 'none', border: 'none', outline: 'none', fontSize: 14, color: '#111827', flex: 1 }} />
+                  autoFocus style={{ background: 'none', border: 'none', outline: 'none', fontSize: 14, color: 'var(--app-text)', flex: 1 }} />
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {CATS.map(c => (
                   <button key={c.id} onClick={() => setPickerCat(c.id)}
-                    style={{ padding: '5px 12px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: pickerCat === c.id ? 700 : 500, background: pickerCat === c.id ? '#111827' : 'transparent', color: pickerCat === c.id ? '#fff' : '#6b7280' }}>
+                    style={{ padding: '5px 12px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: pickerCat === c.id ? 700 : 500, background: pickerCat === c.id ? '#111827' : 'transparent', color: pickerCat === c.id ? '#fff' : 'var(--app-text-muted)' }}>
                     {c.label} ({c.count})
                   </button>
                 ))}
               </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 16px' }}>
-              {bloquesFiltrados.length === 0 && <div style={{ textAlign: 'center', padding: '30px', color: '#9ca3af', fontSize: 13 }}>Sin resultados</div>}
+              {bloquesFiltrados.length === 0 && <div style={{ textAlign: 'center', padding: '30px', color: 'var(--app-text-subtle)', fontSize: 13 }}>Sin resultados</div>}
               {bloquesFiltrados.map(item => (
                 <div key={item.tipo} onClick={() => agregarBloque(item.tipo)}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px', borderRadius: 12, cursor: 'pointer' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.querySelector('.add-btn').style.opacity = '1'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-surface-alt)'; e.currentTarget.querySelector('.add-btn').style.opacity = '1'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.querySelector('.add-btn').style.opacity = '0'; }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--app-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--app-text-muted)', flexShrink: 0 }}>
                     {iconForTipo(item.tipo)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{item.nombre}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{item.desc}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--app-text)' }}>{item.nombre}</div>
+                    <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 1 }}>{item.desc}</div>
                   </div>
                   <span className="add-btn" style={{ fontSize: 18, fontWeight: 700, color: '#e53e3e', opacity: 0, transition: 'opacity 0.1s', flexShrink: 0 }}>+</span>
                 </div>

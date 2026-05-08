@@ -3,7 +3,7 @@ import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const ROLES = [
-  { id: 'viewer', label: 'Viewer', color: '#9ca3af' },
+  { id: 'viewer', label: 'Viewer', color: 'var(--app-text-subtle)' },
   { id: 'editor', label: 'Editor', color: '#3b82f6' },
   { id: 'admin',  label: 'Admin',  color: '#e53e3e' },
 ];
@@ -64,7 +64,7 @@ function RolPill({ usuario, onCambiarRol, canChange }) {
       <button
         ref={btnRef}
         onClick={handleOpen}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, background: '#f9fafb', border: `1.5px solid ${open ? '#e53e3e' : '#e5e7eb'}`, cursor: canChange ? 'pointer' : 'default', fontSize: 13, fontWeight: 500, color: '#374151', transition: 'border-color 0.15s' }}>
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, background: 'var(--app-surface-alt)', border: `1.5px solid ${open ? '#e53e3e' : '#e5e7eb'}`, cursor: canChange ? 'pointer' : 'default', fontSize: 13, fontWeight: 500, color: 'var(--app-text-2)', transition: 'border-color 0.15s' }}>
         <IcoShield color={rol.color} />
         <IcoShield color={rol.color} />
         <span style={{ marginLeft: 2 }}>{rol.label}</span>
@@ -72,12 +72,12 @@ function RolPill({ usuario, onCambiarRol, canChange }) {
       </button>
 
       {open && canChange && (
-        <div style={{ position: 'fixed', top: dropPos.top, right: dropPos.right, background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 9999, minWidth: 148, overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', top: dropPos.top, right: dropPos.right, background: 'var(--app-surface)', borderRadius: 10, border: '1px solid var(--app-border)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 9999, minWidth: 148, overflow: 'hidden' }}>
           {ROLES.map(r => {
             const selected = r.id === usuario.rol;
             return (
               <div key={r.id} onClick={() => { onCambiarRol(r.id); setOpen(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', background: selected ? '#fef9f9' : 'transparent', fontSize: 13, fontWeight: selected ? 600 : 400, color: '#374151' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', background: selected ? '#fef9f9' : 'transparent', fontSize: 13, fontWeight: selected ? 600 : 400, color: 'var(--app-text-2)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = selected ? '#fef9f9' : 'transparent'; }}>
                 {r.id === 'viewer' ? <IcoEye /> : <IcoShield color={r.color} />}
@@ -170,11 +170,11 @@ export default function Usuarios() {
     setShowModal(false);
   }
 
-  const inp = { background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 10px', fontSize: 13, color: '#374151', outline: 'none', width: 100 };
-  const fInp = { width: '100%', background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 10, padding: '10px 14px', fontSize: 14, color: '#111827', outline: 'none', boxSizing: 'border-box' };
+  const inp = { background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '6px 10px', fontSize: 13, color: 'var(--app-text-2)', outline: 'none', width: 100 };
+  const fInp = { width: '100%', background: 'var(--app-surface-alt)', border: '1.5px solid var(--app-border)', borderRadius: 10, padding: '10px 14px', fontSize: 14, color: 'var(--app-text)', outline: 'none', boxSizing: 'border-box' };
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%' }}>
+    <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
 
       {/* Header */}
       <div style={{ padding: '28px 32px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -182,8 +182,8 @@ export default function Usuarios() {
           <IcoUsers />
         </div>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Usuarios</h1>
-          <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>Administra los nombres y roles de los usuarios</div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Usuarios</h1>
+          <div style={{ fontSize: 13, color: 'var(--app-text-subtle)', marginTop: 2 }}>Administra los nombres y roles de los usuarios</div>
         </div>
         {can('add_users') && (
           <button onClick={abrirModal}
@@ -194,15 +194,15 @@ export default function Usuarios() {
       </div>
 
       {/* Table */}
-      <div style={{ margin: '0 32px 32px', background: '#fff', borderRadius: 16, border: '1px solid #f0f0f5', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: `2fr 2fr 180px ${can('add_users') ? '76px' : '40px'}`, padding: '12px 24px', borderBottom: '1px solid #f0f0f5' }}>
+      <div style={{ margin: '0 32px 32px', background: 'var(--app-surface)', borderRadius: 16, border: '1px solid var(--app-border-light)', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `2fr 2fr 180px ${can('add_users') ? '76px' : '40px'}`, padding: '12px 24px', borderBottom: '1px solid var(--app-border-light)' }}>
           {['USUARIO', 'EMAIL', 'ROL', ''].map((h, i) => (
-            <span key={i} style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 0.5, textAlign: i === 2 ? 'right' : 'left' }}>{h}</span>
+            <span key={i} style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textAlign: i === 2 ? 'right' : 'left' }}>{h}</span>
           ))}
         </div>
 
         {usuarios.length === 0 && (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>Sin usuarios</div>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--app-text-subtle)', fontSize: 14 }}>Sin usuarios</div>
         )}
 
         {usuarios.map(u => {
@@ -244,18 +244,18 @@ export default function Usuarios() {
                     <input value={editForm.apellido} onChange={e => setEditForm(p => ({ ...p, apellido: e.target.value }))} placeholder="Apellido" style={inp}
                       onKeyDown={e => { if (e.key === 'Enter') guardarNombre(); if (e.key === 'Escape') setEditandoId(null); }} />
                     <button onClick={guardarNombre} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#4ade80', fontSize: 16 }}>✓</button>
-                    <button onClick={() => setEditandoId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#9ca3af', fontSize: 16 }}>×</button>
+                    <button onClick={() => setEditandoId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--app-text-subtle)', fontSize: 16 }}>×</button>
                   </div>
                 ) : (
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>
-                    {u.nombre || <span style={{ color: '#9ca3af' }}>Sin nombre</span>}
-                    {esYo && <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 400, marginLeft: 6 }}>(tú)</span>}
+                  <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--app-text)' }}>
+                    {u.nombre || <span style={{ color: 'var(--app-text-subtle)' }}>Sin nombre</span>}
+                    {esYo && <span style={{ fontSize: 12, color: 'var(--app-text-subtle)', fontWeight: 400, marginLeft: 6 }}>(tú)</span>}
                   </span>
                 )}
               </div>
 
               {/* Email */}
-              <span style={{ fontSize: 13, color: '#6b7280' }}>{u.email}</span>
+              <span style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>{u.email}</span>
 
               {/* Rol */}
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -293,7 +293,7 @@ export default function Usuarios() {
         return (
           <>
             <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setColorPickerId(null)} />
-            <div style={{ position: 'fixed', top: colorPickerPos.top, left: colorPickerPos.left, background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', padding: 10, zIndex: 999, display: 'grid', gridTemplateColumns: 'repeat(5, 24px)', gap: 6 }}>
+            <div style={{ position: 'fixed', top: colorPickerPos.top, left: colorPickerPos.left, background: 'var(--app-surface)', borderRadius: 12, border: '1px solid var(--app-border)', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', padding: 10, zIndex: 999, display: 'grid', gridTemplateColumns: 'repeat(5, 24px)', gap: 6 }}>
               {AVATAR_COLORS.map(c => (
                 <button key={c} onClick={() => { save(usuarios.map(x => x.id === u.id ? { ...x, avatarBg: c } : x)); setColorPickerId(null); }}
                   style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: (u.avatarBg || '#9ca3af') === c ? '3px solid #111827' : '2px solid transparent', outline: (u.avatarBg || '#9ca3af') === c ? '2px solid #fff' : 'none', cursor: 'pointer', boxSizing: 'border-box' }} />
@@ -307,36 +307,36 @@ export default function Usuarios() {
       {showModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 18, width: '100%', maxWidth: 440, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 18, width: '100%', maxWidth: 440, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
 
             {/* Modal header */}
-            <div style={{ padding: '22px 24px 18px', borderBottom: '1px solid #f0f0f5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>Agregar usuario</span>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#9ca3af', lineHeight: 1 }}>×</button>
+            <div style={{ padding: '22px 24px 18px', borderBottom: '1px solid var(--app-border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)' }}>Agregar usuario</span>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--app-text-subtle)', lineHeight: 1 }}>×</button>
             </div>
 
             {/* Modal body */}
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 6 }}>Nombre</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Nombre</div>
                   <input value={nuevoForm.nombre} onChange={e => setNuevoForm(p => ({ ...p, nombre: e.target.value }))}
                     placeholder="Nombre" style={fInp} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 6 }}>Apellido</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Apellido</div>
                   <input value={nuevoForm.apellido} onChange={e => setNuevoForm(p => ({ ...p, apellido: e.target.value }))}
                     placeholder="Apellido" style={fInp} />
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 6 }}>Email <span style={{ color: '#ef4444' }}>*</span></div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Email <span style={{ color: '#ef4444' }}>*</span></div>
                 <input value={nuevoForm.email} onChange={e => { setNuevoForm(p => ({ ...p, email: e.target.value })); setFormError(''); }}
                   placeholder="correo@ejemplo.com" type="email" style={{ ...fInp, borderColor: formError ? '#ef4444' : '#e5e7eb' }} />
                 {formError && <div style={{ fontSize: 12, color: '#ef4444', marginTop: 5 }}>{formError}</div>}
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 6 }}>Rol</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Rol</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {ROLES.map(r => (
                     <button key={r.id} onClick={() => setNuevoForm(p => ({ ...p, rol: r.id }))}
@@ -350,9 +350,9 @@ export default function Usuarios() {
             </div>
 
             {/* Modal footer */}
-            <div style={{ padding: '16px 24px', borderTop: '1px solid #f0f0f5', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--app-border-light)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button onClick={() => setShowModal(false)}
-                style={{ padding: '9px 18px', background: 'transparent', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 14, fontWeight: 500, color: '#6b7280', cursor: 'pointer' }}>
+                style={{ padding: '9px 18px', background: 'transparent', border: '1.5px solid var(--app-border)', borderRadius: 10, fontSize: 14, fontWeight: 500, color: 'var(--app-text-muted)', cursor: 'pointer' }}>
                 Cancelar
               </button>
               <button onClick={agregarUsuario}

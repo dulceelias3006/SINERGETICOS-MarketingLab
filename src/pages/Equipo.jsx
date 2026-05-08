@@ -375,22 +375,22 @@ export default function Equipo() {
 
   const avatarPreviewMember = equipo.find(m => m.id === avatarEditorId);
   const previewM = avatarPreviewMember ? { ...avatarPreviewMember, avatarType: avatarDraft.type, avatarBg: avatarDraft.bg, avatarEmoji: avatarDraft.emoji, avatarPhoto: avatarDraft.photo } : null;
-  const inp = (extra = {}) => ({ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box', ...extra });
+  const inp = (extra = {}) => ({ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box', ...extra });
 
   const openEstado = openCell ? ESTADOS.find(e => e.key === asistencia[openCell.memberId]?.[openCell.dateStr]?.status) : null;
   const needsNote = openCell && (asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo_just');
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%' }} onClick={() => setOpenCell(null)}>
+    <div style={{ background: 'var(--app-bg)', minHeight: '100%' }} onClick={() => setOpenCell(null)}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0', background: '#fff', borderBottom: '1px solid #e8e8ee', position: 'sticky', top: 0, zIndex: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 20 }}>
         <div style={{ paddingBottom: 16 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Equipo</h1>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, marginTop: 2 }}>{equipo.length} miembros</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Equipo</h1>
+          <p style={{ fontSize: 13, color: 'var(--app-text-subtle)', margin: 0, marginTop: 2 }}>{equipo.length} miembros</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* Tab toggle */}
-          <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
+          <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
             {[['miembros','Miembros'],['asistencia','Asistencia']].map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === key ? 600 : 400, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#111827' : '#6b7280', boxShadow: tab === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                 {label}
@@ -415,11 +415,11 @@ export default function Equipo() {
               <div style={{ fontSize: 13 }}>Agrega el primer miembro con el botón "+ Agregar"</div>
             </div>
           ) : (
-            <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: 'var(--app-surface)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               {equipo.map((m, i) => (
                 <div key={m.id} draggable={can('edit')} onDragStart={() => can('edit') && onDragStart(i)} onDragOver={e => can('edit') && onDragOver(e, i)} onDrop={() => can('edit') && onDrop(i)} onDragEnd={onDragEnd}
                   style={{ opacity: dragIndex === i ? 0.4 : 1, borderTop: dragOver === i && dragIndex !== i ? '2px solid #e53e3e' : '2px solid transparent', transition: 'opacity 0.15s' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: expandido === m.id || i === equipo.length - 1 ? 'none' : '1px solid #f3f4f6', cursor: 'grab' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: expandido === m.id || i === equipo.length - 1 ? 'none' : '1px solid var(--app-border-light)', cursor: 'grab' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
                       <line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/>
                     </svg>
@@ -434,8 +434,8 @@ export default function Equipo() {
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{m.nombre}</div>
-                      <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{[m.puesto, m.departamento].filter(Boolean).join(' · ')}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--app-text)' }}>{m.nombre}</div>
+                      <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 1 }}>{[m.puesto, m.departamento].filter(Boolean).join(' · ')}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, cursor: 'default' }} onClick={e => e.stopPropagation()}>
                       {can('edit') && <button onClick={() => toggleAsistencia(m.id)} title={m.enAsistencia === false ? 'Excluido de asistencia (clic para incluir)' : 'Incluido en asistencia (clic para excluir)'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: m.enAsistencia === false ? '#ef4444' : '#bbb', display: 'flex', padding: 4 }}>{m.enAsistencia === false ? <EyeOffIcon /> : <EyeIcon />}</button>}
@@ -445,13 +445,13 @@ export default function Equipo() {
                     </div>
                   </div>
                   {expandido === m.id && (
-                    <div style={{ padding: '0 20px 14px 78px', borderBottom: i < equipo.length - 1 ? '1px solid #f3f4f6' : 'none', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                      {m.email && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 12 }}><span style={{ color: '#bbb', display: 'flex' }}><MailIcon /></span>{m.email}</div>}
-                      {m.telefono && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 12 }}><span style={{ color: '#bbb', display: 'flex' }}><PhoneIcon /></span>{m.telefono}</div>}
-                      {m.cumpleanos && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 12 }}>
+                    <div style={{ padding: '0 20px 14px 78px', borderBottom: i < equipo.length - 1 ? '1px solid var(--app-border-light)' : 'none', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                      {m.email && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--app-text-muted)', fontSize: 12 }}><span style={{ color: '#bbb', display: 'flex' }}><MailIcon /></span>{m.email}</div>}
+                      {m.telefono && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--app-text-muted)', fontSize: 12 }}><span style={{ color: '#bbb', display: 'flex' }}><PhoneIcon /></span>{m.telefono}</div>}
+                      {m.cumpleanos && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--app-text-muted)', fontSize: 12 }}>
                         <span style={{ color: '#bbb' }}>🎂</span>
                         {new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}
-                        <span style={{ color: '#9ca3af', fontSize: 11 }}>({new Date().getFullYear() - parseInt(m.cumpleanos.slice(0, 4))} años)</span>
+                        <span style={{ color: 'var(--app-text-subtle)', fontSize: 11 }}>({new Date().getFullYear() - parseInt(m.cumpleanos.slice(0, 4))} años)</span>
                       </div>}
                     </div>
                   )}
@@ -468,9 +468,9 @@ export default function Equipo() {
           {/* Legend */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 2 }}>Estados (clic en color para editar):</span>
+              <span style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginRight: 2 }}>Estados (clic en color para editar):</span>
               {todosEstados.map(e => (
-                <div key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 6, padding: '3px 7px 3px 5px' }}>
+                <div key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 6, padding: '3px 7px 3px 5px' }}>
                   {can('edit_asistencia') ? (
                     <label title={`Editar color: ${e.label}`} style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
                       <input type="color" value={estadoColores[e.key] || e.color}
@@ -480,52 +480,52 @@ export default function Equipo() {
                   ) : (
                     <div style={{ width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
                   )}
-                  <span style={{ fontSize: 11, color: '#6b7280' }}>{e.emoji} {e.label}</span>
+                  <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>{e.emoji} {e.label}</span>
                   {e.key.startsWith('custom_') && can('edit_asistencia') && (
                     <button onClick={() => eliminarEstado(e.key)} title="Eliminar estado" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 13, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
                   )}
                 </div>
               ))}
               {can('edit_asistencia') && (
-                <button onClick={() => setShowNewEstado(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: showNewEstado ? '#f3f4f6' : '#fff', border: '1px dashed #d1d5db', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 11, color: '#6b7280', fontWeight: 500 }}>
+                <button onClick={() => setShowNewEstado(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: showNewEstado ? '#f3f4f6' : '#fff', border: '1px dashed #d1d5db', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: 11, color: 'var(--app-text-muted)', fontWeight: 500 }}>
                   + Estado
                 </button>
               )}
             </div>
             {showNewEstado && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px 12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 12px', flexWrap: 'wrap' }}>
                 <label style={{ position: 'relative', width: 28, height: 28, borderRadius: 6, background: newEstadoForm.color, cursor: 'pointer', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }} title="Elegir color">
                   <input type="color" value={newEstadoForm.color} onChange={e => setNewEstadoForm(p => ({ ...p, color: e.target.value }))} style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
                 </label>
-                <input value={newEstadoForm.label} onChange={e => setNewEstadoForm(p => ({ ...p, label: e.target.value }))} placeholder="Nombre del estado" onKeyDown={e => e.key === 'Enter' && agregarEstado()} autoFocus style={{ border: '1px solid #e8e8ee', borderRadius: 6, padding: '5px 10px', fontSize: 12, outline: 'none', width: 160 }} />
-                <input value={newEstadoForm.emoji} onChange={e => setNewEstadoForm(p => ({ ...p, emoji: e.target.value }))} placeholder="Emoji (opcional)" style={{ border: '1px solid #e8e8ee', borderRadius: 6, padding: '5px 10px', fontSize: 12, outline: 'none', width: 130 }} />
+                <input value={newEstadoForm.label} onChange={e => setNewEstadoForm(p => ({ ...p, label: e.target.value }))} placeholder="Nombre del estado" onKeyDown={e => e.key === 'Enter' && agregarEstado()} autoFocus style={{ border: '1px solid var(--app-border)', borderRadius: 6, padding: '5px 10px', fontSize: 12, outline: 'none', width: 160 }} />
+                <input value={newEstadoForm.emoji} onChange={e => setNewEstadoForm(p => ({ ...p, emoji: e.target.value }))} placeholder="Emoji (opcional)" style={{ border: '1px solid var(--app-border)', borderRadius: 6, padding: '5px 10px', fontSize: 12, outline: 'none', width: 130 }} />
                 <button onClick={agregarEstado} style={{ padding: '5px 14px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Agregar</button>
-                <button onClick={() => setShowNewEstado(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid #e8e8ee', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#6b7280' }}>Cancelar</button>
+                <button onClick={() => setShowNewEstado(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid var(--app-border)', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--app-text-muted)' }}>Cancelar</button>
               </div>
             )}
           </div>
 
           {equipo.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9090a8', background: '#fff', borderRadius: 14 }}>
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9090a8', background: 'var(--app-surface)', borderRadius: 14 }}>
               <div style={{ fontSize: 13 }}>Agrega miembros primero en la pestaña Miembros.</div>
             </div>
           ) : (
-            <div style={{ background: '#fff', borderRadius: 14, overflow: 'auto', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: 'var(--app-surface)', borderRadius: 14, overflow: 'auto', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <table style={{ borderCollapse: 'collapse', minWidth: '100%' }}>
                 <thead>
                   {/* Month name row */}
                   <tr>
-                    <th rowSpan={2} style={{ position: 'sticky', left: 0, background: '#f8f9fa', zIndex: 5, padding: '8px 12px', textAlign: 'left', fontSize: 11, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid #e8e8ee', borderRight: '2px solid #e8e8ee', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, whiteSpace: 'nowrap', userSelect: 'none', verticalAlign: 'middle' }}>
+                    <th rowSpan={2} style={{ position: 'sticky', left: 0, background: '#f8f9fa', zIndex: 5, padding: '8px 12px', textAlign: 'left', fontSize: 11, color: 'var(--app-text-subtle)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid var(--app-border)', borderRight: '2px solid var(--app-border)', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, whiteSpace: 'nowrap', userSelect: 'none', verticalAlign: 'middle' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>Nombre</span>
                         <div onMouseDown={startResize} style={{ width: 6, height: 20, cursor: 'col-resize', borderRadius: 3, background: '#d1d5db', flexShrink: 0, marginRight: -4 }} title="Arrastra para redimensionar" />
                       </div>
                     </th>
-                    <th colSpan={weekdays.length} style={{ background: '#f8f9fa', borderBottom: '1px solid #e8e8ee', padding: '4px 8px' }}>
+                    <th colSpan={weekdays.length} style={{ background: '#f8f9fa', borderBottom: '1px solid var(--app-border)', padding: '4px 8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <button onClick={prevMonth} style={{ background: 'none', border: '1px solid #e8e8ee', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 15, color: '#555', lineHeight: 1 }}>‹</button>
-                        <span style={{ fontWeight: 700, fontSize: 12, color: '#374151', letterSpacing: 1, textTransform: 'uppercase', minWidth: 130, textAlign: 'center' }}>{MESES[viewDate.month]} {viewDate.year}</span>
-                        <button onClick={nextMonth} style={{ background: 'none', border: '1px solid #e8e8ee', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 15, color: '#555', lineHeight: 1 }}>›</button>
+                        <button onClick={prevMonth} style={{ background: 'none', border: '1px solid var(--app-border)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 15, color: '#555', lineHeight: 1 }}>‹</button>
+                        <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--app-text-2)', letterSpacing: 1, textTransform: 'uppercase', minWidth: 130, textAlign: 'center' }}>{MESES[viewDate.month]} {viewDate.year}</span>
+                        <button onClick={nextMonth} style={{ background: 'none', border: '1px solid var(--app-border)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 15, color: '#555', lineHeight: 1 }}>›</button>
                       </div>
                     </th>
                   </tr>
@@ -534,7 +534,7 @@ export default function Equipo() {
                     {weekdays.map(d => {
                       const feriadoNombre = feriadosMexico[d.dateStr];
                       return (
-                        <th key={d.dateStr} title={feriadoNombre || undefined} style={{ padding: '0', textAlign: 'center', borderBottom: '2px solid #e8e8ee', borderLeft: d.isMonday ? '2px solid #e8e8ee' : '1px solid #f3f4f6', minWidth: 26, width: 26, background: feriadoNombre ? 'rgba(232,121,240,0.1)' : 'transparent' }}>
+                        <th key={d.dateStr} title={feriadoNombre || undefined} style={{ padding: '0', textAlign: 'center', borderBottom: '2px solid var(--app-border)', borderLeft: d.isMonday ? '2px solid var(--app-border)' : '1px solid var(--app-border-light)', minWidth: 26, width: 26, background: feriadoNombre ? 'rgba(232,121,240,0.1)' : 'transparent' }}>
                           <div style={{ fontSize: 9, color: feriadoNombre ? '#d946ef' : '#bbb', paddingTop: 3 }}>{DIAS[d.dow]}</div>
                           <div style={{ fontSize: 10, fontWeight: 600, color: feriadoNombre ? '#d946ef' : '#374151', paddingBottom: 3 }}>{d.day}</div>
                         </th>
@@ -546,7 +546,7 @@ export default function Equipo() {
                   {equipo.filter(m => m.enAsistencia !== false).map((m, mi) => (
                     <tr key={m.id} style={{ background: mi % 2 === 0 ? '#fff' : '#fafafa' }}>
                       {/* Sticky name cell */}
-                      <td style={{ position: 'sticky', left: 0, background: mi % 2 === 0 ? '#fff' : '#fafafa', zIndex: 4, padding: '6px 12px', borderBottom: '1px solid #f3f4f6', borderRight: '2px solid #e8e8ee', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, overflow: 'hidden' }}>
+                      <td style={{ position: 'sticky', left: 0, background: mi % 2 === 0 ? '#fff' : '#fafafa', zIndex: 4, padding: '6px 12px', borderBottom: '1px solid var(--app-border-light)', borderRight: '2px solid var(--app-border)', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           {renderAvatar(m, 24)}
                           {editingAlias === m.id && can('edit_asistencia') ? (
@@ -554,10 +554,10 @@ export default function Equipo() {
                               onBlur={() => saveAlias(m.id)}
                               onKeyDown={e => { if (e.key === 'Enter') saveAlias(m.id); if (e.key === 'Escape') setEditingAlias(null); }}
                               onClick={e => e.stopPropagation()}
-                              style={{ fontSize: 12, fontWeight: 600, color: '#111827', border: '1px solid #e53e3e', borderRadius: 4, padding: '1px 4px', outline: 'none', flex: 1, minWidth: 0, background: '#fff' }} />
+                              style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text)', border: '1px solid #e53e3e', borderRadius: 4, padding: '1px 4px', outline: 'none', flex: 1, minWidth: 0, background: 'var(--app-surface)' }} />
                           ) : (
                             <span onClick={can('edit_asistencia') ? e => { e.stopPropagation(); startEditAlias(m); } : undefined} title={can('edit_asistencia') ? "Clic para editar nombre en asistencia" : undefined}
-                              style={{ fontSize: 12, fontWeight: 600, color: '#111827', cursor: can('edit_asistencia') ? 'text' : 'default', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text)', cursor: can('edit_asistencia') ? 'text' : 'default', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {m.aliasAsistencia || m.nombre}
                             </span>
                           )}
@@ -582,7 +582,7 @@ export default function Equipo() {
                             onClick={can('edit_asistencia') ? e => clickCell(e, m.id, d.dateStr) : undefined}
                             onMouseEnter={tooltipParts.length ? e => { const r = e.currentTarget.getBoundingClientRect(); setFeriadoTooltip({ text: tooltipParts.join(' · '), x: r.left + r.width / 2, y: r.top - 6 }); } : undefined}
                             onMouseLeave={tooltipParts.length ? () => setFeriadoTooltip(null) : undefined}
-                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid #f3f4f6', borderLeft: d.isMonday ? '2px solid #e8e8ee' : '1px solid #f3f4f6', background: color || 'transparent', cursor: can('edit_asistencia') ? 'pointer' : 'default', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle' }}>
+                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid var(--app-border-light)', borderLeft: d.isMonday ? '2px solid var(--app-border)' : '1px solid var(--app-border-light)', background: color || 'transparent', cursor: can('edit_asistencia') ? 'pointer' : 'default', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle' }}>
                             {(estado || esFeriado) && (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: 1 }}>
                                 {estado?.emoji ? <span style={{ fontSize: 15 }}>{estado.emoji}</span> : null}
@@ -619,8 +619,8 @@ export default function Equipo() {
 
       {/* Cell popover */}
       {openCell && (
-        <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', left: Math.min(openCell.x, window.innerWidth - 230), top: Math.min(openCell.y, window.innerHeight - 60), transform: openCell.y + 40 > window.innerHeight - 60 ? 'translateY(-100%)' : 'none', background: '#fff', border: '1px solid #e8e8ee', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 200, width: 220, overflow: 'hidden' }}>
-          <div style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6', fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
+        <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', left: Math.min(openCell.x, window.innerWidth - 230), top: Math.min(openCell.y, window.innerHeight - 60), transform: openCell.y + 40 > window.innerHeight - 60 ? 'translateY(-100%)' : 'none', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 200, width: 220, overflow: 'hidden' }}>
+          <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--app-border-light)', fontSize: 11, color: 'var(--app-text-subtle)', fontWeight: 600 }}>
             {openCell.dateStr}
           </div>
           <div style={{ padding: 6, maxHeight: 320, overflowY: 'auto' }}>
@@ -633,8 +633,8 @@ export default function Equipo() {
                   <button onClick={() => { if (!needNote) setEstado(e.key); else { setAsistencia(prev => { const md = { ...(prev[openCell.memberId] || {}) }; md[openCell.dateStr] = { status: e.key, note: noteInput }; return { ...prev, [openCell.memberId]: md }; }); } }}
                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 8px', border: 'none', borderRadius: 6, background: isCurrent ? cellColor + '33' : 'none', cursor: 'pointer', textAlign: 'left' }}>
                     <div style={{ width: 12, height: 12, borderRadius: 3, background: cellColor, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: '#374151', flex: 1 }}>{e.emoji} {e.label}</span>
-                    {isCurrent && <span style={{ fontSize: 10, color: '#9ca3af' }}>✓</span>}
+                    <span style={{ fontSize: 12, color: 'var(--app-text-2)', flex: 1 }}>{e.emoji} {e.label}</span>
+                    {isCurrent && <span style={{ fontSize: 10, color: 'var(--app-text-subtle)' }}>✓</span>}
                   </button>
                   {isCurrent && needNote && (
                     <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px 28px' }}>
@@ -646,7 +646,7 @@ export default function Equipo() {
               );
             })}
           </div>
-          <div style={{ padding: '6px 10px', borderTop: '1px solid #f3f4f6' }}>
+          <div style={{ padding: '6px 10px', borderTop: '1px solid var(--app-border-light)' }}>
             <button onClick={() => setEstado(null)} style={{ width: '100%', padding: '5px', border: 'none', borderRadius: 6, background: 'none', cursor: 'pointer', fontSize: 11, color: '#ef4444' }}>
               Limpiar celda
             </button>
@@ -657,14 +657,14 @@ export default function Equipo() {
       {/* Avatar Editor Modal */}
       {avatarEditorId && previewM && (
         <div onClick={e => { if (e.target === e.currentTarget) setAvatarEditorId(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 400 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee' }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Editar avatar</span>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 14, width: '100%', maxWidth: 400 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--app-border-light)' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--app-text)' }}>Editar avatar</span>
               <button onClick={() => setAvatarEditorId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
             </div>
             <div style={{ padding: '20px 20px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>{renderAvatar(previewM, 72)}</div>
-              <div style={{ display: 'flex', borderBottom: '1px solid #eee', marginBottom: 16 }}>
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--app-border-light)', marginBottom: 16 }}>
                 {[['color','Color de fondo'],['emoji','Emoji'],['foto','Foto']].map(([t, label]) => (
                   <button key={t} onClick={() => setAvatarTab(t)} style={{ flex: 1, padding: '8px 0', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: avatarTab === t ? 600 : 400, color: avatarTab === t ? '#e53e3e' : '#6b7280', borderBottom: avatarTab === t ? '2px solid #e53e3e' : '2px solid transparent', marginBottom: -1 }}>
                     {label}
@@ -679,7 +679,7 @@ export default function Equipo() {
                     ))}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <label style={{ fontSize: 12, color: '#6b7280' }}>Color personalizado</label>
+                    <label style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>Color personalizado</label>
                     <input type="color" value={avatarDraft.bg} onChange={e => setAvatarDraft(d => ({ ...d, type: 'initials', bg: e.target.value }))} style={{ width: 36, height: 30, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
                   </div>
                 </div>
@@ -694,7 +694,7 @@ export default function Equipo() {
                     ))}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <label style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap' }}>Fondo:</label>
+                    <label style={{ fontSize: 12, color: 'var(--app-text-muted)', whiteSpace: 'nowrap' }}>Fondo:</label>
                     <input type="color" value={avatarDraft.bg} onChange={e => setAvatarDraft(d => ({ ...d, bg: e.target.value }))} style={{ width: 36, height: 30, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
                   </div>
                 </div>
@@ -704,19 +704,19 @@ export default function Equipo() {
                   <input ref={fileRef} type="file" accept="image/*" onChange={onFotoChange} style={{ display: 'none' }} />
                   <div onClick={() => fileRef.current.click()} style={{ border: '2px dashed #ddd', borderRadius: 10, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: '#fafafa' }}>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>Haz clic para seleccionar una imagen</div>
+                    <div style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>Haz clic para seleccionar una imagen</div>
                     <div style={{ fontSize: 11, color: '#bbb', marginTop: 4 }}>JPG, PNG, GIF</div>
                   </div>
                   {avatarDraft.type === 'photo' && avatarDraft.photo && (
-                    <button onClick={() => setAvatarDraft(d => ({ ...d, type: 'initials', photo: '' }))} style={{ marginTop: 10, width: '100%', padding: '7px', border: '1px solid #eee', borderRadius: 8, background: 'none', cursor: 'pointer', fontSize: 12, color: '#e53e3e' }}>
+                    <button onClick={() => setAvatarDraft(d => ({ ...d, type: 'initials', photo: '' }))} style={{ marginTop: 10, width: '100%', padding: '7px', border: '1px solid var(--app-border-light)', borderRadius: 8, background: 'none', cursor: 'pointer', fontSize: 12, color: '#e53e3e' }}>
                       Quitar foto
                     </button>
                   )}
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 20px', borderTop: '1px solid #eee' }}>
-              <button onClick={() => setAvatarEditorId(null)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 20px', borderTop: '1px solid var(--app-border-light)' }}>
+              <button onClick={() => setAvatarEditorId(null)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 8, background: 'var(--app-surface)', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
               <button onClick={guardarAvatar} style={{ padding: '8px 18px', border: 'none', borderRadius: 8, background: '#e53e3e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Guardar</button>
             </div>
           </div>
@@ -726,43 +726,43 @@ export default function Equipo() {
       {/* Member Modal */}
       {showModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #eee' }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{editandoId ? 'Editar Miembro' : 'Nuevo Miembro'}</span>
+          <div style={{ background: 'var(--app-surface)', borderRadius: 14, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--app-border-light)' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--app-text)' }}>{editandoId ? 'Editar Miembro' : 'Nuevo Miembro'}</span>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
             </div>
             <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Nombre completo</label>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>Nombre completo</label>
                 <input value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} style={inp()} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Puesto</label>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>Puesto</label>
                 <input value={form.puesto} onChange={e => setForm(p => ({ ...p, puesto: e.target.value }))} style={inp()} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Email</label>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>Email</label>
                 <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} type="email" style={inp()} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Telefono</label>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>Telefono</label>
                   <input value={form.telefono} onChange={e => setForm(p => ({ ...p, telefono: e.target.value }))} style={inp()} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>Departamento</label>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>Departamento</label>
                   <input value={form.departamento} onChange={e => setForm(p => ({ ...p, departamento: e.target.value }))}
                     onFocus={() => setFocusDept(true)} onBlur={() => setFocusDept(false)}
                     style={inp(focusDept ? { border: '2px solid #e53e3e' } : {})} />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>🎂 Cumpleaños</label>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>🎂 Cumpleaños</label>
                 <input type="date" value={form.cumpleanos} onChange={e => setForm(p => ({ ...p, cumpleanos: e.target.value }))} style={inp()} />
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid #eee' }}>
-              <button onClick={() => setShowModal(false)} style={{ padding: '9px 18px', border: '1px solid #ddd', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid var(--app-border-light)' }}>
+              <button onClick={() => setShowModal(false)} style={{ padding: '9px 18px', border: '1px solid #ddd', borderRadius: 8, background: 'var(--app-surface)', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
               <button onClick={guardar} style={{ padding: '9px 20px', border: 'none', borderRadius: 8, background: '#e53e3e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                 {editandoId ? 'Guardar cambios' : 'Agregar'}
               </button>

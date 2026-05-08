@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const IcoDashboard = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -89,8 +90,24 @@ const navItems = [
   { path: '/usuarios',   label: 'Usuarios',   icon: <IcoUserGear /> },
 ];
 
+const IcoSun = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+);
+const IcoMoon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+);
+
 export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const { user, role, nombre: nombreAuth, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const nombre = nombreAuth || user?.email?.split('@')[0] || 'Usuario';
   const inicial = nombre[0]?.toUpperCase() || 'U';
@@ -139,6 +156,24 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             {!collapsed && item.label}
           </NavLink>
         ))}
+
+        <button
+          onClick={toggleTheme}
+          title={isDark ? 'Modo día' : 'Modo noche'}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: 10, padding: collapsed ? '10px 0' : '10px 14px',
+            margin: collapsed ? '2px 6px' : '2px 10px',
+            borderRadius: 10, border: 'none', cursor: 'pointer',
+            width: collapsed ? 'calc(100% - 12px)' : 'calc(100% - 20px)',
+            background: 'transparent', color: '#4b5563', fontSize: 13,
+            transition: 'background 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#9ca3af'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563'; }}>
+          {isDark ? <IcoSun /> : <IcoMoon />}
+          {!collapsed && (isDark ? 'Modo día' : 'Modo noche')}
+        </button>
 
         {!isMobile && (
           <button

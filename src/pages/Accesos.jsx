@@ -205,12 +205,12 @@ export default function Accesos() {
   }
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%' }}>
+    <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px', background: '#fff', borderBottom: '1px solid #e8e8ee', position: 'sticky', top: 0, zIndex: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 10 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Accesos</h1>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0, marginTop: 2 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Accesos</h1>
+          <p style={{ fontSize: 13, color: 'var(--app-text-subtle)', margin: 0, marginTop: 2 }}>
             {accesos.length} accesos · {categoriasUsadas.length} categorías
           </p>
         </div>
@@ -224,7 +224,7 @@ export default function Accesos() {
       <div style={{ padding: '20px 24px' }}>
         {/* Search + Filter tabs */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, padding: '8px 14px', flex: '1 1 200px', maxWidth: 380 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 14px', flex: '1 1 200px', maxWidth: 380 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9090a8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar accesos..." style={{ border: 'none', outline: 'none', background: 'none', fontSize: 13, color: '#1a1a2e', width: '100%' }} />
           </div>
@@ -235,7 +235,7 @@ export default function Accesos() {
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 2, marginLeft: 'auto', background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, padding: 3 }}>
+          <div style={{ display: 'flex', gap: 2, marginLeft: 'auto', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: 3 }}>
             {['small', 'medium', 'large'].map(s => (
               <button key={s} onClick={() => setTamano(s)} title={s} style={{ background: tamano === s ? '#e8e8ee' : 'none', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', color: tamano === s ? '#111827' : '#bbb', display: 'flex', alignItems: 'center' }}>
                 <SizeIcon size={s} />
@@ -259,14 +259,14 @@ export default function Accesos() {
                 const menuOpen = menuAbierto === a.id;
                 const domain = a.url ? getDomain(a.url) : null;
                 return (
-                  <div key={a.id} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', position: 'relative', overflow: 'visible' }}>
+                  <div key={a.id} style={{ background: 'var(--app-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', position: 'relative', overflow: 'visible' }}>
                     {/* Card header */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 14px 10px' }}>
                       <div style={{ width: 38, height: 38, borderRadius: 10, background: '#fff0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e53e3e', flexShrink: 0 }}>
                         <KeyIcon />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre}</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--app-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre}</div>
                         <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#f0f0f4', color: '#666', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'inline-block', marginTop: 3 }}>{a.categoria}</span>
                       </div>
                       {/* 3-dot menu — solo para quien puede editar */}
@@ -274,7 +274,7 @@ export default function Accesos() {
                         <div style={{ position: 'relative', flexShrink: 0, zIndex: menuOpen ? 60 : 1 }}>
                           <button onClick={() => setMenuAbierto(menuOpen ? null : a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 20, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }}>⋯</button>
                           {menuOpen && (
-                            <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #e8e8ee', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 130, overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 130, overflow: 'hidden' }}>
                               <button onClick={() => { abrirEditar(a); setMenuAbierto(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', textAlign: 'left', fontSize: 13, cursor: 'pointer', color: '#333' }}><PencilIcon /> Editar</button>
                               <button onClick={() => { eliminar(a.id); setMenuAbierto(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', textAlign: 'left', fontSize: 13, cursor: 'pointer', color: '#e53e3e' }}><TrashIcon /> Eliminar</button>
                             </div>
@@ -284,11 +284,11 @@ export default function Accesos() {
                     </div>
 
                     {/* Card data */}
-                    <div style={{ borderTop: '1px solid #f3f4f6', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <div style={{ borderTop: '1px solid var(--app-border-light)', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
                       {/* Usuario */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ color: '#bbb', display: 'flex', flexShrink: 0 }}><UserIcon /></span>
-                        <span style={{ fontSize: 12, color: '#6b7280', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.usuario || '—'}</span>
+                        <span style={{ fontSize: 12, color: 'var(--app-text-muted)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.usuario || '—'}</span>
                         {a.usuario && (
                           <button onClick={() => copiar(a.usuario, `u-${a.id}`)} title="Copiar usuario" style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiado === `u-${a.id}` ? '#4ade80' : '#bbb', padding: '1px', display: 'flex', flexShrink: 0 }}>
                             <CopyIcon />
@@ -298,7 +298,7 @@ export default function Accesos() {
                       {/* Contraseña — oculta siempre para Viewer */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ color: '#bbb', display: 'flex', flexShrink: 0 }}><LockIcon /></span>
-                        <span style={{ fontSize: 12, color: '#6b7280', flex: 1, letterSpacing: (can('edit') && showPassRow[a.id]) ? 0 : 1 }}>
+                        <span style={{ fontSize: 12, color: 'var(--app-text-muted)', flex: 1, letterSpacing: (can('edit') && showPassRow[a.id]) ? 0 : 1 }}>
                           {(can('edit') && showPassRow[a.id]) ? (a.contrasena || '—') : '•••••••'}
                         </span>
                         {can('edit') && (
@@ -316,7 +316,7 @@ export default function Accesos() {
                       {domain && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ display: 'flex', color: '#bbb', flexShrink: 0 }}><GlobeIcon /></span>
-                          <span style={{ fontSize: 12, color: '#6b7280', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{domain}</span>
+                          <span style={{ fontSize: 12, color: 'var(--app-text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{domain}</span>
                           <a href={a.url.startsWith('http') ? a.url : 'https://' + a.url} target="_blank" rel="noopener noreferrer" style={{ color: '#bbb', display: 'flex', flexShrink: 0 }}>
                             <ExternalIcon />
                           </a>
@@ -335,7 +335,7 @@ export default function Accesos() {
       {showModal && (
         <div onClick={e => { if (e.target === e.currentTarget) cerrarModal(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
           <div style={{ background: '#f5f5f7', borderRadius: 14, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #e0e0e6', background: '#fff', borderRadius: '14px 14px 0 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #e0e0e6', background: 'var(--app-surface)', borderRadius: '14px 14px 0 0' }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a2e' }}>{editandoId ? 'Editar Acceso' : 'Nuevo Acceso'}</span>
               <button onClick={cerrarModal} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1, padding: '0 4px' }}>×</button>
             </div>
@@ -343,23 +343,23 @@ export default function Accesos() {
               {/* Nombre */}
               <div style={{ marginBottom: 14 }}>
                 <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 5 }}>Nombre del servicio *</label>
-                <input value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} placeholder="Ej: Facebook Ads, Google Analytics" style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }} />
+                <input value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} placeholder="Ej: Facebook Ads, Google Analytics" style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box' }} />
               </div>
               {/* URL */}
               <div style={{ marginBottom: 14 }}>
                 <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 5 }}>URL</label>
-                <input value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} placeholder="https://..." style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }} />
+                <input value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} placeholder="https://..." style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box' }} />
               </div>
               {/* Usuario + Contraseña */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 5 }}>Usuario</label>
-                  <input value={form.usuario} onChange={e => setForm(p => ({ ...p, usuario: e.target.value }))} placeholder="usuario@email.com" style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }} />
+                  <input value={form.usuario} onChange={e => setForm(p => ({ ...p, usuario: e.target.value }))} placeholder="usuario@email.com" style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 5 }}>Contraseña</label>
                   <div style={{ position: 'relative' }}>
-                    <input value={form.contrasena} onChange={e => setForm(p => ({ ...p, contrasena: e.target.value }))} type={showPassModal ? 'text' : 'password'} placeholder="••••••••" style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 36px 10px 12px', fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }} />
+                    <input value={form.contrasena} onChange={e => setForm(p => ({ ...p, contrasena: e.target.value }))} type={showPassModal ? 'text' : 'password'} placeholder="••••••••" style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 36px 10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box' }} />
                     <button onClick={() => setShowPassModal(p => !p)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', display: 'flex', alignItems: 'center' }}>
                       <EyeIcon open={showPassModal} />
                     </button>
@@ -369,12 +369,12 @@ export default function Accesos() {
               {/* Categoría */}
               <div style={{ marginBottom: 14, position: 'relative' }}>
                 <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 5 }}>Categoría</label>
-                <button onClick={() => setShowCatDrop(p => !p)} style={{ width: '100%', border: '2px solid #e53e3e', borderRadius: 8, padding: '10px 12px', fontSize: 13, background: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#1a1a2e', boxSizing: 'border-box' }}>
+                <button onClick={() => setShowCatDrop(p => !p)} style={{ width: '100%', border: '2px solid #e53e3e', borderRadius: 8, padding: '10px 12px', fontSize: 13, background: 'var(--app-surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#1a1a2e', boxSizing: 'border-box' }}>
                   <span>{form.categoria}</span>
                   <ChevronIcon />
                 </button>
                 {showCatDrop && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, background: '#fff', border: '1px solid #e0e0e6', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 200, overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, background: 'var(--app-surface)', border: '1px solid #e0e0e6', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 200, overflow: 'hidden' }}>
                     {CATEGORIAS.map(cat => (
                       <button key={cat} onClick={() => { setForm(p => ({ ...p, categoria: cat })); setShowCatDrop(false); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: form.categoria === cat ? '#f8f8fa' : '#fff', cursor: 'pointer', fontSize: 13, color: '#1a1a2e', textAlign: 'left' }}>
                         {form.categoria === cat ? <CheckIcon /> : <span style={{ width: 14, display: 'inline-block' }} />}
@@ -387,11 +387,11 @@ export default function Accesos() {
               {/* Notas */}
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 5 }}>Notas</label>
-                <textarea value={form.notas} onChange={e => setForm(p => ({ ...p, notas: e.target.value }))} placeholder="Información adicional..." rows={3} style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', resize: 'vertical', background: '#fff', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                <textarea value={form.notas} onChange={e => setForm(p => ({ ...p, notas: e.target.value }))} placeholder="Información adicional..." rows={3} style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', resize: 'vertical', background: 'var(--app-surface)', boxSizing: 'border-box', fontFamily: 'inherit' }} />
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid #e0e0e6', background: '#fff', borderRadius: '0 0 14px 14px' }}>
-              <button onClick={cerrarModal} style={{ padding: '9px 18px', border: '1px solid #ddd', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid #e0e0e6', background: 'var(--app-surface)', borderRadius: '0 0 14px 14px' }}>
+              <button onClick={cerrarModal} style={{ padding: '9px 18px', border: '1px solid #ddd', borderRadius: 8, background: 'var(--app-surface)', cursor: 'pointer', fontSize: 13, color: '#555' }}>Cancelar</button>
               <button onClick={guardar} style={{ padding: '9px 20px', border: 'none', borderRadius: 8, background: '#e53e3e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                 {editandoId ? 'Guardar cambios' : 'Crear Acceso'}
               </button>
