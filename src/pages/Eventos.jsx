@@ -472,77 +472,137 @@ export default function Eventos() {
   }
 
   function exportarPDF() {
-    const TIPO_CFG_PDF = {
-      creado:    { label: 'Creado',    color: '#16a34a', bg: '#dcfce7' },
-      editado:   { label: 'Editado',  color: '#2563eb', bg: '#dbeafe' },
-      eliminado: { label: 'Eliminado',color: '#dc2626', bg: '#fee2e2' },
-      ajustado:  { label: 'Ajustado', color: '#7c3aed', bg: '#ede9fe' },
-    };
     const hoy = new Date();
     const hoyStr = hoy.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const hoyM = new Date(hoy); hoyM.setHours(0, 0, 0, 0);
-    const ayerM = new Date(hoyM); ayerM.setDate(ayerM.getDate() - 1);
 
-    function grupoLabel(ts) {
-      const d = new Date(ts); d.setHours(0, 0, 0, 0);
-      if (d.getTime() === hoyM.getTime()) return 'Hoy';
-      if (d.getTime() === ayerM.getTime()) return 'Ayer';
-      return new Date(ts).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+    const ESTADO_LABEL = { activo: 'Activo', planificado: 'Planificado', completado: 'Completado', cancelado: 'Cancelado' };
+    const ESTADO_COLOR = { activo: '#16a34a', planificado: '#f59e0b', completado: '#2563eb', cancelado: '#dc2626' };
+
+    // Totales globales
+    const totalReg = eventos.reduce((s, e) => s + (e.registrosActuales || 0), 0);
+    const totalMeta = eventos.reduce((s, e) => s + (e.registrosMeta || 0), 0);
+    const totalVip = eventos.reduce((s, e) => s + (e.vipVendidas || 0), 0);
+    const pctGlobal = totalMeta > 0 ? Math.round(totalReg / totalMeta * 100) : 0;
+    const activos = eventos.filter(e => e.estado === 'activo').length;
+    const planificados = eventos.filter(e => e.estado === 'planificado').length;
+    const completados = eventos.filter(e => e.estado === 'completado').length;
+
+    // Agrupados por región
+    const sinRegion = eventos.filter(e => !e.region);
+    const regionesConEventos = [
+      ...regiones.map(r => ({
+        label: r.label, color: r.color,
+        evs: eventos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')),
+      })),
+      ...(sinRegion.length > 0 ? [{ label: 'Sin región', color: '#9ca3af', evs: sinRegion }] : []),
+    ].filter(g => g.evs.length > 0);
+
+    function fmtNum(n, div = 'MXN') {
+      return `$${Number(n || 0).toLocaleString('es-MX')} ${div}`;
+    }
+    function fechaCorta(f) {
+      if (!f) return '—';
+      return new Date(f + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
-    const gruposOrden = [];
-    const porGrupo = {};
-    historial.forEach(e => {
-      const g = grupoLabel(e.ts);
-      if (!porGrupo[g]) { porGrupo[g] = []; gruposOrden.push(g); }
-      porGrupo[g].push(e);
-    });
-    const gruposUniq = [...new Set(gruposOrden)];
+    const regionSections = regionesConEventos.map(grupo => {
+      const evsSorted = [...grupo.evs].sort((a, b) => {
+        if (!a.fecha && !b.fecha) return 0;
+        if (!a.fecha) return 1;
+        if (!b.fecha) return -1;
+        return new Date(a.fecha) - new Date(b.fecha);
+      });
 
-    const sections = gruposUniq.map(grupo => {
-      const rows = porGrupo[grupo].map(e => {
-        const cfg = TIPO_CFG_PDF[e.tipo] || { label: e.tipo, color: '#6b7280', bg: '#f3f4f6' };
-        const hora = new Date(e.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
-        const dot = e.color || colorForUser(e.usuario || '');
+      const rows = evsSorted.map(ev => {
+        const pct = ev.registrosMeta > 0 ? Math.round((ev.registrosActuales || 0) / ev.registrosMeta * 100) : 0;
+        const gastadoPct = ev.presupuestoTotal > 0 ? Math.round((ev.presupuestoGastado || 0) / ev.presupuestoTotal * 100) : 0;
+        const costoRegNum = ev.registrosActuales > 0 && ev.presupuestoGastado > 0
+          ? Math.round(ev.presupuestoGastado / ev.registrosActuales) : null;
+        const costoReg = costoRegNum !== null ? `$${costoRegNum.toLocaleString('es-MX')} ${ev.divisa || 'MXN'}` : '—';
+        const estadoColor = ESTADO_COLOR[ev.estado] || '#6b7280';
+        const estadoLabel = ESTADO_LABEL[ev.estado] || ev.estado;
+
         return `<tr>
-          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;white-space:nowrap;">${hora}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;">${e.nombre || '—'}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;"><span style="font-size:11px;font-weight:700;color:${cfg.color};background:${cfg.bg};padding:3px 9px;border-radius:20px;">${cfg.label}</span></td>
-          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;">${e.desc || '—'}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;white-space:nowrap;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dot};margin-right:5px;vertical-align:middle;"></span>${e.usuario || 'Usuario'}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;">${ev.nombre}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;white-space:nowrap;">${fechaCorta(ev.fecha)}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;"><span style="font-size:11px;font-weight:700;color:${estadoColor};background:${estadoColor}18;padding:3px 9px;border-radius:20px;">${estadoLabel}</span></td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827;text-align:right;">${(ev.registrosActuales || 0).toLocaleString('es-MX')}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;text-align:right;">${(ev.registrosMeta || 0).toLocaleString('es-MX')}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:${pct >= 80 ? '#16a34a' : pct >= 50 ? '#f59e0b' : '#dc2626'};text-align:right;">${pct}%</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827;text-align:right;">${(ev.vipVendidas || 0).toLocaleString('es-MX')}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;text-align:right;">${ev.presupuestoTotal ? fmtNum(ev.presupuestoTotal, ev.divisa) : '—'}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:${gastadoPct > 100 ? '#dc2626' : '#111827'};text-align:right;">${ev.presupuestoGastado ? `${fmtNum(ev.presupuestoGastado, ev.divisa)} (${gastadoPct}%)` : '—'}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;text-align:right;">${costoReg}</td>
         </tr>`;
       }).join('');
-      return `<div style="margin-bottom:28px;">
-        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #e8e8ee;">${grupo}</div>
-        <table style="width:100%;border-collapse:collapse;">
-          <thead><tr>
-            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Hora</th>
-            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Evento</th>
-            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Acción</th>
-            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Descripción</th>
-            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:7px 14px;background:#f9fafb;">Usuario</th>
+
+      const regReg = grupo.evs.reduce((s, e) => s + (e.registrosActuales || 0), 0);
+      const regMeta = grupo.evs.reduce((s, e) => s + (e.registrosMeta || 0), 0);
+      const regPct = regMeta > 0 ? Math.round(regReg / regMeta * 100) : 0;
+
+      return `<div style="margin-bottom:32px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;background:${grupo.color}12;border-left:4px solid ${grupo.color};border-radius:0 8px 8px 0;">
+          <span style="font-size:13px;font-weight:800;color:${grupo.color};letter-spacing:0.5px;">${grupo.label}</span>
+          <span style="font-size:11px;color:${grupo.color};opacity:0.7;">${grupo.evs.length} evento${grupo.evs.length !== 1 ? 's' : ''} · ${regReg.toLocaleString('es-MX')} / ${regMeta.toLocaleString('es-MX')} registros (${regPct}%)</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:#f9fafb;">
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Evento</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Fecha</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Estado</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Registros</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Meta</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">%</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">VIP</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Presupuesto</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Gastado</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Costo/Reg</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
     }).join('');
 
-    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte de Cambios</title>
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte de Eventos</title>
     <style>
       * { box-sizing: border-box; }
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; margin: 0; padding: 40px 48px; background: #fff; color: #111827; }
-      @media print { body { padding: 24px 32px; } }
+      @media print { body { padding: 20px 28px; } }
     </style></head><body>
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #111827;">
-      <div>
-        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Sinergeticos · Marketing Lab</div>
-        <h1 style="font-size:24px;font-weight:800;color:#111827;margin:0 0 4px;">Reporte de Cambios en Eventos</h1>
-        <p style="font-size:13px;color:#6b7280;margin:0;">${hoyStr} · ${historial.length} ${historial.length === 1 ? 'registro' : 'registros'}</p>
-      </div>
+    <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #111827;">
+      <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Sinergeticos · Marketing Lab</div>
+      <h1 style="font-size:24px;font-weight:800;color:#111827;margin:0 0 4px;">Reporte de Eventos</h1>
+      <p style="font-size:13px;color:#6b7280;margin:0;">${hoyStr}</p>
     </div>
-    ${historial.length === 0
-      ? '<p style="text-align:center;color:#9ca3af;padding:60px 0;font-size:14px;">Sin cambios registrados en los últimos 7 días</p>'
-      : sections}
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:32px;">
+      ${[
+        ['Total eventos', eventos.length, '#111827'],
+        ['Activos', activos, '#16a34a'],
+        ['Planificados', planificados, '#f59e0b'],
+        ['Completados', completados, '#2563eb'],
+        ['Avance global', `${pctGlobal}%`, pctGlobal >= 80 ? '#16a34a' : pctGlobal >= 50 ? '#f59e0b' : '#dc2626'],
+      ].map(([label, val, color]) => `
+        <div style="background:#f9fafb;border-radius:10px;padding:14px 16px;border:1px solid #e8e8ee;">
+          <div style="font-size:20px;font-weight:800;color:${color};margin-bottom:3px;">${val}</div>
+          <div style="font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${label}</div>
+        </div>`).join('')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:36px;">
+      ${[
+        ['Total registros', totalReg.toLocaleString('es-MX'), '#111827'],
+        ['Meta total', totalMeta.toLocaleString('es-MX'), '#6b7280'],
+        ['VIP totales', totalVip.toLocaleString('es-MX'), '#7c3aed'],
+      ].map(([label, val, color]) => `
+        <div style="background:#f9fafb;border-radius:10px;padding:14px 16px;border:1px solid #e8e8ee;">
+          <div style="font-size:20px;font-weight:800;color:${color};margin-bottom:3px;">${val}</div>
+          <div style="font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${label}</div>
+        </div>`).join('')}
+    </div>
+
+    ${regionSections}
+
     <div style="margin-top:40px;padding-top:14px;border-top:1px solid #e8e8ee;font-size:11px;color:#9ca3af;display:flex;justify-content:space-between;">
       <span>Generado el ${hoy.toLocaleString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
       <span>marketinglab.sinergeticos.mx</span>
@@ -616,6 +676,12 @@ export default function Eventos() {
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#fff', color: '#374151', border: '1px solid #e8e8ee', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Historial
+          </button>
+
+          <button onClick={exportarPDF} title="Exportar reporte PDF"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#fff', color: '#374151', border: '1px solid #e8e8ee', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Reporte PDF
           </button>
 
           {can('edit') && (
@@ -982,11 +1048,6 @@ export default function Eventos() {
                   <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Últimos 7 días · {historial.length} {historial.length === 1 ? 'registro' : 'registros'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button onClick={exportarPDF}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#e53e3e', border: 'none', cursor: 'pointer', fontSize: 11, color: '#fff', padding: '5px 11px', borderRadius: 6, fontWeight: 600 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                    PDF
-                  </button>
                   {historial.length > 0 && (
                     <button onClick={() => { setHistorial([]); if (canSync.current) dbSet('eventos_historial', []); }}
                       style={{ background: 'none', border: '1px solid #e8e8ee', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: '4px 10px', borderRadius: 6 }}>
