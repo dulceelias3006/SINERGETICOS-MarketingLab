@@ -525,7 +525,7 @@ export default function Eventos() {
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827;text-align:right;">${(ev.vipVendidas || 0).toLocaleString('es-MX')}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;text-align:right;">${ev.presupuestoTotal ? fmtNum(ev.presupuestoTotal, ev.divisa) : '—'}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:${gastadoPct > 100 ? '#dc2626' : '#111827'};text-align:right;">${ev.presupuestoGastado ? `${fmtNum(ev.presupuestoGastado, ev.divisa)} (${gastadoPct}%)` : '—'}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;text-align:right;">${costoReg}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:${costoColor(costoRegNum, ev.region)};text-align:right;">${costoReg}</td>
         </tr>`;
       }).join('');
 
