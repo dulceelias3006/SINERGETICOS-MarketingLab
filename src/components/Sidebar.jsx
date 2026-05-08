@@ -120,16 +120,63 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
     <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
 
       {/* Header */}
-      <div style={{ padding: collapsed ? '20px 0 22px' : '20px 16px 22px', display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-        <div style={{ width: 44, height: 44, background: '#e53e3e', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-          🐝
-        </div>
-        {!collapsed && (
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#f1f1f5', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>SINERGÉTICOS</div>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Marketing Lab</div>
+      <div style={{ padding: collapsed ? '20px 0 14px' : '20px 16px 14px', display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'flex-start', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : 'flex-start', width: '100%' }}>
+          <div style={{ width: 44, height: 44, background: '#e53e3e', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+            🐝
           </div>
-        )}
+          {!collapsed && (
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#f1f1f5', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>SINERGÉTICOS</div>
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Marketing Lab</div>
+            </div>
+          )}
+        </div>
+
+        {/* Theme pill toggle */}
+        <button
+          onClick={toggleTheme}
+          title={isDark ? 'Modo día' : 'Modo noche'}
+          style={{
+            position: 'relative',
+            width: collapsed ? 44 : 60,
+            height: collapsed ? 24 : 28,
+            borderRadius: 99,
+            background: isDark ? '#252840' : '#e53e3e',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            flexShrink: 0,
+            transition: 'background 0.3s',
+          }}>
+          {/* Sun icon */}
+          {!collapsed && (
+            <span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#555d7a' : '#fff', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
+              <IcoSun />
+            </span>
+          )}
+          {/* Moon icon */}
+          {!collapsed && (
+            <span style={{ position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#f0f1f5' : 'rgba(255,255,255,0.45)', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
+              <IcoMoon />
+            </span>
+          )}
+          {/* Knob */}
+          <span style={{
+            position: 'absolute',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: collapsed ? 18 : 22,
+            height: collapsed ? 18 : 22,
+            borderRadius: '50%',
+            background: '#fff',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+            transition: 'left 0.3s',
+            left: isDark
+              ? (collapsed ? 23 : 34)
+              : 3,
+          }} />
+        </button>
       </div>
 
       {/* Nav */}
@@ -156,24 +203,6 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             {!collapsed && item.label}
           </NavLink>
         ))}
-
-        <button
-          onClick={toggleTheme}
-          title={isDark ? 'Modo día' : 'Modo noche'}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
-            gap: 10, padding: collapsed ? '10px 0' : '10px 14px',
-            margin: collapsed ? '2px 6px' : '2px 10px',
-            borderRadius: 10, border: 'none', cursor: 'pointer',
-            width: collapsed ? 'calc(100% - 12px)' : 'calc(100% - 20px)',
-            background: 'transparent', color: '#4b5563', fontSize: 13,
-            transition: 'background 0.15s, color 0.15s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#9ca3af'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563'; }}>
-          {isDark ? <IcoSun /> : <IcoMoon />}
-          {!collapsed && (isDark ? 'Modo día' : 'Modo noche')}
-        </button>
 
         {!isMobile && (
           <button
