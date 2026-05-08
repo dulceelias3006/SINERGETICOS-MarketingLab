@@ -187,6 +187,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             to={item.path}
             end={item.end}
             title={collapsed ? item.label : undefined}
+            className={({ isActive }) => isActive ? 'nav-active' : undefined}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
               gap: collapsed ? 0 : 12, padding: collapsed ? '11px 0' : '11px 14px',
@@ -196,8 +197,8 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               textDecoration: 'none', fontSize: 14, fontWeight: isActive ? 600 : 400,
               transition: 'background 0.15s, color 0.15s', overflow: 'hidden', whiteSpace: 'nowrap',
             })}
-            onMouseEnter={e => { if (!e.currentTarget.style.background.includes('e53e3e')) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-            onMouseLeave={e => { if (!e.currentTarget.style.background.includes('e53e3e')) e.currentTarget.style.background = 'transparent'; }}
+            onMouseEnter={e => { if (!e.currentTarget.classList.contains('nav-active')) e.currentTarget.style.background = 'var(--sidebar-hover)'; }}
+            onMouseLeave={e => { if (!e.currentTarget.classList.contains('nav-active')) e.currentTarget.style.background = 'transparent'; }}
           >
             {item.icon}
             {!collapsed && item.label}
