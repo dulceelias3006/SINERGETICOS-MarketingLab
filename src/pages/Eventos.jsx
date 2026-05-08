@@ -475,24 +475,21 @@ export default function Eventos() {
     const hoy = new Date();
     const hoyStr = hoy.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    const ESTADO_LABEL = { activo: 'Activo', planificado: 'Planificado', completado: 'Completado', cancelado: 'Cancelado' };
-    const ESTADO_COLOR = { activo: '#16a34a', planificado: '#f59e0b', completado: '#2563eb', cancelado: '#dc2626' };
+    // Solo eventos activos
+    const eventosActivos = eventos.filter(e => e.estado === 'activo');
 
-    // Totales globales
-    const totalReg = eventos.reduce((s, e) => s + (e.registrosActuales || 0), 0);
-    const totalMeta = eventos.reduce((s, e) => s + (e.registrosMeta || 0), 0);
-    const totalVip = eventos.reduce((s, e) => s + (e.vipVendidas || 0), 0);
+    // Totales globales (solo activos)
+    const totalReg = eventosActivos.reduce((s, e) => s + (e.registrosActuales || 0), 0);
+    const totalMeta = eventosActivos.reduce((s, e) => s + (e.registrosMeta || 0), 0);
+    const totalVip = eventosActivos.reduce((s, e) => s + (e.vipVendidas || 0), 0);
     const pctGlobal = totalMeta > 0 ? Math.round(totalReg / totalMeta * 100) : 0;
-    const activos = eventos.filter(e => e.estado === 'activo').length;
-    const planificados = eventos.filter(e => e.estado === 'planificado').length;
-    const completados = eventos.filter(e => e.estado === 'completado').length;
 
-    // Agrupados por región
-    const sinRegion = eventos.filter(e => !e.region);
+    // Agrupados por región (solo activos)
+    const sinRegion = eventosActivos.filter(e => !e.region);
     const regionesConEventos = [
       ...regiones.map(r => ({
         label: r.label, color: r.color,
-        evs: eventos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')),
+        evs: eventosActivos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')),
       })),
       ...(sinRegion.length > 0 ? [{ label: 'Sin región', color: '#9ca3af', evs: sinRegion }] : []),
     ].filter(g => g.evs.length > 0);
@@ -519,13 +516,9 @@ export default function Eventos() {
         const costoRegNum = ev.registrosActuales > 0 && ev.presupuestoGastado > 0
           ? Math.round(ev.presupuestoGastado / ev.registrosActuales) : null;
         const costoReg = costoRegNum !== null ? `$${costoRegNum.toLocaleString('es-MX')} ${ev.divisa || 'MXN'}` : '—';
-        const estadoColor = ESTADO_COLOR[ev.estado] || '#6b7280';
-        const estadoLabel = ESTADO_LABEL[ev.estado] || ev.estado;
-
         return `<tr>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:#111827;">${ev.nombre}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;white-space:nowrap;">${fechaCorta(ev.fecha)}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;"><span style="font-size:11px;font-weight:700;color:${estadoColor};background:${estadoColor}18;padding:3px 9px;border-radius:20px;">${estadoLabel}</span></td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#111827;text-align:right;">${(ev.registrosActuales || 0).toLocaleString('es-MX')}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#6b7280;text-align:right;">${(ev.registrosMeta || 0).toLocaleString('es-MX')}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:700;color:${pct >= 80 ? '#16a34a' : pct >= 50 ? '#f59e0b' : '#dc2626'};text-align:right;">${pct}%</td>
@@ -549,7 +542,6 @@ export default function Eventos() {
           <thead><tr style="background:#f9fafb;">
             <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Evento</th>
             <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Fecha</th>
-            <th style="text-align:left;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Estado</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Registros</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">Meta</th>
             <th style="text-align:right;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;">%</th>
@@ -575,12 +567,11 @@ export default function Eventos() {
       <p style="font-size:13px;color:#6b7280;margin:0;">${hoyStr}</p>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:32px;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;">
       ${[
-        ['Total eventos', eventos.length, '#111827'],
-        ['Activos', activos, '#16a34a'],
-        ['Planificados', planificados, '#f59e0b'],
-        ['Completados', completados, '#2563eb'],
+        ['Eventos activos', eventosActivos.length, '#16a34a'],
+        ['Total registros', totalReg.toLocaleString('es-MX'), '#111827'],
+        ['Meta total', totalMeta.toLocaleString('es-MX'), '#6b7280'],
         ['Avance global', `${pctGlobal}%`, pctGlobal >= 80 ? '#16a34a' : pctGlobal >= 50 ? '#f59e0b' : '#dc2626'],
       ].map(([label, val, color]) => `
         <div style="background:#f9fafb;border-radius:10px;padding:14px 16px;border:1px solid #e8e8ee;">
@@ -589,11 +580,10 @@ export default function Eventos() {
         </div>`).join('')}
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:36px;">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:36px;">
       ${[
-        ['Total registros', totalReg.toLocaleString('es-MX'), '#111827'],
-        ['Meta total', totalMeta.toLocaleString('es-MX'), '#6b7280'],
         ['VIP totales', totalVip.toLocaleString('es-MX'), '#7c3aed'],
+        ['Regiones activas', regionesConEventos.length, '#111827'],
       ].map(([label, val, color]) => `
         <div style="background:#f9fafb;border-radius:10px;padding:14px 16px;border:1px solid #e8e8ee;">
           <div style="font-size:20px;font-weight:800;color:${color};margin-bottom:3px;">${val}</div>
