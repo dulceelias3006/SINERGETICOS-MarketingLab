@@ -23,6 +23,8 @@
   --sidebar-hover: rgba(255,255,255,0.05);
   --sidebar-footer-border: rgba(255,255,255,0.06);
   --sidebar-title: #f1f1f5;
+  --sidebar-logo-bg: #e53e3e;
+  --sidebar-active-bg: #e53e3e;
 }
 
 [data-theme="dark"] {
@@ -36,13 +38,15 @@
   --app-text-2: #c4c9dc;
   --app-text-muted: #8590b0;
   --app-text-subtle: #6b7290;
-  --sidebar-bg: #e8e9ec;
-  --sidebar-border: #d2d3d8;
-  --sidebar-text: #374151;
-  --sidebar-text-muted: #6b7280;
-  --sidebar-hover: rgba(0,0,0,0.05);
-  --sidebar-footer-border: rgba(0,0,0,0.08);
-  --sidebar-title: #111827;
+  --sidebar-bg: #e53e3e;
+  --sidebar-border: #c0392b;
+  --sidebar-text: #ffffff;
+  --sidebar-text-muted: rgba(255,255,255,0.7);
+  --sidebar-hover: rgba(0,0,0,0.12);
+  --sidebar-footer-border: rgba(255,255,255,0.2);
+  --sidebar-title: #ffffff;
+  --sidebar-logo-bg: #1a1a2e;
+  --sidebar-active-bg: rgba(0,0,0,0.2);
 }
 
 :root {

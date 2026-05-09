@@ -122,7 +122,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
       {/* Header */}
       <div style={{ padding: collapsed ? '20px 0 14px' : '20px 16px 14px', display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'flex-start', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : 'flex-start', width: '100%' }}>
-          <div style={{ width: 44, height: 44, background: '#e53e3e', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, background: 'var(--sidebar-logo-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
             🐝
           </div>
           {!collapsed && (
@@ -142,7 +142,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             width: collapsed ? 44 : 60,
             height: collapsed ? 24 : 28,
             borderRadius: 99,
-            background: isDark ? '#e53e3e' : '#252840',
+            background: isDark ? '#fff' : '#252840',
             border: 'none',
             cursor: 'pointer',
             padding: 0,
@@ -151,13 +151,13 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           }}>
           {/* Sun icon */}
           {!collapsed && (
-            <span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? 'rgba(255,255,255,0.45)' : '#fff', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
+            <span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? 'rgba(0,0,0,0.3)' : '#fff', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
               <IcoSun />
             </span>
           )}
           {/* Moon icon */}
           {!collapsed && (
-            <span style={{ position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#fff' : 'rgba(255,255,255,0.35)', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
+            <span style={{ position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#374151' : 'rgba(255,255,255,0.35)', display: 'flex', transition: 'color 0.3s', pointerEvents: 'none' }}>
               <IcoMoon />
             </span>
           )}
@@ -169,7 +169,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             width: collapsed ? 18 : 22,
             height: collapsed ? 18 : 22,
             borderRadius: '50%',
-            background: '#fff',
+            background: isDark ? '#e53e3e' : '#fff',
             boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
             transition: 'left 0.3s',
             left: isDark
@@ -193,7 +193,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               gap: collapsed ? 0 : 12, padding: collapsed ? '11px 0' : '11px 14px',
               margin: collapsed ? '2px 6px' : '2px 10px', borderRadius: 10,
               color: isActive ? '#ffffff' : 'var(--sidebar-text)',
-              background: isActive ? '#e53e3e' : 'transparent',
+              background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
               textDecoration: 'none', fontSize: 14, fontWeight: isActive ? 600 : 400,
               transition: 'background 0.15s, color 0.15s', overflow: 'hidden', whiteSpace: 'nowrap',
             })}
@@ -215,11 +215,11 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               margin: collapsed ? '10px 6px 4px' : '10px 10px 4px',
               borderRadius: 10, border: 'none', cursor: 'pointer',
               width: collapsed ? 'calc(100% - 12px)' : 'calc(100% - 20px)',
-              background: 'transparent', color: '#4b5563', fontSize: 13,
+              background: 'transparent', color: 'var(--sidebar-text-muted)', fontSize: 13,
               transition: 'background 0.15s, color 0.15s',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--sidebar-hover)'; e.currentTarget.style.color = 'var(--sidebar-text)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--sidebar-text-muted)'; }}
           >
             {collapsed ? <IcoChevronRight /> : <><IcoChevronLeft /><span>Colapsar</span></>}
           </button>
@@ -232,24 +232,24 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           <button
             onClick={signOut}
             title="Cerrar sesión"
-            style={{ width: 32, height: 32, borderRadius: '50%', background: '#e53e3e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}>
+            style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--sidebar-logo-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}>
             {inicial}
           </button>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#e53e3e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--sidebar-logo-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
               {inicial}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, color: 'var(--sidebar-title)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nombre}</div>
-              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{roleLabel}</div>
+              <div style={{ fontSize: 11, color: 'var(--sidebar-text-muted)', marginTop: 1 }}>{roleLabel}</div>
             </div>
             <button
               onClick={signOut}
               title="Cerrar sesión"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
-              onMouseEnter={e => e.currentTarget.style.color = '#9ca3af'}
-              onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sidebar-text-muted)', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--sidebar-title)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--sidebar-text-muted)'}>
               <IcoLogout />
             </button>
           </div>
