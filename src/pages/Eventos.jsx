@@ -308,7 +308,7 @@ export default function Eventos() {
   const [historial, setHistorial] = useState([]);
 
   const [vista, setVista] = useState('grid');
-  const [filtro, setFiltro] = useState('todos');
+  const [filtro, setFiltro] = useState('activo');
   const [showModal, setShowModal] = useState(false);
   const [showTiposModal, setShowTiposModal] = useState(false);
   const [showRegionesConfig, setShowRegionesConfig] = useState(false);
