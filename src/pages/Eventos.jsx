@@ -686,7 +686,7 @@ export default function Eventos() {
       {/* ── Filter tabs ── */}
       <div style={{ padding: '12px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
-            {[['todos','Todos'],['activo','Activos'],['planificado','Planificados'],['completado','Completados']].map(([key, label]) => (
+            {[['activo','Activos'],['planificado','Planificados'],['completado','Completados'],['todos','Todos']].map(([key, label]) => (
               <button key={key} onClick={() => setFiltro(key)}
                 style={{ padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: filtro === key ? 700 : 500, background: filtro === key ? '#111827' : 'var(--app-surface-2)', color: filtro === key ? '#fff' : 'var(--app-text-muted)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 {label}
