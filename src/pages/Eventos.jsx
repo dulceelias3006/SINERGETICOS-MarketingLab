@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import EventosDigitales from '../components/EventosDigitales';
 
 const ESTADOS_CONFIG = [
   { key: 'planificado', label: 'Planificado', color: '#f59e0b' },
@@ -307,6 +308,8 @@ export default function Eventos() {
 
   const [historial, setHistorial] = useState([]);
 
+  const [modo, setModo] = useState('presenciales');
+  const digitalesRef = useRef();
   const [vista, setVista] = useState('grid');
   const [filtro, setFiltro] = useState('activo');
   const [showModal, setShowModal] = useState(false);
@@ -634,57 +637,79 @@ export default function Eventos() {
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: '0 0 16px' }}>Eventos</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-
-          {/* Vista toggle */}
-          <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
-            {[['grid','⊞ Todos'],['regiones','⊟ Regiones']].map(([key, label]) => (
-              <button key={key} onClick={() => setVista(key)}
-                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: vista === key ? 700 : 400, background: vista === key ? 'var(--app-surface)' : 'transparent', color: vista === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: vista === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Eventos</h1>
+          {/* Switcher Presenciales / Digitales */}
+          <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 10, padding: 3 }}>
+            {[['presenciales','🏟 Presenciales'],['digitales','📡 Digitales']].map(([key, label]) => (
+              <button key={key} onClick={() => setModo(key)}
+                style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: modo === key ? 700 : 500, background: modo === key ? 'var(--app-surface)' : 'transparent', color: modo === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: modo === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
                 {label}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Regiones config */}
-          {vista === 'regiones' && (
-            <button onClick={() => setShowRegionesConfig(true)} title="Editar colores de regiones"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              {regiones.map(r => <span key={r.id} style={{ width: 8, height: 8, borderRadius: '50%', background: r.color, display: 'inline-block' }} />)}
-              Regiones
-            </button>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          {modo === 'presenciales' ? (
+            <>
+              {/* Vista toggle */}
+              <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
+                {[['grid','⊞ Todos'],['regiones','⊟ Regiones']].map(([key, label]) => (
+                  <button key={key} onClick={() => setVista(key)}
+                    style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: vista === key ? 700 : 400, background: vista === key ? 'var(--app-surface)' : 'transparent', color: vista === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: vista === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
 
-          <button onClick={() => setShowTiposModal(true)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Tipos
-          </button>
+              {vista === 'regiones' && (
+                <button onClick={() => setShowRegionesConfig(true)} title="Editar colores de regiones"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  {regiones.map(r => <span key={r.id} style={{ width: 8, height: 8, borderRadius: '50%', background: r.color, display: 'inline-block' }} />)}
+                  Regiones
+                </button>
+              )}
 
-          <button onClick={() => setShowHistorial(true)} title="Ver historial"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Historial
-          </button>
+              <button onClick={() => setShowTiposModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Tipos
+              </button>
 
-          <button onClick={exportarPDF} title="Exportar reporte PDF"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-            Reporte PDF
-          </button>
+              <button onClick={() => setShowHistorial(true)} title="Ver historial"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Historial
+              </button>
 
-          {can('edit') && (
-            <button onClick={abrir}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-              + Nuevo Evento
-            </button>
+              <button onClick={exportarPDF} title="Exportar reporte PDF"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                Reporte PDF
+              </button>
+
+              {can('edit') && (
+                <button onClick={abrir}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                  + Nuevo Evento
+                </button>
+              )}
+            </>
+          ) : (
+            can('edit') && (
+              <button onClick={() => digitalesRef.current?.abrir()}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                + Nueva Serie
+              </button>
+            )
           )}
         </div>
       </div>
 
-      {/* ── Filter tabs ── */}
-      <div style={{ padding: '12px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
+      {/* ── Filter tabs — solo en modo presenciales ── */}
+      {modo === 'presenciales' && (
+        <div style={{ padding: '12px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {[['activo','Activos'],['planificado','Planificados'],['completado','Completados'],['todos','Todos']].map(([key, label]) => (
               <button key={key} onClick={() => setFiltro(key)}
@@ -695,9 +720,13 @@ export default function Eventos() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* ── DIGITALES ── */}
+      {modo === 'digitales' && <EventosDigitales ref={digitalesRef} />}
 
       {/* ── GRID VIEW ── */}
-      {vista === 'grid' && (
+      {modo === 'presenciales' && vista === 'grid' && (
         <div style={{ padding: '20px 28px' }}>
           {filtrados.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--app-text-subtle)' }}>
@@ -717,7 +746,7 @@ export default function Eventos() {
       )}
 
       {/* ── REGIONES VIEW ── */}
-      {vista === 'regiones' && (
+      {modo === 'presenciales' && vista === 'regiones' && (
         <div style={{ padding: '20px 28px', overflowX: 'auto' }}>
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', width: '100%' }}>
             {regiones.map(region => {
