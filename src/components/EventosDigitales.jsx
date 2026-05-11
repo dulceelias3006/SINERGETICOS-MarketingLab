@@ -83,7 +83,7 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
       <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid var(--app-border-light)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--app-text)' }}>{s.nombre}</div>
-          <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
             {reg && (
               <span style={{ fontSize: 10, fontWeight: 700, background: reg.color + '22', color: reg.color, borderRadius: 6, padding: '3px 7px' }}>
                 {reg.label}
@@ -92,6 +92,16 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
             <span style={{ fontSize: 10, fontWeight: 700, background: s.estado === 'activo' ? '#4ade8022' : '#f59e0b22', color: s.estado === 'activo' ? '#16a34a' : '#d97706', borderRadius: 6, padding: '3px 7px' }}>
               {s.estado === 'activo' ? 'Activo' : 'Pausado'}
             </span>
+            {editable && (
+              <button onClick={() => onEditar(s)} title="Editar serie"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', padding: '2px 4px', display: 'flex', alignItems: 'center', borderRadius: 6 }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--app-surface-2)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
         <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginBottom: s.diasEvento?.length ? 6 : 0 }}>
@@ -216,17 +226,17 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
         </div>
 
         {/* Botones */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {editable && (
-            <button onClick={() => onEditar(s)}
-              style={{ flex: 1, minWidth: 70, padding: '7px 0', background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', cursor: 'pointer' }}>
-              Editar
-            </button>
-          )}
-          <button onClick={() => setExpandHist(v => !v)}
-            style={{ flex: 1, minWidth: 80, padding: '7px 0', background: expandHist ? 'var(--app-border)' : 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', cursor: 'pointer' }}>
-            {expandHist ? 'Ocultar' : `Historial${s.historial?.length ? ` (${s.historial.length})` : ''}`}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {/* Reloj — historial */}
+          <button onClick={() => setExpandHist(v => !v)} title={expandHist ? 'Ocultar historial' : 'Ver historial'}
+            style={{ padding: '7px 10px', background: expandHist ? 'var(--app-border)' : 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', color: expandHist ? 'var(--app-text)' : 'var(--app-text-muted)', display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {s.historial?.length > 0 && <span style={{ fontSize: 11, fontWeight: 700 }}>{s.historial.length}</span>}
           </button>
+
+          {/* Cerrar semana */}
           {editable && (
             confirmCerrar ? (
               <div style={{ display: 'flex', gap: 4, flex: 1 }}>
@@ -241,7 +251,7 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
               </div>
             ) : (
               <button onClick={() => setConfirmCerrar(true)}
-                style={{ flex: 1, minWidth: 90, padding: '7px 0', background: '#e53e3e', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
+                style={{ flex: 1, padding: '7px 0', background: '#e53e3e', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
                 Cerrar semana
               </button>
             )
