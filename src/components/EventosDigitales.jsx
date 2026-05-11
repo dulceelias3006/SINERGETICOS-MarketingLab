@@ -8,6 +8,18 @@ const REGIONES = [
   { id: 'LATAM', label: 'LATAM',     color: '#f59e0b' },
 ];
 
+const DIAS_SEMANA = [
+  { id: 1, label: 'Lun' },
+  { id: 2, label: 'Mar' },
+  { id: 3, label: 'Mié' },
+  { id: 4, label: 'Jue' },
+  { id: 5, label: 'Vie' },
+  { id: 6, label: 'Sáb' },
+  { id: 0, label: 'Dom' },
+];
+
+const DIAS_FULL = { 0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' };
+
 function getMondayISO() {
   const d = new Date();
   const day = d.getDay();
@@ -20,6 +32,22 @@ function fmtFecha(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+}
+
+function nextEventDates(dias) {
+  if (!dias || !dias.length) return [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayDay = today.getDay();
+  return dias
+    .map(d => {
+      let diff = d - todayDay;
+      if (diff <= 0) diff += 7;
+      const next = new Date(today);
+      next.setDate(today.getDate() + diff);
+      return { dia: d, fecha: next };
+    })
+    .sort((a, b) => a.fecha - b.fecha);
 }
 
 function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
@@ -66,13 +94,25 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
             </span>
           </div>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>
+        <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginBottom: s.diasEvento?.length ? 6 : 0 }}>
           Semana del {fmtFecha(sem.inicio)}
           {s.historial?.length > 0 && <span style={{ marginLeft: 8 }}>· {s.historial.length} sem. anteriores</span>}
           {s.urlRegistro && (
             <a href={s.urlRegistro} target="_blank" rel="noreferrer" style={{ marginLeft: 8, color: '#4a9eff', textDecoration: 'none' }}>↗ Link</a>
           )}
         </div>
+        {s.diasEvento?.length > 0 && (() => {
+          const proximas = nextEventDates(s.diasEvento);
+          return (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {proximas.map(({ dia, fecha }) => (
+                <span key={dia} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: '#4a9eff18', color: '#4a9eff', borderRadius: 6, padding: '3px 8px' }}>
+                  📅 {DIAS_FULL[dia]} {fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                </span>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Stats */}
@@ -230,6 +270,11 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text)', marginBottom: 2 }}>
                         {fmtFecha(h.inicio)} → {fmtFecha(h.fin)}
+                        {h.diasEvento?.length > 0 && (
+                          <span style={{ marginLeft: 6, fontWeight: 400, color: '#4a9eff' }}>
+                            · {h.diasEvento.map(d => DIAS_FULL[d]).join(' & ')}
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>
                         {(h.registros || 0).toLocaleString('es-MX')} reg · {h.vip || 0} VIP
@@ -257,7 +302,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   const [series, setSeries] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
-  const [form, setForm] = useState({ nombre: '', region: 'MEX', estado: 'activo', urlRegistro: '', divisa: 'MXN', meta: 0, presupuestoTotal: 0 });
+  const [form, setForm] = useState({ nombre: '', region: 'MEX', estado: 'activo', urlRegistro: '', divisa: 'MXN', meta: 0, presupuestoTotal: 0, diasEvento: [] });
   const [formError, setFormError] = useState(false);
 
   function saveSeries(next) {
@@ -286,7 +331,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
 
   function abrir() {
     setEditandoId(null);
-    setForm({ nombre: '', region: 'MEX', estado: 'activo', urlRegistro: '', divisa: 'MXN', meta: 0, presupuestoTotal: 0 });
+    setForm({ nombre: '', region: 'MEX', estado: 'activo', urlRegistro: '', divisa: 'MXN', meta: 0, presupuestoTotal: 0, diasEvento: [] });
     setFormError(false);
     setShowModal(true);
   }
@@ -301,6 +346,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       divisa: s.divisa || 'MXN',
       meta: s.semana?.meta || 0,
       presupuestoTotal: s.semana?.presupuestoTotal || 0,
+      diasEvento: s.diasEvento || [],
     });
     setFormError(false);
     setShowModal(true);
@@ -319,6 +365,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
             estado: form.estado,
             urlRegistro: form.urlRegistro,
             divisa: form.divisa,
+            diasEvento: form.diasEvento,
             semana: { ...s.semana, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal) },
           }
         : s
@@ -331,6 +378,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
         estado: form.estado,
         urlRegistro: form.urlRegistro,
         divisa: form.divisa,
+        diasEvento: form.diasEvento,
         semana: { inicio: getMondayISO(), registros: 0, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), presupuestoGastado: 0, vip: 0 },
         historial: [],
       }]);
@@ -356,9 +404,15 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     const s = series.find(x => x.id === id);
     if (!s) return;
     const fin = new Date().toISOString().split('T')[0];
+    const fechasEvento = (s.diasEvento || []).map(d => {
+      const prox = nextEventDates([d]);
+      return prox[0] ? prox[0].fecha.toISOString().split('T')[0] : null;
+    }).filter(Boolean);
     const entrada = {
       inicio: s.semana?.inicio || getMondayISO(),
       fin,
+      diasEvento: s.diasEvento || [],
+      fechasEvento,
       registros: s.semana?.registros || 0,
       meta: s.semana?.meta || 0,
       presupuestoTotal: s.semana?.presupuestoTotal || 0,
@@ -504,6 +558,25 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', display: 'block', marginBottom: 6 }}>URL de registro</label>
                   <input value={form.urlRegistro} onChange={e => setForm(p => ({ ...p, urlRegistro: e.target.value }))} placeholder="https://..." style={inp} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', display: 'block', marginBottom: 8 }}>Día(s) del evento</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {DIAS_SEMANA.map(d => {
+                    const sel = form.diasEvento.includes(d.id);
+                    return (
+                      <button key={d.id} type="button"
+                        onClick={() => setForm(p => ({
+                          ...p,
+                          diasEvento: sel ? p.diasEvento.filter(x => x !== d.id) : [...p.diasEvento, d.id],
+                        }))}
+                        style={{ padding: '6px 12px', borderRadius: 8, border: `1.5px solid ${sel ? '#4a9eff' : 'var(--app-border)'}`, background: sel ? '#4a9eff18' : 'var(--app-surface-2)', color: sel ? '#4a9eff' : 'var(--app-text-muted)', fontSize: 13, fontWeight: sel ? 700 : 500, cursor: 'pointer' }}>
+                        {d.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
