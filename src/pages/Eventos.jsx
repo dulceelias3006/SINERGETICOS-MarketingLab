@@ -174,7 +174,7 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
           </div>
         </div>
         <div style={{ height: 4, background: 'var(--app-surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: '#facc15', borderRadius: 99 }} />
+          <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#22c55e' : '#facc15', borderRadius: 99 }} />
         </div>
 
         {/* Registros por horario — solo si hay segundo horario y está expandido */}
