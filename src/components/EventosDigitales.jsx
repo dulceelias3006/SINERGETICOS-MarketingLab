@@ -34,6 +34,18 @@ function fmtFecha(iso) {
   return new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
 }
 
+function fmtActualizado(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const ayer = new Date(hoy); ayer.setDate(ayer.getDate() - 1);
+  const dm = new Date(d); dm.setHours(0, 0, 0, 0);
+  const hora = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+  if (dm.getTime() === hoy.getTime()) return `hoy ${hora}`;
+  if (dm.getTime() === ayer.getTime()) return `ayer ${hora}`;
+  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) + ' ' + hora;
+}
+
 function nextEventDates(dias) {
   if (!dias || !dias.length) return [];
   const today = new Date();
@@ -225,6 +237,15 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
           </div>
         </div>
 
+        {/* Actualizado */}
+        {s.updatedAt && (
+          <div style={{ marginBottom: 10 }}>
+            <span style={{ fontSize: 11, color: '#c4c9d4', fontStyle: 'italic' }}>
+              actualizado {fmtActualizado(s.updatedAt)}
+            </span>
+          </div>
+        )}
+
         {/* Botones */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {/* Reloj — historial */}
@@ -370,6 +391,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       saveSeries(series.map(s => s.id === editandoId
         ? {
             ...s,
+            updatedAt: Date.now(),
             nombre: form.nombre.trim(),
             region: form.region,
             estado: form.estado,
@@ -405,7 +427,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
 
   function ajustar(id, campo, delta) {
     saveSeries(series.map(s => s.id === id
-      ? { ...s, semana: { ...s.semana, [campo]: Math.max(0, (s.semana?.[campo] || 0) + delta) } }
+      ? { ...s, updatedAt: Date.now(), semana: { ...s.semana, [campo]: Math.max(0, (s.semana?.[campo] || 0) + delta) } }
       : s
     ));
   }
@@ -435,6 +457,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     saveSeries(series.map(x => x.id === id
       ? {
           ...x,
+          updatedAt: Date.now(),
           historial: [entrada, ...(x.historial || [])],
           semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0 },
         }
