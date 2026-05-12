@@ -237,16 +237,7 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
           </div>
         </div>
 
-        {/* Actualizado */}
-        {s.updatedAt && (
-          <div style={{ marginBottom: 10 }}>
-            <span style={{ fontSize: 11, color: '#c4c9d4', fontStyle: 'italic' }}>
-              actualizado {fmtActualizado(s.updatedAt)}
-            </span>
-          </div>
-        )}
-
-        {/* Botones */}
+        {/* Botones + actualizado */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {/* Reloj — historial */}
           <button onClick={() => setExpandHist(v => !v)} title={expandHist ? 'Ocultar historial' : 'Ver historial'}
@@ -278,6 +269,15 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
             )
           )}
         </div>
+
+        {/* Actualizado — pie derecho */}
+        {s.updatedAt && (
+          <div style={{ textAlign: 'right', marginTop: 8 }}>
+            <span style={{ fontSize: 11, color: '#c4c9d4', fontStyle: 'italic' }}>
+              actualizado {fmtActualizado(s.updatedAt)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Historial expandible */}
