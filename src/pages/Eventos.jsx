@@ -313,13 +313,11 @@ export default function Eventos() {
   const [vista, setVista] = useState('grid');
   const [filtro, setFiltro] = useState('activo');
   const [showModal, setShowModal] = useState(false);
-  const [showTiposModal, setShowTiposModal] = useState(false);
   const [showRegionesConfig, setShowRegionesConfig] = useState(false);
   const [showHistorial, setShowHistorial] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState(FORM_INIT);
   const [formError, setFormError] = useState(false);
-  const [nuevoTipo, setNuevoTipo] = useState({ label: '', color: '#4a9eff' });
 
   const [undoStack, setUndoStack] = useState([]);
   const [undoToast, setUndoToast] = useState(null);
@@ -609,13 +607,6 @@ export default function Eventos() {
     setTimeout(() => { win.focus(); win.print(); }, 400);
   }
 
-  function agregarTipo() {
-    if (!nuevoTipo.label.trim()) return;
-    saveTipos([...tipos, { id: 'tipo_' + Date.now(), label: nuevoTipo.label.trim(), color: nuevoTipo.color }]);
-    setNuevoTipo({ label: '', color: '#4a9eff' });
-  }
-  function eliminarTipo(id) { saveTipos(tipos.filter(t => t.id !== id)); }
-
   const inp = (extra = {}) => ({
     width: '100%', border: '1px solid var(--app-border)', borderRadius: 10, padding: '10px 14px',
     fontSize: 14, outline: 'none', background: 'var(--app-surface)', color: 'var(--app-text)', boxSizing: 'border-box', ...extra,
@@ -670,12 +661,6 @@ export default function Eventos() {
                   Regiones
                 </button>
               )}
-
-              <button onClick={() => setShowTiposModal(true)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                Tipos
-              </button>
 
               <button onClick={() => setShowHistorial(true)} title="Ver historial"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
@@ -823,44 +808,6 @@ export default function Eventos() {
                   <span style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginLeft: 'auto' }}>{eventos.filter(e => e.region === r.id || (r.id === 'USA' && e.region === 'CAN')).length} eventos</span>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── TIPOS MODAL ── */}
-      {showTiposModal && (
-        <div onClick={e => { if (e.target === e.currentTarget) setShowTiposModal(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: 'var(--app-surface)', borderRadius: 16, width: '100%', maxWidth: 420 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--app-border-light)' }}>
-              <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)' }}>Tipos de Evento</div>
-                <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Crea, edita o elimina tipos de evento</div>
-              </div>
-              <button onClick={() => setShowTiposModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
-            </div>
-            <div style={{ padding: '16px 22px 20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
-                {tipos.map(t => (
-                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--app-surface-alt)', borderRadius: 10, border: '1px solid var(--app-border-light)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 13, height: 13, borderRadius: '50%', background: t.color }} />
-                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--app-text)' }}>{t.label}</span>
-                    </div>
-                    {!TIPOS_DEFAULT.find(d => d.id === t.id) && (
-                      <button onClick={() => eliminarTipo(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 18, lineHeight: 1 }}>×</button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Nuevo Tipo</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ position: 'relative', width: 38, height: 38, borderRadius: 8, background: nuevoTipo.color, cursor: 'pointer', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}>
-                  <input type="color" value={nuevoTipo.color} onChange={e => setNuevoTipo(p => ({ ...p, color: e.target.value }))} style={{ opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', border: 'none', padding: 0 }} />
-                </label>
-                <input value={nuevoTipo.label} onChange={e => setNuevoTipo(p => ({ ...p, label: e.target.value }))} onKeyDown={e => e.key === 'Enter' && agregarTipo()} placeholder="Ej: conferencia" style={{ flex: 1, border: '1px solid var(--app-border)', borderRadius: 10, padding: '10px 14px', fontSize: 13, outline: 'none', background: 'var(--app-surface-alt)', color: 'var(--app-text)' }} />
-                <button onClick={agregarTipo} style={{ padding: '10px 16px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>+ Crear</button>
-              </div>
             </div>
           </div>
         </div>
