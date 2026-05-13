@@ -94,6 +94,8 @@ export default function Enlaces() {
   });
   const [showCatModal, setShowCatModal] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(null);
+  const [dragId, setDragId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
   const canSync = useRef(false);
   const fbEn = useRef(false); const fbCc = useRef(false);
 
@@ -145,6 +147,23 @@ export default function Enlaces() {
     if (window.confirm('¿Eliminar este enlace?')) {
       setEnlaces(prev => prev.filter(e => e.id !== id));
     }
+  }
+
+  function handleDrop(dropId) {
+    if (!dragId || dragId === dropId) return;
+    const fromIdx = filtrados.findIndex(e => e.id === dragId);
+    const toIdx   = filtrados.findIndex(e => e.id === dropId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const newFiltered = [...filtrados];
+    const [moved] = newFiltered.splice(fromIdx, 1);
+    newFiltered.splice(toIdx, 0, moved);
+    // Reubicar en el array completo manteniendo las posiciones de los filtrados
+    const positions = filtrados.map(f => enlaces.findIndex(e => e.id === f.id));
+    const newEnlaces = [...enlaces];
+    positions.forEach((pos, i) => { newEnlaces[pos] = newFiltered[i]; });
+    setEnlaces(newEnlaces);
+    setDragId(null);
+    setDragOverId(null);
   }
 
   function getCatStyle(cat) {
@@ -226,7 +245,13 @@ export default function Enlaces() {
               const catStyle = getCatStyle(e.categoria);
               const menuOpen = menuAbierto === e.id;
               return (
-                <div key={e.id} style={{ background: 'var(--app-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid var(--app-border)', position: 'relative' }}>
+                <div key={e.id}
+                  draggable={can('edit')}
+                  onDragStart={() => setDragId(e.id)}
+                  onDragOver={ev => { ev.preventDefault(); setDragOverId(e.id); }}
+                  onDrop={ev => { ev.preventDefault(); handleDrop(e.id); }}
+                  onDragEnd={() => { setDragId(null); setDragOverId(null); }}
+                  style={{ background: 'var(--app-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: dragOverId === e.id && dragId !== e.id ? '2px dashed #e53e3e' : '1px solid var(--app-border)', position: 'relative', opacity: dragId === e.id ? 0.4 : 1, cursor: can('edit') ? 'grab' : 'default', transition: 'opacity 0.15s, border 0.15s' }}>
                   <div style={{ height: 4, background: catStyle.color, borderRadius: '12px 12px 0 0' }} />
                   <div style={{ padding: '16px 18px' }}>
                     {/* Ícono + nombre + 3 puntos */}
