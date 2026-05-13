@@ -205,25 +205,6 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           </NavLink>
         ))}
 
-        {!isMobile && (
-          <button
-            onClick={onToggle}
-            title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
-              gap: 10, padding: collapsed ? '10px 0' : '10px 14px',
-              margin: collapsed ? '10px 6px 4px' : '10px 10px 4px',
-              borderRadius: 10, border: 'none', cursor: 'pointer',
-              width: collapsed ? 'calc(100% - 12px)' : 'calc(100% - 20px)',
-              background: 'transparent', color: 'var(--sidebar-text-muted)', fontSize: 13,
-              transition: 'background 0.15s, color 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--sidebar-hover)'; e.currentTarget.style.color = 'var(--sidebar-text)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--sidebar-text-muted)'; }}
-          >
-            {collapsed ? <IcoChevronRight /> : <><IcoChevronLeft /><span>Colapsar</span></>}
-          </button>
-        )}
       </nav>
 
       {/* Footer — usuario + logout */}

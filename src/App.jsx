@@ -53,11 +53,11 @@ function AppContent() {
         <Sidebar collapsed={collapsed} isMobile={isMobile} onToggle={() => setCollapsed(c => !c)} />
 
         <main className="main-content">
-          {collapsed && (
+          {!isMobile && (
             <div style={{ height: 48, background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', paddingLeft: 14, flexShrink: 0 }}>
               <button
-                onClick={() => setCollapsed(false)}
-                title="Mostrar sidebar"
+                onClick={() => setCollapsed(c => !c)}
+                title={collapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
                 style={{ width: 30, height: 30, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
