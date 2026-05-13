@@ -383,7 +383,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     setShowModal(true);
   }
 
-  useImperativeHandle(ref, () => ({ abrir }));
+  useImperativeHandle(ref, () => ({ abrir, generarPDF }));
 
   function guardar() {
     if (!form.nombre.trim()) { setFormError(true); return; }
@@ -463,6 +463,84 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
         }
       : x
     ));
+  }
+
+  function generarPDF() {
+    const hoy = new Date();
+    const hoyStr = hoy.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const activas = series.filter(s => s.estado === 'activo');
+    const totalReg  = activas.reduce((s, x) => s + (x.semana?.registros || 0), 0);
+    const totalMeta = activas.reduce((s, x) => s + (x.semana?.meta || 0), 0);
+    const totalVip  = activas.reduce((s, x) => s + (x.semana?.vip || 0), 0);
+    const totalGasto = activas.reduce((s, x) => s + (x.semana?.presupuestoGastado || 0), 0);
+    const pctGlobal = totalMeta > 0 ? Math.round(totalReg / totalMeta * 100) : 0;
+    const pctColor = p => p >= 100 ? '#16a34a' : p >= 60 ? '#d97706' : '#dc2626';
+
+    const filas = activas.map(s => {
+      const sem = s.semana || {};
+      const pct = sem.meta > 0 ? Math.round((sem.registros || 0) / sem.meta * 100) : 0;
+      const costo = sem.registros > 0 && sem.presupuestoGastado > 0
+        ? Math.round(sem.presupuestoGastado / sem.registros) : null;
+      const gastadoPct = sem.presupuestoTotal > 0
+        ? Math.round((sem.presupuestoGastado || 0) / sem.presupuestoTotal * 100) : 0;
+      const dias = (s.diasEvento || []).map(d => DIAS_FULL[d]).join(' & ') || '—';
+      const reg = REGIONES.find(r => r.id === s.region);
+      return `
+        <tr>
+          <td style="font-weight:600">${s.nombre}</td>
+          <td><span style="font-size:10px;font-weight:700;background:${reg ? reg.color + '22' : '#f3f4f6'};color:${reg ? reg.color : '#6b7280'};padding:2px 7px;border-radius:5px">${s.region || '—'}</span></td>
+          <td style="color:#6b7280">${dias}</td>
+          <td style="color:#6b7280">${fmtFecha(sem.inicio)}</td>
+          <td style="text-align:right;font-weight:600">${(sem.registros || 0).toLocaleString('es-MX')}</td>
+          <td style="text-align:right;color:#6b7280">${(sem.meta || 0).toLocaleString('es-MX')}</td>
+          <td style="text-align:right;font-weight:700;color:${pctColor(pct)}">${pct}%</td>
+          <td style="text-align:right">${sem.vip || 0}</td>
+          <td style="text-align:right">${(sem.presupuestoGastado || 0).toLocaleString('es-MX')} <span style="font-size:10px;color:#9ca3af">(${gastadoPct}%)</span></td>
+          <td style="text-align:right;font-weight:700;color:${costo === null ? '#9ca3af' : costo < 50 ? '#16a34a' : costo < 120 ? '#d97706' : '#dc2626'};white-space:nowrap">${costo === null ? '—' : '$' + costo.toLocaleString('es-MX')}</td>
+        </tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Reporte Digitales</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, Arial, sans-serif; padding: 32px 36px; color: #111827; font-size: 13px; }
+      h1 { font-size: 22px; font-weight: 800; margin-bottom: 3px; }
+      .sub { font-size: 12px; color: #6b7280; margin-bottom: 28px; }
+      .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 28px; }
+      .stat { background: #f5f6fa; border-radius: 10px; padding: 14px 16px; }
+      .stat-label { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+      .stat-value { font-size: 20px; font-weight: 800; }
+      table { width: 100%; border-collapse: collapse; }
+      th { text-align: left; padding: 8px 10px; font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb; }
+      td { padding: 10px 10px; border-bottom: 1px solid #f3f4f6; font-size: 12px; color: #111827; vertical-align: middle; }
+      tr:last-child td { border-bottom: none; }
+    </style></head><body>
+    <h1>📡 Reporte Eventos Digitales</h1>
+    <div class="sub">${hoyStr} · ${activas.length} serie${activas.length !== 1 ? 's' : ''} activa${activas.length !== 1 ? 's' : ''}</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Series activas</div><div class="stat-value">${activas.length}</div></div>
+      <div class="stat"><div class="stat-label">Registros totales</div><div class="stat-value">${totalReg.toLocaleString('es-MX')}</div></div>
+      <div class="stat"><div class="stat-label">Meta total</div><div class="stat-value">${totalMeta.toLocaleString('es-MX')}</div></div>
+      <div class="stat"><div class="stat-label">Avance global</div><div class="stat-value" style="color:${pctColor(pctGlobal)}">${pctGlobal}%</div></div>
+      <div class="stat"><div class="stat-label">VIP total</div><div class="stat-value">${totalVip.toLocaleString('es-MX')}</div></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Serie</th><th>Región</th><th>Días evento</th><th>Semana del</th>
+        <th style="text-align:right">Registros</th><th style="text-align:right">Meta</th>
+        <th style="text-align:right">%Reg</th><th style="text-align:right">VIP</th>
+        <th style="text-align:right">Gastado</th><th style="text-align:right">Costo/Reg</th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { alert('Activa las ventanas emergentes para exportar el PDF'); return; }
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 400);
   }
 
   const inp = {
