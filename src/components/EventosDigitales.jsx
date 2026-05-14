@@ -62,7 +62,21 @@ function nextEventDates(dias) {
     .sort((a, b) => a.fecha - b.fecha);
 }
 
-function calcFechasEvento(dias) {
+function calcFechasEventoSemana(dias, inicio) {
+  if (!dias || !dias.length || !inicio) return [];
+  const [y, m, d] = inicio.split('-').map(Number);
+  const monday = new Date(y, m - 1, d);
+  return [...dias]
+    .sort((a, b) => (a === 0 ? 6 : a - 1) - (b === 0 ? 6 : b - 1))
+    .map(dia => {
+      const offset = dia === 0 ? 6 : dia - 1;
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + offset);
+      return date.toISOString().split('T')[0];
+    });
+}
+
+function calcProximasFechas(dias) {
   return nextEventDates(dias).map(({ fecha }) => fecha.toISOString().split('T')[0]);
 }
 
@@ -347,15 +361,26 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     if (canSync.current) dbSet('series_digitales', next);
   }
 
+  function migrarFechas(arr) {
+    return arr.map(s => {
+      if (s.semana && !s.semana.fechasEvento && s.diasEvento?.length && s.semana.inicio) {
+        return { ...s, semana: { ...s.semana, fechasEvento: calcFechasEventoSemana(s.diasEvento, s.semana.inicio) } };
+      }
+      return s;
+    });
+  }
+
   useEffect(() => {
     dbGet('series_digitales').then(v => {
       canSync.current = true;
       if (v !== null) {
-        setSeries(v);
+        const migrado = migrarFechas(v);
+        setSeries(migrado);
+        if (JSON.stringify(migrado) !== JSON.stringify(v)) dbSet('series_digitales', migrado);
       } else {
         try {
           const local = JSON.parse(localStorage.getItem('series_digitales') || 'null');
-          if (local) { setSeries(local); dbSet('series_digitales', local); }
+          if (local) { const m = migrarFechas(local); setSeries(m); dbSet('series_digitales', m); }
         } catch {}
       }
     });
@@ -403,7 +428,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
             urlRegistro: form.urlRegistro,
             divisa: form.divisa,
             diasEvento: form.diasEvento,
-            semana: { ...s.semana, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), fechasEvento: calcFechasEvento(form.diasEvento) },
+            semana: { ...s.semana, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), fechasEvento: calcFechasEventoSemana(form.diasEvento, s.semana?.inicio || getMondayISO()) },
           }
         : s
       ));
@@ -416,7 +441,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
         urlRegistro: form.urlRegistro,
         divisa: form.divisa,
         diasEvento: form.diasEvento,
-        semana: { inicio: getMondayISO(), registros: 0, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), presupuestoGastado: 0, vip: 0, fechasEvento: calcFechasEvento(form.diasEvento) },
+        semana: { inicio: getMondayISO(), registros: 0, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), presupuestoGastado: 0, vip: 0, fechasEvento: calcFechasEventoSemana(form.diasEvento, getMondayISO()) },
         historial: [],
       }]);
     }
@@ -464,7 +489,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
           ...x,
           updatedAt: Date.now(),
           historial: [entrada, ...(x.historial || [])],
-          semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0, fechasEvento: calcFechasEvento(s.diasEvento) },
+          semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0, fechasEvento: calcProximasFechas(s.diasEvento) },
         }
       : x
     ));
