@@ -85,8 +85,10 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
   const [confirmCerrar, setConfirmCerrar] = useState(false);
   const [editGasto, setEditGasto] = useState(null);
   const [editReg, setEditReg] = useState(null);
+  const [editVip, setEditVip] = useState(null);
   const gastoInputRef = useRef();
   const regInputRef = useRef();
+  const vipInputRef = useRef();
 
   const sem = s.semana || {};
   const pct = sem.meta > 0 ? Math.min(100, Math.round((sem.registros || 0) / sem.meta * 100)) : 0;
@@ -104,6 +106,11 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
     const val = Math.max(0, Number(editReg) || 0);
     onAjustar(s.id, 'registros', val - (sem.registros || 0));
     setEditReg(null);
+  }
+  function commitVip() {
+    const val = Math.max(0, Number(editVip) || 0);
+    onAjustar(s.id, 'vip', val - (sem.vip || 0));
+    setEditVip(null);
   }
 
   return (
@@ -210,7 +217,23 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
                 <button onClick={() => onAjustar(s.id, 'vip', -1)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 14, lineHeight: 1, padding: 0 }}>−</button>
               )}
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)' }}>{sem.vip || 0}</span>
+              {editVip !== null ? (
+                <input
+                  ref={vipInputRef}
+                  value={editVip}
+                  onChange={e => setEditVip(e.target.value)}
+                  onBlur={commitVip}
+                  onKeyDown={e => { if (e.key === 'Enter') commitVip(); if (e.key === 'Escape') setEditVip(null); }}
+                  style={{ width: 50, textAlign: 'center', border: '1px solid var(--app-border)', borderRadius: 6, padding: '2px 4px', fontSize: 12, fontWeight: 700, background: 'var(--app-surface)', color: 'var(--app-text)', outline: 'none' }}
+                />
+              ) : (
+                <span
+                  onClick={editable ? () => { setEditVip(String(sem.vip || 0)); setTimeout(() => vipInputRef.current?.select(), 10); } : undefined}
+                  title={editable ? 'Clic para editar' : undefined}
+                  style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)', cursor: editable ? 'text' : 'default', minWidth: 20, textAlign: 'center' }}>
+                  {sem.vip || 0}
+                </span>
+              )}
               {editable && (
                 <button onClick={() => onAjustar(s.id, 'vip', 1)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', fontSize: 14, lineHeight: 1, padding: 0 }}>+</button>
