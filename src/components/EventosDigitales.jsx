@@ -62,6 +62,10 @@ function nextEventDates(dias) {
     .sort((a, b) => a.fecha - b.fecha);
 }
 
+function calcFechasEvento(dias) {
+  return nextEventDates(dias).map(({ fecha }) => fecha.toISOString().split('T')[0]);
+}
+
 function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
   const [expandHist, setExpandHist] = useState(false);
   const [confirmCerrar, setConfirmCerrar] = useState(false);
@@ -123,18 +127,19 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
             <a href={s.urlRegistro} target="_blank" rel="noreferrer" style={{ marginLeft: 8, color: '#4a9eff', textDecoration: 'none' }}>↗ Link</a>
           )}
         </div>
-        {s.diasEvento?.length > 0 && (() => {
-          const proximas = nextEventDates(s.diasEvento);
-          return (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {proximas.map(({ dia, fecha }) => (
-                <span key={dia} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: '#4a9eff18', color: '#4a9eff', borderRadius: 6, padding: '3px 8px' }}>
-                  📅 {DIAS_FULL[dia]} {fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+        {sem.fechasEvento?.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {sem.fechasEvento.map(iso => {
+              const [y, m, d] = iso.split('-').map(Number);
+              const date = new Date(y, m - 1, d);
+              return (
+                <span key={iso} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: '#4a9eff18', color: '#4a9eff', borderRadius: 6, padding: '3px 8px' }}>
+                  📅 {DIAS_FULL[date.getDay()]} {fmtFecha(iso)}
                 </span>
-              ))}
-            </div>
-          );
-        })()}
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -398,7 +403,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
             urlRegistro: form.urlRegistro,
             divisa: form.divisa,
             diasEvento: form.diasEvento,
-            semana: { ...s.semana, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal) },
+            semana: { ...s.semana, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), fechasEvento: calcFechasEvento(form.diasEvento) },
           }
         : s
       ));
@@ -411,7 +416,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
         urlRegistro: form.urlRegistro,
         divisa: form.divisa,
         diasEvento: form.diasEvento,
-        semana: { inicio: getMondayISO(), registros: 0, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), presupuestoGastado: 0, vip: 0 },
+        semana: { inicio: getMondayISO(), registros: 0, meta: Number(form.meta), presupuestoTotal: Number(form.presupuestoTotal), presupuestoGastado: 0, vip: 0, fechasEvento: calcFechasEvento(form.diasEvento) },
         historial: [],
       }]);
     }
@@ -459,7 +464,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
           ...x,
           updatedAt: Date.now(),
           historial: [entrada, ...(x.historial || [])],
-          semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0 },
+          semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0, fechasEvento: calcFechasEvento(s.diasEvento) },
         }
       : x
     ));
