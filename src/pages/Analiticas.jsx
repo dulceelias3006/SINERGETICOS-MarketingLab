@@ -3,13 +3,13 @@ import { dbGet, dbSub } from '../lib/supabase';
 
 // ── Catalog ───────────────────────────────────────────────────────────────────
 const CATS = [
-  { id: 'todos',       label: 'Todos',       count: 34 },
+  { id: 'todos',       label: 'Todos',       count: 35 },
   { id: 'registros',   label: 'Registros',   count: 7  },
   { id: 'presupuesto', label: 'Presupuesto', count: 7  },
   { id: 'eventos',     label: 'Eventos',     count: 8  },
   { id: 'tickets',     label: 'Tickets',     count: 4  },
   { id: 'graficas',    label: 'Gráficas',    count: 7  },
-  { id: 'tablas',      label: 'Tablas',      count: 1  },
+  { id: 'tablas',      label: 'Tablas',      count: 2  },
 ];
 
 const CATALOGO = [
@@ -51,8 +51,9 @@ const CATALOGO = [
   { tipo: 'avance_registros',   nombre: 'Avance de Registros',       desc: 'Barra de progreso de registros por evento',        cat: 'graficas' },
   { tipo: 'uso_presupuesto',    nombre: 'Uso de Presupuesto',        desc: 'Barra de progreso de presupuesto por evento',      cat: 'graficas' },
   { tipo: 'destacados',         nombre: 'Destacados',                desc: 'Eventos destacados por métricas clave',            cat: 'graficas' },
-  // Tablas (1)
-  { tipo: 'comparativa',        nombre: 'Comparativa General',       desc: 'Tabla comparativa de todos los eventos',           cat: 'tablas' },
+  // Tablas (2)
+  { tipo: 'comparativa',          nombre: 'Comparativa General',       desc: 'Tabla comparativa de todos los eventos presenciales', cat: 'tablas' },
+  { tipo: 'comparativa_digitales',nombre: 'Comparativa Digitales',     desc: 'Tabla comparativa de series de eventos digitales',    cat: 'tablas' },
 ];
 
 const BLOQUES_DEFAULT = [
@@ -99,7 +100,7 @@ function iconForTipo(tipo) {
     panel_mas_tickets: <IcoGrid />,
     por_estado: <IcoClock />, por_tipo: <IcoBar />, ranking_registros: <IcoBar />,
     ranking_costo_reg: <IcoTarget />, avance_registros: <IcoList />, uso_presupuesto: <IcoDollar />,
-    destacados: <IcoBolt />, comparativa: <IcoTable />,
+    destacados: <IcoBolt />, comparativa: <IcoTable />, comparativa_digitales: <IcoTable />,
   };
   return m[tipo] || <IcoBar />;
 }
@@ -118,15 +119,20 @@ export default function Analiticas() {
         [{ id: 'digital', label: 'Digital' }, { id: 'presencial', label: 'Presencial' }];
     } catch { return [{ id: 'digital', label: 'Digital' }, { id: 'presencial', label: 'Presencial' }]; }
   });
+  const [seriesDigitales, setSeriesDigitales] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('series_digitales') || '[]'); } catch { return []; }
+  });
 
   useEffect(() => {
     dbGet('eventos').then(v => { if (v !== null) setEventos(v); });
     dbGet('tickets').then(v => { if (v !== null) setTickets(v); });
     dbGet('eventos_tipos').then(v => { if (v !== null) setTiposEvento(v); });
+    dbGet('series_digitales').then(v => { if (v !== null) setSeriesDigitales(v); });
     const s1 = dbSub('eventos', v => setEventos(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
     const s2 = dbSub('tickets', v => setTickets(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
     const s3 = dbSub('eventos_tipos', v => setTiposEvento(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
-    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); };
+    const s4 = dbSub('series_digitales', v => setSeriesDigitales(p => JSON.stringify(p)===JSON.stringify(v)?p:v));
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); };
   }, []);
 
   // ── Responsive columns ────────────────────────────────────────────────────────
@@ -613,6 +619,80 @@ export default function Analiticas() {
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: 'var(--app-text-2)' }}>{(e.presupuestoGastado || 0) > 0 ? fmtMXN(e.presupuestoGastado) : '—'}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: costoR ? costoColor(costoR, e.region) : '#9ca3af' }}>{costoR ? fmtMXN(costoR) : '—'}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: 'var(--app-text-2)' }}>{e.vipVendidas || 0}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      }
+
+      case 'comparativa_digitales': {
+        const REGIONES_D = { MEX: { label: 'MEX', color: '#e53e3e' }, USA: { label: 'USA / CAN', color: '#4a9eff' }, LATAM: { label: 'LATAM', color: '#f59e0b' } };
+        const DIAS_FULL_D = { 0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb' };
+        const sorted = [...seriesDigitales].sort((a, b) => (b.semana?.registros || 0) - (a.semana?.registros || 0));
+        const thStyle = { textAlign: 'left', padding: '8px 12px', fontSize: 11, color: 'var(--app-text-subtle)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid var(--app-border-light)', whiteSpace: 'nowrap' };
+        const tdStyle = { padding: '10px 12px', fontSize: 13, borderBottom: '1px solid #f9fafb', verticalAlign: 'middle' };
+        function fmtFechaD(iso) {
+          if (!iso) return '—';
+          const [y, m, d] = iso.split('-').map(Number);
+          return new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+        }
+        return (
+          <div>
+            {sectionHeader(<IcoTable />, 'Comparativa Digitales')}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Serie</th>
+                    <th style={{ ...thStyle, textAlign: 'center' }}>Región</th>
+                    <th style={{ ...thStyle }}>Días</th>
+                    <th style={{ ...thStyle }}>Semana del</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Registros</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Meta</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>% Logrado</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>VIP</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Gastado</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Costo/Reg</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.length === 0 && (
+                    <tr><td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: 'var(--app-text-subtle)' }}>Sin series digitales</td></tr>
+                  )}
+                  {sorted.map(s => {
+                    const sem = s.semana || {};
+                    const pct = (sem.meta || 0) > 0 ? Math.round((sem.registros || 0) / sem.meta * 100) : 0;
+                    const costoR = (sem.registros || 0) > 0 && (sem.presupuestoGastado || 0) > 0
+                      ? Math.round(sem.presupuestoGastado / sem.registros) : null;
+                    const reg = REGIONES_D[s.region];
+                    const dias = (s.diasEvento || []).map(d => DIAS_FULL_D[d]).join(' & ') || '—';
+                    const costoCol = costoR === null ? '#9ca3af' : costoR < 50 ? '#4ade80' : costoR < 120 ? '#facc15' : '#ef4444';
+                    return (
+                      <tr key={s.id}>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.estado === 'activo' ? '#22c55e' : '#9ca3af', flexShrink: 0 }} />
+                            <span style={{ fontWeight: 500, color: 'var(--app-text)' }}>{s.nombre}</span>
+                          </div>
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'center' }}>
+                          {reg
+                            ? <span style={{ fontSize: 10, fontWeight: 700, background: reg.color + '22', color: reg.color, borderRadius: 6, padding: '2px 7px' }}>{reg.label}</span>
+                            : <span style={{ color: '#9ca3af' }}>—</span>
+                          }
+                        </td>
+                        <td style={{ ...tdStyle, fontSize: 12, color: 'var(--app-text-2)' }}>{dias}</td>
+                        <td style={{ ...tdStyle, fontSize: 12, color: 'var(--app-text-2)' }}>{fmtFechaD(sem.inicio)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--app-text)' }}>{fmtN(sem.registros)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: 'var(--app-text-2)' }}>{fmtN(sem.meta)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: pctColor(pct) }}>{pct}%</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: 'var(--app-text-2)' }}>{sem.vip || 0}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: 'var(--app-text-2)' }}>{(sem.presupuestoGastado || 0) > 0 ? fmtMXN(sem.presupuestoGastado) : '—'}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: costoCol, whiteSpace: 'nowrap' }}>{costoR ? fmtMXN(costoR) : '—'}</td>
                       </tr>
                     );
                   })}
