@@ -253,9 +253,9 @@ export default function Analiticas() {
 
   function renderContenido(b) {
     const ESTADO_CFG = {
-      activo:      { color: '#e53e3e', label: 'Activo' },
-      planificado: { color: '#4a9eff', label: 'Planificado' },
-      completado:  { color: '#4ade80', label: 'Completado' },
+      activo:      { color: '#22c55e', label: 'Activo' },
+      planificado: { color: '#a855f7', label: 'Planificado' },
+      completado:  { color: '#4a9eff', label: 'Completado' },
       cancelado:   { color: 'var(--app-text-subtle)', label: 'Cancelado' },
     };
 
@@ -360,9 +360,9 @@ export default function Analiticas() {
       // ── Gráficas ───────────────────────────────────────────────────────────
       case 'por_estado': {
         const estados = [
-          { key: 'activo',      color: '#e53e3e', label: 'Activo'      },
-          { key: 'planificado', color: '#4a9eff', label: 'Planificado' },
-          { key: 'completado',  color: '#4ade80', label: 'Completado'  },
+          { key: 'activo',      color: '#22c55e', label: 'Activo'      },
+          { key: 'planificado', color: '#a855f7', label: 'Planificado' },
+          { key: 'completado',  color: '#4a9eff', label: 'Completado'  },
           { key: 'cancelado',   color: 'var(--app-text-subtle)', label: 'Cancelado'   },
         ];
         return (
