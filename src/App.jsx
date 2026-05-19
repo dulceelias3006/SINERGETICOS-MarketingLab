@@ -53,21 +53,19 @@ function AppContent() {
         <Sidebar collapsed={collapsed} isMobile={isMobile} onToggle={() => setCollapsed(c => !c)} />
 
         <main className="main-content">
-          {!isMobile && (
-            <div style={{ height: 48, background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', paddingLeft: 14, flexShrink: 0 }}>
-              <button
-                onClick={() => setCollapsed(c => !c)}
-                title={collapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
-                style={{ width: 30, height: 30, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="3" width="20" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>
-                </svg>
-              </button>
-            </div>
-          )}
+          <div style={{ height: 48, background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', paddingLeft: 14, flexShrink: 0 }}>
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              title={collapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
+              style={{ width: 30, height: 30, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>
+              </svg>
+            </button>
+          </div>
 
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
             <Routes>
