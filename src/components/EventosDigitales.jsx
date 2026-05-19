@@ -80,12 +80,14 @@ function calcProximasFechas(dias) {
   return nextEventDates(dias).map(({ fecha }) => fecha.toISOString().split('T')[0]);
 }
 
-function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
+function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editable }) {
   const [expandHist, setExpandHist] = useState(false);
   const [confirmCerrar, setConfirmCerrar] = useState(false);
   const [editGasto, setEditGasto] = useState(null);
   const [editReg, setEditReg] = useState(null);
   const [editVip, setEditVip] = useState(null);
+  const [editHistIdx, setEditHistIdx] = useState(null);
+  const [editHistForm, setEditHistForm] = useState({});
   const gastoInputRef = useRef();
   const regInputRef = useRef();
   const vipInputRef = useRef();
@@ -338,9 +340,51 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
                 const hPct = h.meta > 0 ? Math.round((h.registros || 0) / h.meta * 100) : 0;
                 const hCosto = h.registros > 0 && h.presupuestoGastado > 0
                   ? Math.round(h.presupuestoGastado / h.registros) : null;
+
+                if (editHistIdx === i) {
+                  const f = editHistForm;
+                  const inpStyle = { width: '100%', border: '1px solid var(--app-border)', borderRadius: 7, padding: '6px 9px', fontSize: 12, background: 'var(--app-surface)', color: 'var(--app-text)', outline: 'none', boxSizing: 'border-box' };
+                  return (
+                    <div key={i} style={{ background: 'var(--app-surface)', border: '1px solid #4a9eff66', borderRadius: 8, padding: '12px 14px' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text-subtle)', marginBottom: 10 }}>
+                        {fmtFecha(h.inicio)} → {fmtFecha(h.fin)}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                        {[['registros','Registros'],['meta','Meta'],['vip','VIP'],['presupuestoGastado','Gastado'],['presupuestoTotal','Presupuesto']].map(([campo, label]) => (
+                          <div key={campo}>
+                            <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginBottom: 3 }}>{label}</div>
+                            <input type="number" min="0" value={f[campo] ?? 0}
+                              onChange={e => setEditHistForm(p => ({ ...p, [campo]: e.target.value }))}
+                              style={inpStyle} />
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        <button onClick={() => setEditHistIdx(null)}
+                          style={{ padding: '5px 12px', background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 7, fontSize: 12, color: 'var(--app-text-muted)', cursor: 'pointer' }}>
+                          Cancelar
+                        </button>
+                        <button onClick={() => {
+                          onEditarHistorial(s.id, i, {
+                            registros: Math.max(0, Number(f.registros) || 0),
+                            meta: Math.max(0, Number(f.meta) || 0),
+                            vip: Math.max(0, Number(f.vip) || 0),
+                            presupuestoGastado: Math.max(0, Number(f.presupuestoGastado) || 0),
+                            presupuestoTotal: Math.max(0, Number(f.presupuestoTotal) || 0),
+                          });
+                          setEditHistIdx(null);
+                        }}
+                          style={{ padding: '5px 14px', background: '#4a9eff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                          Guardar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <div key={i} style={{ background: 'var(--app-surface-2)', borderRadius: 8, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text)', marginBottom: 2 }}>
                         {fmtFecha(h.inicio)} → {fmtFecha(h.fin)}
                         {h.diasEvento?.length > 0 && (
@@ -358,6 +402,15 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, editable }) {
                       color: hPct >= 100 ? '#22c55e' : hPct >= 60 ? '#f59e0b' : '#ef4444' }}>
                       {hPct}%
                     </div>
+                    {editable && (
+                      <button onClick={() => { setEditHistIdx(i); setEditHistForm({ ...h }); }}
+                        title="Editar"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-subtle)', padding: '2px 4px', borderRadius: 5, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.color = 'var(--app-text)'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--app-text-subtle)'}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -481,6 +534,13 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   function ajustar(id, campo, delta) {
     saveSeries(series.map(s => s.id === id
       ? { ...s, updatedAt: Date.now(), semana: { ...s.semana, [campo]: Math.max(0, (s.semana?.[campo] || 0) + delta) } }
+      : s
+    ));
+  }
+
+  function editarHistorial(id, idx, datos) {
+    saveSeries(series.map(s => s.id === id
+      ? { ...s, updatedAt: Date.now(), historial: s.historial.map((h, i) => i === idx ? { ...h, ...datos } : h) }
       : s
     ));
   }
@@ -633,7 +693,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, marginBottom: pausadasSeries.length ? 28 : 0 }}>
                 {activasSeries.map(s => (
-                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} editable={can('edit')} />
+                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} editable={can('edit')} />
                 ))}
               </div>
             </>
@@ -647,7 +707,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
                 {pausadasSeries.map(s => (
-                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} editable={can('edit')} />
+                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} editable={can('edit')} />
                 ))}
               </div>
             </>
