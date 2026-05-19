@@ -617,23 +617,25 @@ export default function Eventos() {
   return (
     <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
 
-      {/* ── Íconos fijos en topbar: PDF y Historial ── */}
-      {modo === 'presenciales' && (
-        <div style={{ position: 'fixed', top: 0, right: 14, height: 48, display: 'flex', alignItems: 'center', gap: 6, zIndex: 30 }}>
-          <button onClick={exportarPDF} data-tooltip="Reporte PDF"
-            style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-          </button>
+      {/* ── Íconos fijos en topbar ── */}
+      <div style={{ position: 'fixed', top: 0, right: 14, height: 48, display: 'flex', alignItems: 'center', gap: 6, zIndex: 30 }}>
+        <button
+          onClick={modo === 'presenciales' ? exportarPDF : () => digitalesRef.current?.generarPDF()}
+          data-tooltip="Reporte PDF"
+          style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </button>
+        {modo === 'presenciales' && (
           <button onClick={() => setShowHistorial(true)} data-tooltip="Historial"
             style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── Undo toast ── */}
       {undoToast && (
@@ -689,15 +691,10 @@ export default function Eventos() {
             </>
           ) : (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => digitalesRef.current?.generarPDF()}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                Reporte PDF
-              </button>
               {can('edit') && (
-                <button onClick={() => digitalesRef.current?.abrir()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-                  + Nueva Serie
+                <button onClick={() => digitalesRef.current?.abrir()} data-tooltip="Nueva Serie"
+                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>
+                  +
                 </button>
               )}
             </div>
