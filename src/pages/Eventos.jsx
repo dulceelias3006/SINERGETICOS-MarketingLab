@@ -842,32 +842,46 @@ export default function Eventos() {
                     <div style={{ flex: 1, height: 1, background: 'var(--app-border)' }} />
                   </div>
 
-                  {/* Filas de eventos */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 16, borderLeft: '3px solid var(--app-border)' }}>
+                  {/* Grid de tarjetas compactas */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
                     {sortedEvs.map(ev => {
-                      const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
                       const regionObj = regiones.find(r => r.id === ev.region);
                       const pct = ev.registrosMeta > 0 ? Math.min(100, Math.round((ev.registrosActuales || 0) / ev.registrosMeta * 100)) : 0;
                       const fechaFmt = ev.fecha ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : null;
                       const ESTADO_COLOR = { activo: '#22c55e', planificado: '#a855f7', completado: '#4a9eff', cancelado: '#9ca3af' };
                       const dotColor = ESTADO_COLOR[ev.estado] || '#9ca3af';
+                      const pctColor = pct >= 100 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
 
                       return (
                         <div key={ev.id}
                           onClick={() => can('edit') && abrirEditar(ev)}
-                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, cursor: can('edit') ? 'pointer' : 'default', transition: 'border-color 0.15s' }}
-                          onMouseEnter={e => { if (can('edit')) e.currentTarget.style.borderColor = 'var(--app-text-subtle)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
-                          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--app-text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.nombre}</span>
-                          {regionObj && (
-                            <span style={{ fontSize: 10, fontWeight: 700, background: regionObj.color + '22', color: regionObj.color, borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>{regionObj.label}</span>
-                          )}
-                          {fechaFmt && <span style={{ fontSize: 11, color: 'var(--app-text-subtle)', flexShrink: 0 }}>{fechaFmt}</span>}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--app-text-2)' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
-                            <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>/{(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 100 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444', marginLeft: 4 }}>{pct}%</span>
+                          style={{ padding: '12px 14px', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 12, cursor: can('edit') ? 'pointer' : 'default', transition: 'border-color 0.15s, box-shadow 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}
+                          onMouseEnter={e => { if (can('edit')) { e.currentTarget.style.borderColor = 'var(--app-text-subtle)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.07)'; } }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.boxShadow = 'none'; }}>
+
+                          {/* Nombre + estado */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)', lineHeight: 1.3, flex: 1, minWidth: 0 }}>{ev.nombre}</span>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, marginTop: 3 }} />
+                          </div>
+
+                          {/* Región + fecha */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {regionObj && (
+                              <span style={{ fontSize: 10, fontWeight: 700, background: regionObj.color + '22', color: regionObj.color, borderRadius: 5, padding: '2px 6px' }}>{regionObj.label}</span>
+                            )}
+                            {fechaFmt && <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>{fechaFmt}</span>}
+                          </div>
+
+                          {/* Barra de progreso */}
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')} / {(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: pctColor }}>{pct}%</span>
+                            </div>
+                            <div style={{ height: 4, background: 'var(--app-surface-2)', borderRadius: 99, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${pct}%`, background: pctColor, borderRadius: 99, transition: 'width 0.3s' }} />
+                            </div>
                           </div>
                         </div>
                       );
