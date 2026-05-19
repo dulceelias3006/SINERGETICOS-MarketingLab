@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
   const [nombre, setNombre]     = useState(null);
   const [avatarColor, setAvatarColor] = useState(null);
   const [loading, setLoading]   = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   const loadRole = useCallback(async (u) => {
     if (!u) { setRole(null); setNombre(null); setAvatarColor(null); setLoading(false); return; }
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
       loadRole(u);
     });
     const { data: { subscription } } = sb.auth.onAuthStateChange((_event, session) => {
+      if (_event === 'PASSWORD_RECOVERY') { setRecoveryMode(true); return; }
       const u = session?.user ?? null;
       setUser(u);
       loadRole(u);
@@ -76,6 +78,19 @@ export function AuthProvider({ children }) {
     await sb.auth.signOut();
   }
 
+  async function resetPassword(email) {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    return error;
+  }
+
+  async function updatePassword(newPassword) {
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if (!error) setRecoveryMode(false);
+    return error;
+  }
+
   function can(action) {
     if (role === 'superadmin') return true;
     if (role === 'admin') {
@@ -98,7 +113,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, nombre, avatarColor, loading, signIn, signUp, signOut, can }}>
+    <AuthContext.Provider value={{ user, role, nombre, avatarColor, loading, signIn, signUp, signOut, can, resetPassword, updatePassword, recoveryMode, setRecoveryMode }}>
       {children}
     </AuthContext.Provider>
   );

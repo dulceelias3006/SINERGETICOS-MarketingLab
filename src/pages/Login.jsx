@@ -3,15 +3,28 @@ import { useAuth } from '../context/AuthContext';
 import { dbGet } from '../lib/supabase';
 
 export default function Login() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const [modo, setModo]             = useState('login');
   const [form, setForm]             = useState({ nombre: '', email: '', password: '' });
   const [error, setError]           = useState('');
   const [loading, setLoading]       = useState(false);
   const [registrado, setRegistrado] = useState(false);
   const [showPass, setShowPass]     = useState(false);
+  const [resetEnviado, setResetEnviado] = useState(false);
 
   function setField(k, v) { setForm(p => ({ ...p, [k]: v })); setError(''); }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    setError('');
+    const email = form.email.trim();
+    if (!email || !email.includes('@')) { setError('Ingresa un correo válido.'); return; }
+    setLoading(true);
+    const err = await resetPassword(email);
+    setLoading(false);
+    if (err) setError('No se pudo enviar el correo. Verifica el email ingresado.');
+    else setResetEnviado(true);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -68,6 +81,63 @@ export default function Login() {
             style={{ width: '100%', padding: '12px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             Ir a iniciar sesión
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (modo === 'recuperar') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--app-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ background: 'var(--app-surface)', borderRadius: 18, padding: '40px 36px', maxWidth: 420, width: '100%', boxShadow: '0 8px 40px rgba(0,0,0,0.10)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+            <div style={{ width: 46, height: 46, background: '#e53e3e', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🐝</div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--app-text)', letterSpacing: 0.3 }}>SINERGÉTICOS</div>
+              <div style={{ fontSize: 12, color: 'var(--app-text-subtle)' }}>Marketing Lab</div>
+            </div>
+          </div>
+          {resetEnviado ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', fontSize: 26 }}>✉️</div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--app-text)', margin: '0 0 10px' }}>Revisa tu correo</h2>
+              <p style={{ fontSize: 14, color: 'var(--app-text-muted)', margin: '0 0 24px', lineHeight: 1.6 }}>
+                Te enviamos un enlace a <strong>{form.email}</strong>.<br />
+                Haz clic en el enlace para establecer una nueva contraseña.
+              </p>
+              <button onClick={() => { setModo('login'); setResetEnviado(false); setError(''); }}
+                style={{ width: '100%', padding: '12px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                Volver al inicio de sesión
+              </button>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--app-text)', margin: '0 0 4px' }}>Recuperar contraseña</h1>
+              <p style={{ fontSize: 14, color: 'var(--app-text-subtle)', margin: '0 0 28px' }}>
+                Ingresa tu correo y te enviaremos un enlace para restablecerla.
+              </p>
+              <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Correo electrónico</label>
+                  <input type="email" value={form.email} onChange={e => setField('email', e.target.value)}
+                    placeholder="correo@ejemplo.com" autoFocus style={inp}
+                    onFocus={e => e.target.style.borderColor = '#e53e3e'}
+                    onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
+                </div>
+                {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626' }}>{error}</div>}
+                <button type="submit" disabled={loading}
+                  style={{ marginTop: 4, width: '100%', padding: '13px', background: loading ? '#fca5a5' : '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                  {loading ? 'Enviando...' : 'Enviar enlace'}
+                </button>
+              </form>
+              <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--app-text-subtle)' }}>
+                <button onClick={() => { setModo('login'); setError(''); }}
+                  style={{ background: 'none', border: 'none', color: '#e53e3e', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                  ← Volver al inicio de sesión
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -168,11 +238,18 @@ export default function Login() {
         {/* Cambiar modo */}
         <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--app-text-subtle)' }}>
           {modo === 'login' ? (
-            <>¿No tienes cuenta?{' '}
-              <button onClick={() => { setModo('registro'); setError(''); setShowPass(false); }} style={{ background: 'none', border: 'none', color: '#e53e3e', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-                Regístrate
-              </button>
-            </>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>¿No tienes cuenta?{' '}
+                <button onClick={() => { setModo('registro'); setError(''); setShowPass(false); }} style={{ background: 'none', border: 'none', color: '#e53e3e', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                  Regístrate
+                </button>
+              </div>
+              <div>
+                <button onClick={() => { setModo('recuperar'); setError(''); setResetEnviado(false); }} style={{ background: 'none', border: 'none', color: 'var(--app-text-subtle)', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            </div>
           ) : (
             <>¿Ya tienes cuenta?{' '}
               <button onClick={() => { setModo('login'); setError(''); setShowPass(false); }} style={{ background: 'none', border: 'none', color: '#e53e3e', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>

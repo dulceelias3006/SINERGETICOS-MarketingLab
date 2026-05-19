@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -105,9 +106,65 @@ const IcoMoon = () => (
   </svg>
 );
 
+function ModalCambiarPass({ onClose }) {
+  const { updatePassword } = useAuth();
+  const [pass, setPass]   = useState('');
+  const [pass2, setPass2] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [ok, setOk]       = useState(false);
+  const inp = { width: '100%', border: '1.5px solid var(--app-border)', borderRadius: 9, padding: '9px 12px', fontSize: 13, color: 'var(--app-text)', outline: 'none', background: 'var(--app-surface-alt)', boxSizing: 'border-box', fontFamily: 'inherit' };
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (pass.length < 6) { setError('Mínimo 6 caracteres.'); return; }
+    if (pass !== pass2)  { setError('Las contraseñas no coinciden.'); return; }
+    setLoading(true);
+    const err = await updatePassword(pass);
+    setLoading(false);
+    if (err) setError('Error al actualizar. Intenta de nuevo.');
+    else setOk(true);
+  }
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'var(--app-surface)', borderRadius: 16, width: '100%', maxWidth: 360, padding: 26, boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Cambiar contraseña</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--app-text-subtle)', lineHeight: 1 }}>×</button>
+        </div>
+        {ok ? (
+          <div style={{ textAlign: 'center', padding: '10px 0 6px' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+            <p style={{ fontSize: 14, color: 'var(--app-text-muted)', marginBottom: 20 }}>¡Contraseña actualizada correctamente!</p>
+            <button onClick={onClose} style={{ width: '100%', padding: '10px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 9, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cerrar</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 5 }}>Nueva contraseña</label>
+              <input type="password" value={pass} onChange={e => { setPass(e.target.value); setError(''); }} placeholder="Mínimo 6 caracteres" autoFocus style={inp} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 5 }}>Confirmar contraseña</label>
+              <input type="password" value={pass2} onChange={e => { setPass2(e.target.value); setError(''); }} placeholder="Repite tu contraseña" style={inp} />
+            </div>
+            {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 7, padding: '8px 12px', fontSize: 12, color: '#dc2626' }}>{error}</div>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <button type="button" onClick={onClose} style={{ flex: 1, padding: '10px', background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 9, fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', cursor: 'pointer' }}>Cancelar</button>
+              <button type="submit" disabled={loading} style={{ flex: 1, padding: '10px', background: loading ? '#fca5a5' : '#e53e3e', color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                {loading ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const { user, role, nombre: nombreAuth, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const [showCambiarPass, setShowCambiarPass] = useState(false);
 
   const nombre = nombreAuth || user?.email?.split('@')[0] || 'Usuario';
   const inicial = nombre[0]?.toUpperCase() || 'U';
@@ -226,8 +283,16 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
               <div style={{ fontSize: 11, color: 'var(--sidebar-text-muted)', marginTop: 1 }}>{roleLabel}</div>
             </div>
             <button
+              onClick={() => setShowCambiarPass(true)}
+              data-tooltip="Cambiar contraseña"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sidebar-text-muted)', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--sidebar-title)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--sidebar-text-muted)'}>
+              <IcoKey />
+            </button>
+            <button
               onClick={signOut}
-              title="Cerrar sesión"
+              data-tooltip="Cerrar sesión"
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sidebar-text-muted)', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0 }}
               onMouseEnter={e => e.currentTarget.style.color = 'var(--sidebar-title)'}
               onMouseLeave={e => e.currentTarget.style.color = 'var(--sidebar-text-muted)'}>
@@ -236,6 +301,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
           </div>
         )}
       </div>
+      {showCambiarPass && <ModalCambiarPass onClose={() => setShowCambiarPass(false)} />}
     </aside>
   );
 }

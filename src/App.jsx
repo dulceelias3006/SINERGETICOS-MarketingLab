@@ -14,8 +14,65 @@ import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
 import Pendiente from './pages/Pendiente';
 
+function NuevaContrasena() {
+  const { updatePassword, setRecoveryMode } = useAuth();
+  const [pass, setPass]       = useState('');
+  const [pass2, setPass2]     = useState('');
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const [ok, setOk]           = useState(false);
+  const inp = { width: '100%', border: '1.5px solid var(--app-border)', borderRadius: 10, padding: '11px 14px', fontSize: 14, color: 'var(--app-text)', outline: 'none', background: 'var(--app-surface-alt)', boxSizing: 'border-box', fontFamily: 'inherit' };
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (pass.length < 6) { setError('Mínimo 6 caracteres.'); return; }
+    if (pass !== pass2) { setError('Las contraseñas no coinciden.'); return; }
+    setLoading(true);
+    const err = await updatePassword(pass);
+    setLoading(false);
+    if (err) setError('Error al actualizar. Intenta de nuevo.');
+    else setOk(true);
+  }
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--app-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'var(--app-surface)', borderRadius: 18, padding: '40px 36px', maxWidth: 420, width: '100%', boxShadow: '0 8px 40px rgba(0,0,0,0.10)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+          <div style={{ width: 46, height: 46, background: '#e53e3e', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🐝</div>
+          <div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--app-text)' }}>SINERGÉTICOS</div><div style={{ fontSize: 12, color: 'var(--app-text-subtle)' }}>Marketing Lab</div></div>
+        </div>
+        {ok ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--app-text)', margin: '0 0 10px' }}>¡Contraseña actualizada!</h2>
+            <p style={{ fontSize: 14, color: 'var(--app-text-muted)', margin: '0 0 24px' }}>Ya puedes usar tu nueva contraseña para iniciar sesión.</p>
+            <button onClick={() => setRecoveryMode(false)} style={{ width: '100%', padding: '12px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Continuar</button>
+          </div>
+        ) : (
+          <>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--app-text)', margin: '0 0 4px' }}>Nueva contraseña</h1>
+            <p style={{ fontSize: 14, color: 'var(--app-text-subtle)', margin: '0 0 28px' }}>Elige una contraseña segura para tu cuenta.</p>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Nueva contraseña</label>
+                <input type="password" value={pass} onChange={e => { setPass(e.target.value); setError(''); }} placeholder="Mínimo 6 caracteres" autoFocus style={inp} onFocus={e => e.target.style.borderColor='#e53e3e'} onBlur={e => e.target.style.borderColor='#e5e7eb'} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Confirmar contraseña</label>
+                <input type="password" value={pass2} onChange={e => { setPass2(e.target.value); setError(''); }} placeholder="Repite tu contraseña" style={inp} onFocus={e => e.target.style.borderColor='#e53e3e'} onBlur={e => e.target.style.borderColor='#e5e7eb'} />
+              </div>
+              {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626' }}>{error}</div>}
+              <button type="submit" disabled={loading} style={{ marginTop: 4, width: '100%', padding: '13px', background: loading ? '#fca5a5' : '#e53e3e', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                {loading ? 'Guardando...' : 'Guardar contraseña'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AppContent() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, recoveryMode } = useAuth();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [collapsed, setCollapsed] = useState(window.innerWidth <= 768);
 
@@ -37,6 +94,7 @@ function AppContent() {
     );
   }
 
+  if (recoveryMode) return <NuevaContrasena />;
   if (!user) return <Login />;
   if (role === 'pending' || role === null) return <Pendiente />;
 
