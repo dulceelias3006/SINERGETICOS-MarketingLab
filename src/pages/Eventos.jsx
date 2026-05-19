@@ -620,13 +620,13 @@ export default function Eventos() {
       {/* ── Íconos fijos en topbar: PDF y Historial ── */}
       {modo === 'presenciales' && (
         <div style={{ position: 'fixed', top: 0, right: 14, height: 48, display: 'flex', alignItems: 'center', gap: 6, zIndex: 30 }}>
-          <button onClick={exportarPDF} title="Reporte PDF"
+          <button onClick={exportarPDF} data-tooltip="Reporte PDF"
             style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
           </button>
-          <button onClick={() => setShowHistorial(true)} title="Historial"
+          <button onClick={() => setShowHistorial(true)} data-tooltip="Historial"
             style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
