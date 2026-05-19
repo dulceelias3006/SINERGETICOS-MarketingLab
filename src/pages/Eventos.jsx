@@ -646,7 +646,7 @@ export default function Eventos() {
             <>
               {/* Vista toggle */}
               <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
-                {[['grid','⊞ Todos'],['regiones','⊟ Regiones']].map(([key, label]) => (
+                {[['grid','⊞ Todos'],['regiones','⊟ Regiones'],['meses','📅 Meses']].map(([key, label]) => (
                   <button key={key} onClick={() => setVista(key)}
                     style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: vista === key ? 700 : 400, background: vista === key ? 'var(--app-surface)' : 'transparent', color: vista === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: vista === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                     {label}
@@ -789,6 +789,94 @@ export default function Eventos() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── MESES VIEW ── */}
+      {modo === 'presenciales' && vista === 'meses' && (
+        <div style={{ padding: '24px 28px' }}>
+          {(() => {
+            const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            const porMes = {};
+            filtrados.forEach(ev => {
+              const key = ev.fecha ? ev.fecha.slice(0, 7) : 'sin-fecha';
+              if (!porMes[key]) {
+                if (ev.fecha) {
+                  const [y, m] = ev.fecha.split('-').map(Number);
+                  porMes[key] = { label: `${MESES_ES[m - 1]} ${y}`, sortKey: key, evs: [] };
+                } else {
+                  porMes[key] = { label: 'Sin fecha', sortKey: 'zzzz', evs: [] };
+                }
+              }
+              porMes[key].evs.push(ev);
+            });
+
+            const meses = Object.values(porMes).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+            if (meses.length === 0) return (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--app-text-subtle)' }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📅</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Sin eventos</div>
+              </div>
+            );
+
+            return meses.map(({ label, sortKey, evs }) => {
+              const totalReg = evs.reduce((s, e) => s + (e.registrosActuales || 0), 0);
+              const totalMeta = evs.reduce((s, e) => s + (e.registrosMeta || 0), 0);
+              const pctMes = totalMeta > 0 ? Math.round(totalReg / totalMeta * 100) : 0;
+              const sortedEvs = [...evs].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+
+              return (
+                <div key={sortKey} style={{ marginBottom: 32 }}>
+                  {/* Mes header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--app-text)', letterSpacing: 0.2 }}>{label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', borderRadius: 10, padding: '2px 8px' }}>
+                      {evs.length} evento{evs.length !== 1 ? 's' : ''}
+                    </span>
+                    {totalMeta > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: pctMes >= 100 ? '#22c55e' : pctMes >= 60 ? '#f59e0b' : '#ef4444', background: (pctMes >= 100 ? '#22c55e' : pctMes >= 60 ? '#f59e0b' : '#ef4444') + '18', borderRadius: 10, padding: '2px 8px' }}>
+                        {totalReg.toLocaleString('es-MX')} / {totalMeta.toLocaleString('es-MX')} reg · {pctMes}%
+                      </span>
+                    )}
+                    <div style={{ flex: 1, height: 1, background: 'var(--app-border)' }} />
+                  </div>
+
+                  {/* Filas de eventos */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 16, borderLeft: '3px solid var(--app-border)' }}>
+                    {sortedEvs.map(ev => {
+                      const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
+                      const regionObj = regiones.find(r => r.id === ev.region);
+                      const pct = ev.registrosMeta > 0 ? Math.min(100, Math.round((ev.registrosActuales || 0) / ev.registrosMeta * 100)) : 0;
+                      const fechaFmt = ev.fecha ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : null;
+                      const ESTADO_COLOR = { activo: '#22c55e', planificado: '#a855f7', completado: '#4a9eff', cancelado: '#9ca3af' };
+                      const dotColor = ESTADO_COLOR[ev.estado] || '#9ca3af';
+
+                      return (
+                        <div key={ev.id}
+                          onClick={() => can('edit') && abrirEditar(ev)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, cursor: can('edit') ? 'pointer' : 'default', transition: 'border-color 0.15s' }}
+                          onMouseEnter={e => { if (can('edit')) e.currentTarget.style.borderColor = 'var(--app-text-subtle)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--app-text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.nombre}</span>
+                          {regionObj && (
+                            <span style={{ fontSize: 10, fontWeight: 700, background: regionObj.color + '22', color: regionObj.color, borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>{regionObj.label}</span>
+                          )}
+                          {fechaFmt && <span style={{ fontSize: 11, color: 'var(--app-text-subtle)', flexShrink: 0 }}>{fechaFmt}</span>}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--app-text-2)' }}>{(ev.registrosActuales || 0).toLocaleString('es-MX')}</span>
+                            <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>/{(ev.registrosMeta || 0).toLocaleString('es-MX')}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 100 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444', marginLeft: 4 }}>{pct}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
 
