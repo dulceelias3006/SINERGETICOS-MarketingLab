@@ -681,9 +681,9 @@ export default function Eventos() {
               )}
 
               {can('edit') && (
-                <button onClick={abrir}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-                  + Nuevo Evento
+                <button onClick={abrir} data-tooltip="Nuevo Evento"
+                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>
+                  +
                 </button>
               )}
             </>
