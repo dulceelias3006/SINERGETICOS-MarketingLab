@@ -23,7 +23,7 @@ const USUARIOS_DEFAULT = [
   { id: 6, nombre: '',               email: 'saulmm@zigma3.com',        rol: 'editor', avatarBg: '#9ca3af' },
 ];
 
-const FORM_INIT = { nombre: '', apellido: '', email: '', rol: 'viewer' };
+const FORM_INIT = { nombre: '', apellido: '', email: '', rol: 'viewer', password: '', password2: '' };
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const IcoShield  = ({ color }) => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color||'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
@@ -94,7 +94,7 @@ function RolPill({ usuario, onCambiarRol, canChange }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Usuarios() {
-  const { user, role, can } = useAuth();
+  const { user, role, can, signUp } = useAuth();
   const [usuarios, setUsuarios] = useState(() => {
     try { return JSON.parse(localStorage.getItem('usuarios') || 'null') || USUARIOS_DEFAULT; }
     catch { return USUARIOS_DEFAULT; }
@@ -107,6 +107,8 @@ export default function Usuarios() {
   const [showModal, setShowModal]         = useState(false);
   const [nuevoForm, setNuevoForm]   = useState(FORM_INIT);
   const [formError, setFormError]   = useState('');
+  const [formLoading, setFormLoading] = useState(false);
+  const [showPass, setShowPass]     = useState(false);
 
   const canSync = useRef(false);
 
@@ -156,17 +158,38 @@ export default function Usuarios() {
     save(usuarios.filter(u => u.id !== id));
   }
 
-  function abrirModal() { setNuevoForm(FORM_INIT); setFormError(''); setShowModal(true); }
+  function abrirModal() { setNuevoForm(FORM_INIT); setFormError(''); setFormLoading(false); setShowPass(false); setShowModal(true); }
 
-  function agregarUsuario() {
+  async function agregarUsuario() {
     if (!nuevoForm.email.trim()) { setFormError('El email es obligatorio.'); return; }
-    if (usuarios.some(u => u.email.toLowerCase() === nuevoForm.email.toLowerCase())) {
+    if (!nuevoForm.password) { setFormError('La contraseña es obligatoria.'); return; }
+    if (nuevoForm.password.length < 6) { setFormError('Mínimo 6 caracteres en la contraseña.'); return; }
+    if (nuevoForm.password !== nuevoForm.password2) { setFormError('Las contraseñas no coinciden.'); return; }
+    if (usuarios.some(u => u.email.toLowerCase() === nuevoForm.email.trim().toLowerCase())) {
       setFormError('Ya existe un usuario con ese email.');
       return;
     }
+    setFormLoading(true);
     const nombre = `${nuevoForm.nombre} ${nuevoForm.apellido}`.trim();
-    const color  = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
-    save([...usuarios, { id: Date.now(), nombre, email: nuevoForm.email.trim(), rol: nuevoForm.rol, avatarBg: color }]);
+    const error = await signUp(nuevoForm.email.trim(), nuevoForm.password, nombre);
+    if (error) {
+      setFormLoading(false);
+      const msg = error.message || '';
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        setFormError('Este email ya tiene una cuenta registrada.');
+      } else {
+        setFormError(msg || 'Error al crear el usuario.');
+      }
+      return;
+    }
+    // signUp sets role to 'pending'; override with selected role
+    const emailLower = nuevoForm.email.trim().toLowerCase();
+    const roles = await dbGet('user_roles') || {};
+    roles[emailLower] = nuevoForm.rol;
+    await dbSet('user_roles', roles);
+    const lista = await dbGet('usuarios') || [];
+    await dbSet('usuarios', lista.map(u => u.email?.toLowerCase() === emailLower ? { ...u, rol: nuevoForm.rol } : u));
+    setFormLoading(false);
     setShowModal(false);
   }
 
@@ -332,9 +355,30 @@ export default function Usuarios() {
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Email <span style={{ color: '#ef4444' }}>*</span></div>
                 <input value={nuevoForm.email} onChange={e => { setNuevoForm(p => ({ ...p, email: e.target.value })); setFormError(''); }}
-                  placeholder="correo@ejemplo.com" type="email" style={{ ...fInp, borderColor: formError ? '#ef4444' : '#e5e7eb' }} />
-                {formError && <div style={{ fontSize: 12, color: '#ef4444', marginTop: 5 }}>{formError}</div>}
+                  placeholder="correo@ejemplo.com" type="email" style={{ ...fInp }} />
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Contraseña <span style={{ color: '#ef4444' }}>*</span></div>
+                  <div style={{ position: 'relative' }}>
+                    <input value={nuevoForm.password} onChange={e => { setNuevoForm(p => ({ ...p, password: e.target.value })); setFormError(''); }}
+                      placeholder="Mín. 6 caracteres" type={showPass ? 'text' : 'password'} style={{ ...fInp, paddingRight: 36 }} />
+                    <button type="button" onClick={() => setShowPass(v => !v)}
+                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center', padding: 0 }}>
+                      {showPass
+                        ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Confirmar <span style={{ color: '#ef4444' }}>*</span></div>
+                  <input value={nuevoForm.password2} onChange={e => { setNuevoForm(p => ({ ...p, password2: e.target.value })); setFormError(''); }}
+                    placeholder="Repite la contraseña" type={showPass ? 'text' : 'password'} style={{ ...fInp }} />
+                </div>
+              </div>
+              {formError && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '9px 13px', fontSize: 13, color: '#dc2626' }}>{formError}</div>}
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', marginBottom: 6 }}>Rol</div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -355,9 +399,9 @@ export default function Usuarios() {
                 style={{ padding: '9px 18px', background: 'transparent', border: '1.5px solid var(--app-border)', borderRadius: 10, fontSize: 14, fontWeight: 500, color: 'var(--app-text-muted)', cursor: 'pointer' }}>
                 Cancelar
               </button>
-              <button onClick={agregarUsuario}
-                style={{ padding: '9px 20px', background: '#e53e3e', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
-                Agregar
+              <button onClick={agregarUsuario} disabled={formLoading}
+                style={{ padding: '9px 20px', background: formLoading ? '#fca5a5' : '#e53e3e', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, color: '#fff', cursor: formLoading ? 'not-allowed' : 'pointer' }}>
+                {formLoading ? 'Creando...' : 'Agregar'}
               </button>
             </div>
           </div>
