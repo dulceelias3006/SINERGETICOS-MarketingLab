@@ -662,24 +662,28 @@ export default function Eventos() {
                 </button>
               )}
 
-              <button onClick={() => setShowHistorial(true)} title="Ver historial"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Historial
-              </button>
-
-              <button onClick={exportarPDF} title="Exportar reporte PDF"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                Reporte PDF
-              </button>
-
               {can('edit') && (
                 <button onClick={abrir}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                   + Nuevo Evento
                 </button>
               )}
+
+              <div style={{ width: 1, height: 24, background: 'var(--app-border)', marginLeft: 4 }} />
+
+              <button onClick={exportarPDF} title="Reporte PDF"
+                style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface)'; e.currentTarget.style.color = 'var(--app-text-2)'; }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              </button>
+
+              <button onClick={() => setShowHistorial(true)} title="Historial"
+                style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface)'; e.currentTarget.style.color = 'var(--app-text-2)'; }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </button>
             </>
           ) : (
             <div style={{ display: 'flex', gap: 8 }}>
