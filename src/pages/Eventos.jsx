@@ -137,14 +137,16 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, onResult
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <button onClick={() => onResultados(ev)} data-tooltip="Resultados"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: ev.resultados ? '#e53e3e' : '#d1d5db', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 5 }}
-            onMouseEnter={e => e.currentTarget.style.color = '#e53e3e'}
-            onMouseLeave={e => e.currentTarget.style.color = ev.resultados ? '#e53e3e' : '#d1d5db'}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-          </button>
+          {ev.estado === 'completado' && (
+            <button onClick={() => onResultados(ev)} data-tooltip="Resultados"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: ev.resultados ? '#e53e3e' : '#d1d5db', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 5 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#e53e3e'}
+              onMouseLeave={e => e.currentTarget.style.color = ev.resultados ? '#e53e3e' : '#d1d5db'}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </button>
+          )}
           {onEdit && <button onClick={() => onEdit(ev)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 20, lineHeight: 1, letterSpacing: 2, padding: '0 2px', fontWeight: 700 }}>···</button>}
         </div>
       </div>
