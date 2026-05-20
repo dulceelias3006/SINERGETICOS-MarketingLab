@@ -149,18 +149,18 @@ function ApartadosSection({ apartados, setApartados, currency }) {
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px', alignItems: 'center', gap: 10 }}>
               {/* Col 1: label + [+/×] a la derecha + monto input estilo subtítulo */}
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{ fontSize: 13, color: 'var(--app-text-2)' }}>Apartados</span>
                   {i === 0 ? (
                     <button onClick={addRow} data-tooltip="Agregar apartado"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontSize: 16, fontWeight: 700, lineHeight: 1, padding: '0 2px' }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
-                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                      style={{ width: 15, height: 15, background: '#e53e3e', border: 'none', borderRadius: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1, padding: 0, flexShrink: 0 }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#c53030'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#e53e3e'}>
                       +
                     </button>
                   ) : (
                     <button onClick={() => removeRow(i)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 16, lineHeight: 1, padding: '0 2px' }}
+                      style={{ width: 15, height: 15, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 15, lineHeight: 1, padding: 0, flexShrink: 0 }}
                       onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
                       onMouseLeave={e => e.currentTarget.style.color = '#d1d5db'}>
                       ×
@@ -170,8 +170,8 @@ function ApartadosSection({ apartados, setApartados, currency }) {
                 <input
                   type="number" min="0" value={apt.monto}
                   onChange={e => update(i, 'monto', e.target.value)}
-                  placeholder="$ monto por apartado"
-                  style={{ marginTop: 3, width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--app-border)', outline: 'none', fontSize: 11, color: 'var(--app-text-subtle)', padding: '2px 0', boxSizing: 'border-box' }}
+                  placeholder="$ monto"
+                  style={{ marginTop: 3, width: 100, background: 'transparent', border: 'none', borderBottom: '1px solid var(--app-border)', outline: 'none', fontSize: 11, color: 'var(--app-text-subtle)', padding: '2px 0', boxSizing: 'border-box' }}
                   onFocus={e => e.target.style.borderBottomColor = '#e53e3e'}
                   onBlur={e => e.target.style.borderBottomColor = 'var(--app-border)'}
                 />
