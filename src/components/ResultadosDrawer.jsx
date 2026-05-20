@@ -134,7 +134,7 @@ function TotalRow({ label, qty, monto, currency, big }) {
 // ── Apartados multi-row ────────────────────────────────────────────────────────
 function ApartadosSection({ apartados, setApartados, currency }) {
   function addRow()         { setApartados(p => [...p, { ...APT_ROW }]); }
-  function removeRow(i)     { setApartados(p => p.length === 1 ? [{ ...APT_ROW }] : p.filter((_, idx) => idx !== i)); }
+  function removeRow(i)     { setApartados(p => p.filter((_, idx) => idx !== i)); }
   function update(i, k, v) { setApartados(p => p.map((r, idx) => idx === i ? { ...r, [k]: v } : r)); }
 
   const totalMonto = apartados.reduce((s, a) => s + n(a.monto) * n(a.cantidad), 0);
@@ -142,53 +142,53 @@ function ApartadosSection({ apartados, setApartados, currency }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <SectionTitle
-        label="Apartados"
-        action={
-          <button onClick={addRow}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 10px', background: '#e53e3e12', color: '#e53e3e', border: '1px solid #e53e3e30', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
-            + Agregar
-          </button>
-        }
-      />
-
-      {/* Column headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 24px', gap: 8, marginBottom: 6, paddingRight: 2 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4 }}>$ por apartado</span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4, textAlign: 'right' }}>Cantidad</span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4, textAlign: 'right' }}>Total</span>
-        <span />
-      </div>
-
-      {/* Rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {apartados.map((apt, i) => {
           const rowTotal = n(apt.monto) * n(apt.cantidad);
           return (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 24px', gap: 8, alignItems: 'center' }}>
-              <input
-                type="number" min="0" value={apt.monto}
-                onChange={e => update(i, 'monto', e.target.value)}
-                placeholder="0" style={INP_STYLE}
-                onFocus={e => e.target.style.borderColor = '#e53e3e'}
-                onBlur={e => e.target.style.borderColor = 'var(--app-border)'}
-              />
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px', alignItems: 'center', gap: 10 }}>
+              {/* Col 1: [+/×] + label + monto input */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {i === 0 ? (
+                    <button onClick={addRow} data-tooltip="Agregar apartado"
+                      style={{ width: 17, height: 17, border: '1.5px solid var(--app-text-subtle)', borderRadius: 4, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--app-text-subtle)', fontSize: 13, lineHeight: 1, padding: 0, flexShrink: 0 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#e53e3e'; e.currentTarget.style.color = '#e53e3e'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-text-subtle)'; e.currentTarget.style.color = 'var(--app-text-subtle)'; }}>
+                      +
+                    </button>
+                  ) : (
+                    <button onClick={() => removeRow(i)}
+                      style={{ width: 17, height: 17, border: '1.5px solid #fecaca', borderRadius: 4, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f87171', fontSize: 13, lineHeight: 1, padding: 0, flexShrink: 0 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#fecaca'; e.currentTarget.style.color = '#f87171'; }}>
+                      ×
+                    </button>
+                  )}
+                  <span style={{ fontSize: 13, color: 'var(--app-text-2)' }}>Apartados</span>
+                </div>
+                <input
+                  type="number" min="0" value={apt.monto}
+                  onChange={e => update(i, 'monto', e.target.value)}
+                  placeholder="$ monto por apartado"
+                  style={{ ...INP_STYLE, marginTop: 5, fontSize: 12, padding: '5px 8px' }}
+                  onFocus={e => e.target.style.borderColor = '#e53e3e'}
+                  onBlur={e => e.target.style.borderColor = 'var(--app-border)'}
+                />
+              </div>
+              {/* Col 2: quantity */}
               <input
                 type="number" min="0" value={apt.cantidad}
                 onChange={e => update(i, 'cantidad', e.target.value)}
-                placeholder="0" style={INP_STYLE}
+                placeholder="0"
+                style={{ ...INP_STYLE, width: 80 }}
                 onFocus={e => e.target.style.borderColor = '#e53e3e'}
                 onBlur={e => e.target.style.borderColor = 'var(--app-border)'}
               />
-              <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: rowTotal > 0 ? 'var(--app-text)' : '#d1d5db' }}>
-                {rowTotal > 0 ? fmt(rowTotal, currency) : '—'}
-              </span>
-              <button onClick={() => removeRow(i)}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', borderRadius: 4, fontSize: 16, lineHeight: 1, padding: 0 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                onMouseLeave={e => e.currentTarget.style.color = '#d1d5db'}>
-                ×
-              </button>
+              {/* Col 3: total */}
+              <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: rowTotal > 0 ? 'var(--app-text)' : '#d1d5db' }}>
+                {rowTotal > 0 ? fmt(rowTotal, currency) : '$—'}
+              </div>
             </div>
           );
         })}
