@@ -258,8 +258,8 @@ function TotalView({ mañana, tarde, P, currency, gasto }) {
   const mT = calcMetrics(tarde,  P);
   const tt = sumMetrics(mM, mT);
 
-  const roasClub  = tt.totalClub > 0 && gasto > 0 ? (gasto / tt.totalClub  * 100) : null;
-  const roasTotal = tt.total     > 0 && gasto > 0 ? (gasto / tt.total      * 100) : null;
+  const roasClub  = gasto > 0 && tt.totalClub > 0 ? (tt.totalClub  / gasto) : null;
+  const roasTotal = gasto > 0 && tt.total     > 0 ? (tt.total      / gasto) : null;
   const hayData   = tt.cantTotal > 0 || n(mañana.asistencia) + n(tarde.asistencia) > 0;
 
   if (!hayData) {
@@ -351,8 +351,8 @@ function TotalView({ mañana, tarde, P, currency, gasto }) {
             {tt.cantVIP  > 0 && <TotalRow label="Total VIP"  qty={tt.cantVIP}  monto={tt.totalVIP}  currency={currency} />}
             {tt.cantClub > 0 && <TotalRow label="Total Club" qty={tt.cantClub} monto={tt.totalClub} currency={currency} />}
             <TotalRow label="Club + VIP" qty={tt.cantTotal} monto={tt.total} currency={currency} big />
-            {roasClub  !== null && <TotalRow label="ROAS Club"       monto={`${roasClub.toFixed(2)}%`}  currency={currency} />}
-            {roasTotal !== null && <TotalRow label="ROAS Club + VIP" monto={`${roasTotal.toFixed(2)}%`} currency={currency} />}
+            {roasClub  !== null && <TotalRow label="ROAS Club"       monto={`${roasClub.toFixed(2)}x`}  currency={currency} />}
+            {roasTotal !== null && <TotalRow label="ROAS Club + VIP" monto={`${roasTotal.toFixed(2)}x`} currency={currency} />}
           </div>
         </>
       )}
