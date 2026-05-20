@@ -147,33 +147,33 @@ function ApartadosSection({ apartados, setApartados, currency }) {
           const rowTotal = n(apt.monto) * n(apt.cantidad);
           return (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px', alignItems: 'center', gap: 10 }}>
-              {/* Col 1: [+/×] + label + monto input */}
+              {/* Col 1: label + [+/×] a la derecha + monto input estilo subtítulo */}
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, color: 'var(--app-text-2)' }}>Apartados</span>
                   {i === 0 ? (
                     <button onClick={addRow} data-tooltip="Agregar apartado"
-                      style={{ width: 17, height: 17, border: '1.5px solid var(--app-text-subtle)', borderRadius: 4, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--app-text-subtle)', fontSize: 13, lineHeight: 1, padding: 0, flexShrink: 0 }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#e53e3e'; e.currentTarget.style.color = '#e53e3e'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-text-subtle)'; e.currentTarget.style.color = 'var(--app-text-subtle)'; }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontSize: 16, fontWeight: 700, lineHeight: 1, padding: '0 2px' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                       +
                     </button>
                   ) : (
                     <button onClick={() => removeRow(i)}
-                      style={{ width: 17, height: 17, border: '1.5px solid #fecaca', borderRadius: 4, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f87171', fontSize: 13, lineHeight: 1, padding: 0, flexShrink: 0 }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#fecaca'; e.currentTarget.style.color = '#f87171'; }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 16, lineHeight: 1, padding: '0 2px' }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#d1d5db'}>
                       ×
                     </button>
                   )}
-                  <span style={{ fontSize: 13, color: 'var(--app-text-2)' }}>Apartados</span>
                 </div>
                 <input
                   type="number" min="0" value={apt.monto}
                   onChange={e => update(i, 'monto', e.target.value)}
                   placeholder="$ monto por apartado"
-                  style={{ ...INP_STYLE, marginTop: 5, fontSize: 12, padding: '5px 8px' }}
-                  onFocus={e => e.target.style.borderColor = '#e53e3e'}
-                  onBlur={e => e.target.style.borderColor = 'var(--app-border)'}
+                  style={{ marginTop: 3, width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--app-border)', outline: 'none', fontSize: 11, color: 'var(--app-text-subtle)', padding: '2px 0', boxSizing: 'border-box' }}
+                  onFocus={e => e.target.style.borderBottomColor = '#e53e3e'}
+                  onBlur={e => e.target.style.borderBottomColor = 'var(--app-border)'}
                 />
               </div>
               {/* Col 2: quantity */}
@@ -186,8 +186,8 @@ function ApartadosSection({ apartados, setApartados, currency }) {
                 onBlur={e => e.target.style.borderColor = 'var(--app-border)'}
               />
               {/* Col 3: total */}
-              <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: rowTotal > 0 ? 'var(--app-text)' : '#d1d5db' }}>
-                {rowTotal > 0 ? fmt(rowTotal, currency) : '$—'}
+              <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--app-text)' }}>
+                {rowTotal > 0 ? fmt(rowTotal, currency) : ''}
               </div>
             </div>
           );
