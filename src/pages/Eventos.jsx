@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import EventosDigitales from '../components/EventosDigitales';
+import ResultadosDrawer from '../components/ResultadosDrawer';
 
 const ESTADOS_CONFIG = [
   { key: 'planificado', label: 'Planificado', color: '#f59e0b' },
@@ -79,7 +80,7 @@ function costoColor(costo, region) {
 }
 
 // ── Mini event card used in both views ──────────────────────────────────────
-function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact = false }) {
+function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, onResultados, compact = false }) {
   const [editReg, setEditReg]         = useState(null);
   const [editVip, setEditVip]         = useState(null);
   const [editGastado, setEditGastado] = useState(null);
@@ -135,7 +136,17 @@ function EventCard({ ev, tipos, regiones, estadoObj, onEdit, onAjustar, compact 
             </span>
           )}
         </div>
-        {onEdit && <button onClick={() => onEdit(ev)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 20, lineHeight: 1, letterSpacing: 2, padding: '0 2px', fontWeight: 700 }}>···</button>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button onClick={() => onResultados(ev)} data-tooltip="Resultados"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: ev.resultados ? '#e53e3e' : '#d1d5db', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 5 }}
+            onMouseEnter={e => e.currentTarget.style.color = '#e53e3e'}
+            onMouseLeave={e => e.currentTarget.style.color = ev.resultados ? '#e53e3e' : '#d1d5db'}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </button>
+          {onEdit && <button onClick={() => onEdit(ev)} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: 20, lineHeight: 1, letterSpacing: 2, padding: '0 2px', fontWeight: 700 }}>···</button>}
+        </div>
       </div>
 
       {/* Title */}
@@ -319,6 +330,8 @@ export default function Eventos() {
   const [form, setForm] = useState(FORM_INIT);
   const [formError, setFormError] = useState(false);
 
+  const [drawerEvento, setDrawerEvento] = useState(null);
+
   const [undoStack, setUndoStack] = useState([]);
   const [undoToast, setUndoToast] = useState(null);
   const toastTimer = useRef(null);
@@ -330,6 +343,11 @@ export default function Eventos() {
     setEventos(next);
     localStorage.setItem('eventos', JSON.stringify(next));
     if (canSync.current) dbSet('eventos', next);
+  }
+
+  function guardarResultados(id, resultados) {
+    saveEventos(eventos.map(ev => ev.id === id ? { ...ev, resultados, updatedAt: Date.now() } : ev), `resultados de "${eventos.find(e => e.id === id)?.nombre}"`);
+    setDrawerEvento(null);
   }
 
   function dehacer() {
@@ -615,6 +633,7 @@ export default function Eventos() {
   const sinRegion = filtrados.filter(e => !e.region);
 
   return (
+    <>
     <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
 
       {/* ── Íconos fijos en topbar ── */}
@@ -733,7 +752,7 @@ export default function Eventos() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: 16 }}>
               {filtrados.map(ev => {
                 const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
-                return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} />;
+                return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} onResultados={setDrawerEvento} />;
               })}
             </div>
           )}
@@ -763,7 +782,7 @@ export default function Eventos() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {cols.map(ev => {
                       const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
-                      return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} compact />;
+                      return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} onResultados={setDrawerEvento} compact />;
                     })}
                     {cols.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '24px 10px', color: '#d1d5db', fontSize: 12, border: `1px dashed ${region.color}44`, borderRadius: 10, background: 'var(--app-surface)' }}>
@@ -786,7 +805,7 @@ export default function Eventos() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {sinRegion.map(ev => {
                     const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
-                    return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} compact />;
+                    return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} onResultados={setDrawerEvento} compact />;
                   })}
                 </div>
               </div>
@@ -1086,5 +1105,15 @@ export default function Eventos() {
         );
       })()}
     </div>
+
+    {drawerEvento && (
+      <ResultadosDrawer
+        evento={drawerEvento}
+        regiones={regiones}
+        onClose={() => setDrawerEvento(null)}
+        onSave={guardarResultados}
+      />
+    )}
+    </>
   );
 }
