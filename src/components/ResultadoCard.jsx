@@ -155,7 +155,7 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>de {(ev.registrosActuales || 0).toLocaleString('es-MX')} registros</span>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#e53e3e' }}>{pctAsistencia}%</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#e53e3e' }}>{pctAsistencia}% <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text-subtle)' }}>asistió</span></span>
                   </div>
                   <div style={{ height: 5, background: 'var(--app-border)', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${Math.min(100, pctAsistencia)}%`, background: 'linear-gradient(90deg, #e53e3e, #fc8181)', borderRadius: 3 }} />
