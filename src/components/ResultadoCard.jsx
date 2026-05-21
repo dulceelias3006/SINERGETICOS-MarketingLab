@@ -13,7 +13,7 @@ function fmt(val, currency) {
 function Block({ title, children }) {
   return (
     <div style={{ background: 'var(--app-surface-alt)', borderRadius: 10, padding: '11px 13px' }}>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'var(--app-text-subtle)', marginBottom: 9 }}>{title}</div>
+      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--app-text-2)', marginBottom: 9 }}>{title}</div>
       {children}
     </div>
   );
