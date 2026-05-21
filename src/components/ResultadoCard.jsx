@@ -138,7 +138,7 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
 
           {/* Asistencia */}
           {totalAsistencia > 0 && (
-            <Block title="Asistencia">
+            <Block title="👥 Asistencia">
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: pctAsistencia !== null ? 10 : 0 }}>
                 <div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--app-text)', lineHeight: 1 }}>{totalAsistencia.toLocaleString('es-MX')}</div>
@@ -170,7 +170,7 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
             <div style={{ display: 'grid', gridTemplateColumns: cantVIP > 0 && cantClub > 0 ? '1fr 1fr' : '1fr', gap: 10 }}>
 
               {cantVIP > 0 && (
-                <Block title="Ventas VIP">
+                <Block title="⭐ Ventas VIP">
                   {ventasVIP    > 0 && <LineRow label="VIP"    qty={ventasVIP}    monto={montoVIP}    currency={currency} />}
                   {ventasVIP2x1 > 0 && <LineRow label="2×1"   qty={ventasVIP2x1} monto={montoVIP2x1} currency={currency} />}
                   <Divider qty={cantVIP} monto={totalVIP} currency={currency} />
@@ -178,7 +178,7 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
               )}
 
               {cantClub > 0 && (
-                <Block title="Ventas Club">
+                <Block title="🏆 Ventas Club">
                   {cant3m  > 0 && <LineRow label="3 meses"  qty={cant3m}  monto={monto3m}  currency={currency} />}
                   {cant6m  > 0 && <LineRow label="6 meses"  qty={cant6m}  monto={monto6m}  currency={currency} />}
                   {cant12m > 0 && <LineRow label="12 meses" qty={cant12m} monto={monto12m} currency={currency} />}
@@ -194,7 +194,7 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
             <div style={{ background: '#e53e3e08', border: '1px solid #e53e3e18', borderRadius: 10, padding: '11px 13px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: roasClub !== null || roasTotal !== null ? 10 : 0 }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--app-text)' }}>Total ventas</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--app-text)' }}>💰 Total ventas</div>
                   <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginTop: 1 }}>{cantTotal} ventas · Gasto: {fmt(gasto, currency)}</div>
                 </div>
                 <div style={{ fontSize: 17, fontWeight: 800, color: '#e53e3e' }}>{fmt(totalGeneral, currency)}</div>
@@ -203,13 +203,13 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   {roasClub !== null && (
                     <div style={{ flex: 1, background: 'var(--app-surface)', borderRadius: 8, padding: '6px 10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4, marginBottom: 2 }}>ROAS Club</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4, marginBottom: 2 }}>📈 ROAS Club</div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--app-text)' }}>{roasClub.toFixed(2)}x</div>
                     </div>
                   )}
                   {roasTotal !== null && (
                     <div style={{ flex: 1, background: 'var(--app-surface)', borderRadius: 8, padding: '6px 10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4, marginBottom: 2 }}>ROAS Total</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', letterSpacing: 0.4, marginBottom: 2 }}>📈 ROAS Total</div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--app-text)' }}>{roasTotal.toFixed(2)}x</div>
                     </div>
                   )}
