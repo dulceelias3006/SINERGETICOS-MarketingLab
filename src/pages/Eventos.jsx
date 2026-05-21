@@ -3,6 +3,7 @@ import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import EventosDigitales from '../components/EventosDigitales';
 import ResultadosDrawer from '../components/ResultadosDrawer';
+import ResultadoCard from '../components/ResultadoCard';
 
 const ESTADOS_CONFIG = [
   { key: 'planificado', label: 'Planificado', color: '#f59e0b' },
@@ -325,6 +326,7 @@ export default function Eventos() {
   const digitalesRef = useRef();
   const [vista, setVista] = useState('grid');
   const [filtro, setFiltro] = useState('activo');
+  const [vistaResultados, setVistaResultados] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showRegionesConfig, setShowRegionesConfig] = useState(false);
   const [showHistorial, setShowHistorial] = useState(false);
@@ -728,13 +730,25 @@ export default function Eventos() {
         <div style={{ padding: '12px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {[['activo','Activos'],['planificado','Planificados'],['completado','Completados'],['todos','Todos']].map(([key, label]) => (
-              <button key={key} onClick={() => setFiltro(key)}
+              <button key={key} onClick={() => { setFiltro(key); if (key !== 'completado') setVistaResultados(false); }}
                 style={{ padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: filtro === key ? 700 : 500, background: filtro === key ? '#111827' : 'var(--app-surface-2)', color: filtro === key ? '#fff' : 'var(--app-text-muted)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 {label}
                 <span style={{ fontSize: 11, background: filtro === key ? 'rgba(255,255,255,0.2)' : 'var(--app-border)', color: filtro === key ? '#fff' : 'var(--app-text-subtle)', borderRadius: 10, padding: '1px 6px', fontWeight: 600 }}>{counts[key]}</span>
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Toggle resultados — solo en completados grid ── */}
+      {modo === 'presenciales' && vista === 'grid' && filtro === 'completado' && (
+        <div style={{ padding: '10px 28px', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border-light)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12, color: vistaResultados ? 'var(--app-text-subtle)' : 'var(--app-text-2)', fontWeight: vistaResultados ? 400 : 600 }}>Vista eventos</span>
+          <div onClick={() => setVistaResultados(v => !v)}
+            style={{ width: 38, height: 22, borderRadius: 11, background: vistaResultados ? '#e53e3e' : 'var(--app-border)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+            <div style={{ position: 'absolute', top: 3, left: vistaResultados ? 19 : 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.25)' }} />
+          </div>
+          <span style={{ fontSize: 12, color: vistaResultados ? 'var(--app-text-2)' : 'var(--app-text-subtle)', fontWeight: vistaResultados ? 600 : 400 }}>Vista resultados</span>
         </div>
       )}
 
@@ -754,6 +768,9 @@ export default function Eventos() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: 16 }}>
               {filtrados.map(ev => {
                 const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
+                if (vistaResultados && filtro === 'completado') {
+                  return <ResultadoCard key={ev.id} ev={ev} regiones={regiones} onEdit={setDrawerEvento} />;
+                }
                 return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} onResultados={setDrawerEvento} />;
               })}
             </div>
