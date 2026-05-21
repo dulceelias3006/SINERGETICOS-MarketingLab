@@ -178,7 +178,7 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
               )}
 
               {cantClub > 0 && (
-                <Block title="🏆 Ventas Club">
+                <Block title="🐝 Ventas Club">
                   {cant3m  > 0 && <LineRow label="3 meses"  qty={cant3m}  monto={monto3m}  currency={currency} />}
                   {cant6m  > 0 && <LineRow label="6 meses"  qty={cant6m}  monto={monto6m}  currency={currency} />}
                   {cant12m > 0 && <LineRow label="12 meses" qty={cant12m} monto={monto12m} currency={currency} />}
