@@ -227,7 +227,7 @@ function ShiftForm({ shift, setShift, P, currency }) {
 }
 
 // ── Total view ─────────────────────────────────────────────────────────────────
-function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currency, gasto }) {
+function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currency, gasto, registros }) {
   const cM = calcClub(mañana, P);
   const cT = calcClub(tarde,  P);
 
@@ -247,6 +247,9 @@ function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currenc
 
   const totalAsistencia    = n(mañana.asistencia)    + n(tarde.asistencia);
   const totalAsistenciaVIP = n(mañana.asistenciaVIP) + n(tarde.asistenciaVIP);
+  const pctAsistencia      = (registros > 0 && totalAsistencia > 0)
+    ? (totalAsistencia / registros * 100).toFixed(1)
+    : null;
 
   const hayData = cantTotal > 0 || totalAsistencia > 0;
 
@@ -335,13 +338,22 @@ function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currenc
       )}
 
       {/* Resumen */}
-      {cantTotal > 0 && (
+      {(cantTotal > 0 || totalAsistencia > 0) && (
         <>
           <SectionTitle label="Resumen total" accent />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {totalAsistencia > 0 && (
+              <TotalRow label="Asistencia total" monto={`${totalAsistencia.toLocaleString('es-MX')} personas`} currency={currency} />
+            )}
+            {totalAsistenciaVIP > 0 && (
+              <TotalRow label="Asistencia VIP" sub="Incluidas en total" monto={`${totalAsistenciaVIP.toLocaleString('es-MX')} personas`} currency={currency} />
+            )}
+            {pctAsistencia !== null && (
+              <TotalRow label="% Asistencia" sub={`${totalAsistencia.toLocaleString('es-MX')} de ${(registros).toLocaleString('es-MX')} registros`} monto={`${pctAsistencia}%`} currency={currency} big />
+            )}
             {cantVIP  > 0 && <TotalRow label="Total VIP"  qty={cantVIP}  monto={totalVIP}  currency={currency} />}
             {cantClub > 0 && <TotalRow label="Total Club" qty={cantClub} monto={totalClub} currency={currency} />}
-            <TotalRow label="Club + VIP" qty={cantTotal} monto={totalGeneral} currency={currency} big />
+            {cantTotal > 0 && <TotalRow label="Club + VIP" qty={cantTotal} monto={totalGeneral} currency={currency} big />}
             {roasClub  !== null && <TotalRow label="ROAS Club"       monto={`${roasClub.toFixed(2)}x`}  currency={currency} />}
             {roasTotal !== null && <TotalRow label="ROAS Club + VIP" monto={`${roasTotal.toFixed(2)}x`} currency={currency} />}
           </div>
@@ -416,7 +428,7 @@ export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) 
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           {turno === 'total' && (
-            <TotalView mañana={res.mañana} tarde={res.tarde} ventasVIP={res.ventasVIP} ventasVIP2x1={res.ventasVIP2x1} setVIP={setVIP} P={P} currency={currency} gasto={gasto} />
+            <TotalView mañana={res.mañana} tarde={res.tarde} ventasVIP={res.ventasVIP} ventasVIP2x1={res.ventasVIP2x1} setVIP={setVIP} P={P} currency={currency} gasto={gasto} registros={evento.registrosActuales || 0} />
           )}
           {turno === 'mañana' && <ShiftForm shift={res.mañana} setShift={setShift('mañana')} P={P} currency={currency} />}
           {turno === 'tarde'  && <ShiftForm shift={res.tarde}  setShift={setShift('tarde')}  P={P} currency={currency} />}
