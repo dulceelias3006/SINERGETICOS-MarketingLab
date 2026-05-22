@@ -337,13 +337,19 @@ export default function Eventos() {
   const [drawerEvento, setDrawerEvento] = useState(null);
 
   const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
   const [undoToast, setUndoToast] = useState(null);
   const toastTimer = useRef(null);
   const dehacerRef = useRef(null);
+  const rehacerRef = useRef(null);
+  const modoRef    = useRef(modo);
   const canSync = useRef(false);
+
+  modoRef.current = modo;
 
   function saveEventos(next, desc = '') {
     setUndoStack(prev => [...prev, { snap: eventos, desc }].slice(-20));
+    setRedoStack([]);
     setEventos(next);
     localStorage.setItem('eventos', JSON.stringify(next));
     if (canSync.current) dbSet('eventos', next);
@@ -358,6 +364,7 @@ export default function Eventos() {
     setUndoStack(prev => {
       if (prev.length === 0) return prev;
       const entry = prev[prev.length - 1];
+      setRedoStack(r => [...r, { snap: eventos, desc: entry.desc }].slice(-20));
       setEventos(entry.snap);
       localStorage.setItem('eventos', JSON.stringify(entry.snap));
       if (canSync.current) dbSet('eventos', entry.snap);
@@ -368,14 +375,35 @@ export default function Eventos() {
     });
   }
 
+  function rehacer() {
+    setRedoStack(prev => {
+      if (prev.length === 0) return prev;
+      const entry = prev[prev.length - 1];
+      setUndoStack(u => [...u, { snap: eventos, desc: entry.desc }].slice(-20));
+      setEventos(entry.snap);
+      localStorage.setItem('eventos', JSON.stringify(entry.snap));
+      if (canSync.current) dbSet('eventos', entry.snap);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setUndoToast(entry.desc ? `Rehecho: ${entry.desc}` : 'Cambio rehecho');
+      toastTimer.current = setTimeout(() => setUndoToast(null), 2800);
+      return prev.slice(0, -1);
+    });
+  }
+
   dehacerRef.current = dehacer;
+  rehacerRef.current = rehacer;
 
   useEffect(() => {
     function handleKey(e) {
+      if (modoRef.current !== 'presenciales') return;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
         e.preventDefault();
         dehacerRef.current();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        rehacerRef.current();
       }
     }
     window.addEventListener('keydown', handleKey);
@@ -665,7 +693,8 @@ export default function Eventos() {
         <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', background: '#1f2937', color: '#fff', padding: '11px 20px', borderRadius: 10, fontSize: 13, fontWeight: 500, zIndex: 9999, boxShadow: '0 4px 16px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           {undoToast}
-          {undoStack.length > 0 && <span style={{ color: 'var(--app-text-subtle)', fontSize: 11 }}>({undoStack.length} más)</span>}
+          {undoStack.length > 0 && <span style={{ color: '#9ca3af', fontSize: 11 }}>· Ctrl+Z ({undoStack.length})</span>}
+          {redoStack.length > 0 && <span style={{ color: '#9ca3af', fontSize: 11 }}>· Ctrl+Y ({redoStack.length})</span>}
         </div>
       )}
 
