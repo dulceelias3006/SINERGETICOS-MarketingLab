@@ -770,7 +770,7 @@ export default function Eventos() {
       )}
 
       {/* ── Toggle resultados — solo en completados grid ── */}
-      {modo === 'presenciales' && vista === 'grid' && filtro === 'completado' && (
+      {modo === 'presenciales' && filtro === 'completado' && (
         <div style={{ padding: '10px 28px', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border-light)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12, color: vistaResultados ? 'var(--app-text-subtle)' : 'var(--app-text-2)', fontWeight: vistaResultados ? 400 : 600 }}>Vista eventos</span>
           <div onClick={() => setVistaResultados(v => !v)}
