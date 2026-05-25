@@ -814,7 +814,7 @@ export default function Eventos() {
             {regiones.map(region => {
               const cols = filtrados.filter(e => e.region === region.id || (region.id === 'USA' && e.region === 'CAN'));
               return (
-                <div key={region.id} style={{ flex: 1, minWidth: 260 }}>
+                <div key={region.id} style={{ flex: 1, minWidth: vistaResultados && filtro === 'completado' ? 360 : 260 }}>
                   {/* Column header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '10px 14px', background: region.color + '18', borderRadius: 10, border: `1.5px solid ${region.color}44` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -830,6 +830,9 @@ export default function Eventos() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {cols.map(ev => {
                       const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
+                      if (vistaResultados && filtro === 'completado') {
+                        return <ResultadoCard key={ev.id} ev={ev} regiones={regiones} onEdit={setDrawerEvento} />;
+                      }
                       return <EventCard key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj} onEdit={can('edit') ? abrirEditar : undefined} onAjustar={can('edit') ? ajustar : undefined} onResultados={setDrawerEvento} compact />;
                     })}
                     {cols.length === 0 && (
