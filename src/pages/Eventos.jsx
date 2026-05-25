@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import EventosDigitales from '../components/EventosDigitales';
 import ResultadosDrawer from '../components/ResultadosDrawer';
 import ResultadoCard from '../components/ResultadoCard';
+import EnlacesDrawer from '../components/EnlacesDrawer';
 
 const ESTADOS_CONFIG = [
   { key: 'planificado', label: 'Planificado', color: '#f59e0b' },
@@ -303,7 +304,7 @@ function autoCompletarEventos(lista) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Eventos() {
-  const { can, nombre: nombreUsuario, avatarColor } = useAuth();
+  const { can, role, nombre: nombreUsuario, avatarColor } = useAuth();
   const [eventos, setEventos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('eventos') || 'null') || EVENTOS_DEFAULT; } catch { return EVENTOS_DEFAULT; }
   });
@@ -335,6 +336,7 @@ export default function Eventos() {
   const [formError, setFormError] = useState(false);
 
   const [drawerEvento, setDrawerEvento] = useState(null);
+  const [showEnlaces, setShowEnlaces] = useState(false);
 
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -737,6 +739,17 @@ export default function Eventos() {
                 </button>
               )}
 
+              {role === 'superadmin' && (
+                <button onClick={() => setShowEnlaces(true)} data-tooltip="Enlaces rápidos"
+                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#e53e3e'; e.currentTarget.style.borderColor = '#fca5a5'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                </button>
+              )}
               {can('edit') && (
                 <button onClick={abrir} data-tooltip="Nuevo Evento"
                   style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>
@@ -1170,6 +1183,7 @@ export default function Eventos() {
         onSave={guardarResultados}
       />
     )}
+    {showEnlaces && <EnlacesDrawer onClose={() => setShowEnlaces(false)} />}
     </>
   );
 }
