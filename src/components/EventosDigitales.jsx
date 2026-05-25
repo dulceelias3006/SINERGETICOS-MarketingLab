@@ -389,7 +389,10 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editab
                         {fmtFecha(h.inicio)} → {fmtFecha(h.fin)}
                         {h.diasEvento?.length > 0 && (
                           <span style={{ marginLeft: 6, fontWeight: 400, color: '#4a9eff' }}>
-                            · {h.diasEvento.map(d => DIAS_FULL[d]).join(' & ')}
+                            · {h.diasEvento.map((d, i) => {
+                                const fecha = h.fechasEvento?.[i];
+                                return fecha ? `${DIAS_FULL[d]} ${fmtFecha(fecha)}` : DIAS_FULL[d];
+                              }).join(' & ')}
                           </span>
                         )}
                       </div>
