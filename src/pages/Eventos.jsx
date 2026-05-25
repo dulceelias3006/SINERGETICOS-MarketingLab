@@ -759,6 +759,17 @@ export default function Eventos() {
             </>
           ) : (
             <div style={{ display: 'flex', gap: 8 }}>
+              {role === 'superadmin' && (
+                <button onClick={() => setShowEnlaces(true)} data-tooltip="Enlaces rápidos"
+                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#e53e3e'; e.currentTarget.style.borderColor = '#fca5a5'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                </button>
+              )}
               {can('edit') && (
                 <button onClick={() => digitalesRef.current?.abrir()} data-tooltip="Nueva Serie"
                   style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>
