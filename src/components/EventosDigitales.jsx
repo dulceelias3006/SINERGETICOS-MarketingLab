@@ -426,6 +426,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   const { can } = useAuth();
   const canSync = useRef(false);
   const [series, setSeries] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState({ nombre: '', region: 'MEX', estado: 'activo', urlRegistro: '', divisa: 'MXN', meta: 0, presupuestoTotal: 0, diasEvento: [] });
@@ -459,6 +460,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
           if (local) { const m = migrarFechas(local); setSeries(m); dbSet('series_digitales', m); }
         } catch {}
       }
+      setLoading(false);
     });
     const sub = dbSub('series_digitales', v => {
       if (v !== null) setSeries(p => JSON.stringify(p) === JSON.stringify(v) ? p : v);
@@ -664,6 +666,8 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
 
   const activasSeries = series.filter(s => s.estado === 'activo');
   const pausadasSeries = series.filter(s => s.estado === 'pausado');
+
+  if (loading) return <div style={{ minHeight: 200 }} />;
 
   return (
     <div style={{ background: 'var(--app-bg)', minHeight: '100%' }}>
