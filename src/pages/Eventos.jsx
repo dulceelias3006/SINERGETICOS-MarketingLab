@@ -698,8 +698,11 @@ export default function Eventos() {
         </div>
       )}
 
+      {/* ── Sticky wrapper: header + filtros + toggle ── */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--app-surface)' }}>
+
       {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 0', borderBottom: '1px solid var(--app-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Eventos</h1>
           {/* Switcher Presenciales / Digitales */}
@@ -756,7 +759,7 @@ export default function Eventos() {
 
       {/* ── Filter tabs — solo en modo presenciales ── */}
       {modo === 'presenciales' && (
-        <div style={{ padding: '12px 28px 0', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
+        <div style={{ padding: '12px 28px 0', borderBottom: '1px solid var(--app-border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {[['activo','Activos'],['planificado','Planificados'],['completado','Completados'],['todos','Todos']].map(([key, label]) => (
               <button key={key} onClick={() => { setFiltro(key); setVistaResultados(key === 'completado'); }}
@@ -769,9 +772,9 @@ export default function Eventos() {
         </div>
       )}
 
-      {/* ── Toggle resultados — solo en completados grid ── */}
+      {/* ── Toggle resultados — solo en completados ── */}
       {modo === 'presenciales' && filtro === 'completado' && (
-        <div style={{ padding: '10px 28px', background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border-light)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ padding: '10px 28px', borderBottom: '1px solid var(--app-border-light)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12, color: vistaResultados ? 'var(--app-text-subtle)' : 'var(--app-text-2)', fontWeight: vistaResultados ? 400 : 600 }}>Vista eventos</span>
           <div onClick={() => setVistaResultados(v => !v)}
             style={{ width: 38, height: 22, borderRadius: 11, background: vistaResultados ? '#e53e3e' : 'var(--app-border)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
@@ -780,6 +783,8 @@ export default function Eventos() {
           <span style={{ fontSize: 12, color: vistaResultados ? 'var(--app-text-2)' : 'var(--app-text-subtle)', fontWeight: vistaResultados ? 600 : 400 }}>Vista resultados</span>
         </div>
       )}
+
+      </div>{/* ── fin sticky wrapper ── */}
 
       {/* ── DIGITALES ── */}
       {modo === 'digitales' && <EventosDigitales ref={digitalesRef} />}
