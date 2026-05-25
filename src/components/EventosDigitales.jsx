@@ -264,6 +264,11 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editab
                   ${(sem.presupuestoGastado || 0).toLocaleString('es-MX')}
                 </span>
                 <span style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginLeft: 2 }}>({gastadoPct}%)</span>
+                {sem.presupuestoTotal > 0 && (
+                  <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 2 }}>
+                    de ${(sem.presupuestoTotal).toLocaleString('es-MX')}
+                  </div>
+                )}
               </div>
             )}
           </div>
