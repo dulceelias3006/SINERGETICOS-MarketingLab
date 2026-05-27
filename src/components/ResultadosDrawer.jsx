@@ -450,7 +450,7 @@ export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) 
         <div style={{ padding: '14px 20px', borderTop: '1px solid var(--app-border-light)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 12, color: 'var(--app-text-subtle)' }}>
             {turno === 'total'
-              ? `VIP editable · Club de solo lectura${mixedCurrency ? ' · ROAS N/A (divisas mixtas)' : ''}`
+              ? `VIP editable · Club de solo lectura${isUSD ? ' · ROAS N/A (divisas mixtas)' : ''}`
               : `Turno ${turno}`}
           </span>
           <div style={{ display: 'flex', gap: 10 }}>
