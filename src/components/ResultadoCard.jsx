@@ -80,8 +80,8 @@ export default function ResultadoCard({ ev, regiones, onEdit }) {
   const totalGeneral = totalClub + totalVIP;
   const cantTotal    = cantClub + cantVIP;
 
-  const roasClub  = gasto > 0 && totalClub    > 0 ? totalClub    / gasto : null;
-  const roasTotal = gasto > 0 && totalGeneral  > 0 ? totalGeneral / gasto : null;
+  const roasClub  = !isUSD && gasto > 0 && totalClub    > 0 ? totalClub    / gasto : null;
+  const roasTotal = !isUSD && gasto > 0 && totalGeneral  > 0 ? totalGeneral / gasto : null;
 
   const hasResults = totalAsistencia > 0 || cantVIP > 0 || cantClub > 0;
 
