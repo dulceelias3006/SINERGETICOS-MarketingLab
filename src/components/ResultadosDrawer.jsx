@@ -227,7 +227,7 @@ function ShiftForm({ shift, setShift, P, currency }) {
 }
 
 // ── Total view ─────────────────────────────────────────────────────────────────
-function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currency, gasto, registros }) {
+function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currency, gasto, gastoCurrency, mixedCurrency, registros }) {
   const cM = calcClub(mañana, P);
   const cT = calcClub(tarde,  P);
 
@@ -242,8 +242,9 @@ function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currenc
   const totalGeneral = totalClub + totalVIP;
   const cantTotal    = cantClub  + cantVIP;
 
-  const roasClub  = gasto > 0 && totalClub    > 0 ? (totalClub    / gasto) : null;
-  const roasTotal = gasto > 0 && totalGeneral  > 0 ? (totalGeneral / gasto) : null;
+  // ROAS solo cuando gasto y ventas están en la misma divisa
+  const roasClub  = !mixedCurrency && gasto > 0 && totalClub    > 0 ? (totalClub    / gasto) : null;
+  const roasTotal = !mixedCurrency && gasto > 0 && totalGeneral  > 0 ? (totalGeneral / gasto) : null;
 
   const totalAsistencia    = n(mañana.asistencia)    + n(tarde.asistencia);
   const totalAsistenciaVIP = n(mañana.asistenciaVIP) + n(tarde.asistenciaVIP);
@@ -380,8 +381,15 @@ function VIPSection({ ventasVIP, ventasVIP2x1, setVIP, montoVIP, montoVIP2x1, ca
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) {
   const isUSD    = evento.region === 'USA' || evento.region === 'CAN';
-  const currency = isUSD ? 'USD' : 'MXN';
+  const currency = isUSD ? 'USD' : 'MXN';   // divisas para ventas
+  const gastoCurrency = 'MXN';               // gasto siempre en MXN
   const P        = PRECIOS[currency];
+
+  // Detectar si hay uno o dos turnos
+  const hasHora2      = evento.hora2 && evento.hora2.trim() !== '';
+  const hora1Hour     = evento.hora ? parseInt(evento.hora.split(':')[0], 10) : 10;
+  const singleShift   = !hasHora2;
+  const singleShiftKey = singleShift ? (hora1Hour >= 13 ? 'tarde' : 'mañana') : null;
 
   const [res, setRes]     = useState(() => loadRes(evento.resultados));
   const [turno, setTurno] = useState('total');
@@ -394,7 +402,11 @@ export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) 
   const regionObj = regiones?.find(r => r.id === evento.region);
   const gasto     = evento.presupuestoGastado || 0;
 
-  const TABS = [{ key: 'total', label: 'Total' }, { key: 'mañana', label: 'Mañana' }, { key: 'tarde', label: 'Tarde' }];
+  const TABS = [
+    { key: 'total',   label: 'Total'   },
+    ...(!singleShift || singleShiftKey === 'mañana' ? [{ key: 'mañana', label: 'Mañana' }] : []),
+    ...(!singleShift || singleShiftKey === 'tarde'  ? [{ key: 'tarde',  label: 'Tarde'  }] : []),
+  ];
 
   return (
     <>
@@ -410,7 +422,7 @@ export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                 {regionObj && <span style={{ fontSize: 11, fontWeight: 700, background: regionObj.color + '22', color: regionObj.color, borderRadius: 6, padding: '2px 8px' }}>{regionObj.label}</span>}
                 <span style={{ fontSize: 11, fontWeight: 700, background: isUSD ? '#2563eb18' : '#16a34a18', color: isUSD ? '#2563eb' : '#16a34a', borderRadius: 6, padding: '2px 8px' }}>{currency}</span>
-                {gasto > 0 && <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>Gasto: {fmt(gasto, currency)}</span>}
+                {gasto > 0 && <span style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>Gasto: {fmt(gasto, gastoCurrency)}</span>}
               </div>
             </div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--app-text-subtle)', lineHeight: 1, padding: '4px 6px' }}>×</button>
@@ -428,7 +440,7 @@ export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) 
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           {turno === 'total' && (
-            <TotalView mañana={res.mañana} tarde={res.tarde} ventasVIP={res.ventasVIP} ventasVIP2x1={res.ventasVIP2x1} setVIP={setVIP} P={P} currency={currency} gasto={gasto} registros={evento.registrosActuales || 0} />
+            <TotalView mañana={res.mañana} tarde={res.tarde} ventasVIP={res.ventasVIP} ventasVIP2x1={res.ventasVIP2x1} setVIP={setVIP} P={P} currency={currency} gasto={gasto} gastoCurrency={gastoCurrency} mixedCurrency={isUSD} registros={evento.registrosActuales || 0} />
           )}
           {turno === 'mañana' && <ShiftForm shift={res.mañana} setShift={setShift('mañana')} P={P} currency={currency} />}
           {turno === 'tarde'  && <ShiftForm shift={res.tarde}  setShift={setShift('tarde')}  P={P} currency={currency} />}
@@ -437,7 +449,9 @@ export default function ResultadosDrawer({ evento, regiones, onClose, onSave }) 
         {/* Footer */}
         <div style={{ padding: '14px 20px', borderTop: '1px solid var(--app-border-light)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 12, color: 'var(--app-text-subtle)' }}>
-            {turno === 'total' ? 'VIP editable · Club de solo lectura' : `Turno ${turno}`}
+            {turno === 'total'
+              ? `VIP editable · Club de solo lectura${mixedCurrency ? ' · ROAS N/A (divisas mixtas)' : ''}`
+              : `Turno ${turno}`}
           </span>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{ padding: '9px 18px', background: 'transparent', border: '1.5px solid var(--app-border)', borderRadius: 10, fontSize: 14, fontWeight: 500, color: 'var(--app-text-muted)', cursor: 'pointer' }}>Cancelar</button>
