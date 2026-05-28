@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const PRECIOS = {
   MXN: { vip: 1000, vip2x1: 1500, club3: 9997, club6: 12997, club12: 14997 },
-  USD: { vip: 59,   vip2x1: 99,   club3: 1499,  club6: 1799,  club12: 1999  },
+  USD: { vip: 79,   vip2x1: 99,   club3: 1499,  club6: 1799,  club12: 1999  },
 };
 
 const APT_ROW   = { monto: '', cantidad: '' };
