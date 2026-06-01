@@ -267,11 +267,28 @@ function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currenc
     );
   }
 
+  // Detectar qué turnos tienen datos para suprimir columnas vacías
+  const showMCol = cM.totalClub > 0 || n(mañana.asistencia) > 0;
+  const showTCol = cT.totalClub > 0 || n(tarde.asistencia) > 0;
+  const bothCols = showMCol && showTCol;
+
   const ColHdr = ({ label }) => (
     <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-subtle)', textAlign: 'right', letterSpacing: 0.4 }}>{label}</span>
   );
 
   function CompareRow({ label, subtitle, valM, valT, valTT }) {
+    if (valTT === 0) return null;
+    if (!bothCols) {
+      return (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 10, alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 13, color: 'var(--app-text-2)' }}>{label}</div>
+            {subtitle && <div style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>{subtitle}</div>}
+          </div>
+          <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 800, color: 'var(--app-text)' }}>{fmt(valTT, currency)}</span>
+        </div>
+      );
+    }
     const any = valM > 0 || valT > 0;
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px', gap: 10, alignItems: 'center' }}>
@@ -286,11 +303,11 @@ function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currenc
     );
   }
 
-  const hdrRow = (
+  const hdrRow = bothCols ? (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px', gap: 10, marginBottom: 6 }}>
       <span /><ColHdr label="Mañana" /><ColHdr label="Tarde" /><ColHdr label="Total" />
     </div>
-  );
+  ) : null;
 
   return (
     <div>
@@ -299,20 +316,20 @@ function TotalView({ mañana, tarde, ventasVIP, ventasVIP2x1, setVIP, P, currenc
         <div style={{ marginBottom: 20 }}>
           <SectionTitle label="Asistencia" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px', gap: 10, alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: bothCols ? '1fr 80px 80px 90px' : '1fr 90px', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: 'var(--app-text-2)' }}>Total asistentes</span>
-              <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(mañana.asistencia) > 0 ? n(mañana.asistencia).toLocaleString('es-MX') : '—'}</span>
-              <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(tarde.asistencia) > 0 ? n(tarde.asistencia).toLocaleString('es-MX') : '—'}</span>
+              {bothCols && <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(mañana.asistencia) > 0 ? n(mañana.asistencia).toLocaleString('es-MX') : '—'}</span>}
+              {bothCols && <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(tarde.asistencia) > 0 ? n(tarde.asistencia).toLocaleString('es-MX') : '—'}</span>}
               <span style={{ textAlign: 'right', fontSize: 13, fontWeight: 800, color: 'var(--app-text)' }}>{totalAsistencia.toLocaleString('es-MX')}</span>
             </div>
             {totalAsistenciaVIP > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px', gap: 10, alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: bothCols ? '1fr 80px 80px 90px' : '1fr 90px', gap: 10, alignItems: 'center' }}>
                 <div>
                   <span style={{ fontSize: 13, color: 'var(--app-text-2)' }}>VIP</span>
                   <div style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>Incluidos en total</div>
                 </div>
-                <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(mañana.asistenciaVIP) > 0 ? n(mañana.asistenciaVIP).toLocaleString('es-MX') : '—'}</span>
-                <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(tarde.asistenciaVIP) > 0 ? n(tarde.asistenciaVIP).toLocaleString('es-MX') : '—'}</span>
+                {bothCols && <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(mañana.asistenciaVIP) > 0 ? n(mañana.asistenciaVIP).toLocaleString('es-MX') : '—'}</span>}
+                {bothCols && <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)' }}>{n(tarde.asistenciaVIP) > 0 ? n(tarde.asistenciaVIP).toLocaleString('es-MX') : '—'}</span>}
                 <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--app-text-muted)' }}>{totalAsistenciaVIP.toLocaleString('es-MX')}</span>
               </div>
             )}
