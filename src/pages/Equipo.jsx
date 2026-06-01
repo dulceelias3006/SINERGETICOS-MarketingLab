@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
-const FORM_INIT = { nombre: '', puesto: '', email: '', telefono: '', departamento: '', cumpleanos: '' };
+const FORM_INIT = { nombre: '', puesto: '', email: '', telefono: '', departamento: '', cumpleanos: '', fechaIngreso: '' };
 
 const AVATAR_COLORS = [
   '#1c1c2a','#374151','#6b7280','#9ca3af',
@@ -148,6 +148,44 @@ function EyeOffIcon() {
       <line x1="1" y1="1" x2="23" y2="23"/>
     </svg>
   );
+}
+
+function diasLFT(años) {
+  if (años < 1) return 0;
+  if (años <= 5) return 10 + años * 2;
+  return 20 + Math.floor((años - 1) / 5) * 2;
+}
+
+function calcVacaciones(fechaIngreso, asistencia, memberId) {
+  if (!fechaIngreso) return null;
+  const ingreso = new Date(fechaIngreso + 'T12:00:00');
+  const hoy = new Date();
+
+  let ultimoAniv = new Date(ingreso);
+  ultimoAniv.setFullYear(hoy.getFullYear());
+  if (ultimoAniv > hoy) ultimoAniv.setFullYear(hoy.getFullYear() - 1);
+
+  const añosCumplidos = ultimoAniv.getFullYear() - ingreso.getFullYear();
+
+  const proximoAniv = new Date(ultimoAniv);
+  proximoAniv.setFullYear(ultimoAniv.getFullYear() + 1);
+
+  const diasCorresponden = diasLFT(añosCumplidos);
+
+  const registros = asistencia[String(memberId)] || {};
+  let usados = 0;
+  for (const [fecha, entry] of Object.entries(registros)) {
+    if (entry?.status === 'vacaciones') {
+      const d = new Date(fecha + 'T12:00:00');
+      if (d >= ultimoAniv && d < proximoAniv) usados++;
+    }
+  }
+
+  return { añosCumplidos, diasCorresponden, usados, disponibles: Math.max(0, diasCorresponden - usados), desde: ultimoAniv, hasta: proximoAniv };
+}
+
+function fmtFecha(d) {
+  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 const EQUIPO_DEFAULT = [
@@ -316,7 +354,7 @@ export default function Equipo() {
   function abrir() { setEditandoId(null); setForm(FORM_INIT); setShowModal(true); }
   function abrirEditar(m) {
     setEditandoId(m.id);
-    setForm({ nombre: m.nombre, puesto: m.puesto || '', email: m.email || '', telefono: m.telefono || '', departamento: m.departamento || '', cumpleanos: m.cumpleanos || '' });
+    setForm({ nombre: m.nombre, puesto: m.puesto || '', email: m.email || '', telefono: m.telefono || '', departamento: m.departamento || '', cumpleanos: m.cumpleanos || '', fechaIngreso: m.fechaIngreso || '' });
     setShowModal(true);
   }
   function guardar() {
@@ -391,7 +429,7 @@ export default function Equipo() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* Tab toggle */}
           <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
-            {[['miembros','Miembros'],['asistencia','Asistencia']].map(([key, label]) => (
+            {[['miembros','Miembros'],['asistencia','Asistencia'],['vacaciones','🌴 Vacaciones']].map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === key ? 600 : 400, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#111827' : '#6b7280', boxShadow: tab === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                 {label}
               </button>
@@ -452,6 +490,10 @@ export default function Equipo() {
                         <span style={{ color: '#bbb' }}>🎂</span>
                         {new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}
                         <span style={{ color: 'var(--app-text-subtle)', fontSize: 11 }}>({new Date().getFullYear() - parseInt(m.cumpleanos.slice(0, 4))} años)</span>
+                      </div>}
+                      {m.fechaIngreso && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--app-text-muted)', fontSize: 12 }}>
+                        <span style={{ color: '#bbb' }}>📅</span>
+                        Ingreso: {new Date(m.fechaIngreso + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </div>}
                     </div>
                   )}
@@ -609,6 +651,96 @@ export default function Equipo() {
         </div>
       )}
 
+      {/* ── VACACIONES TAB ── */}
+      {tab === 'vacaciones' && (
+        <div style={{ padding: '20px 24px' }}>
+          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '6px 14px' }}>
+              Los días se calculan según la <strong>LFT 2023</strong> por año de aniversario. Los días usados se toman de los registros de asistencia con estado <span style={{ color: '#67e8f9', fontWeight: 700 }}>🌴 Vacaciones</span>.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {equipo.map(m => {
+              const vac = calcVacaciones(m.fechaIngreso, asistencia, m.id);
+              const sinFecha = !m.fechaIngreso;
+
+              return (
+                <div key={m.id} style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+
+                  {/* Avatar + Nombre */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 200, flex: 1 }}>
+                    {renderAvatar(m, 38)}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)' }}>{m.nombre}</div>
+                      <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginTop: 1 }}>{m.puesto}</div>
+                    </div>
+                  </div>
+
+                  {sinFecha ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 2 }}>
+                      <span style={{ fontSize: 12, color: '#f59e0b', background: '#fef3c7', borderRadius: 6, padding: '4px 10px', fontWeight: 600 }}>⚠️ Sin fecha de ingreso</span>
+                      {can('edit') && (
+                        <button onClick={() => abrirEditar(m)} style={{ fontSize: 11, color: '#e53e3e', background: 'none', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600 }}>
+                          + Agregar fecha
+                        </button>
+                      )}
+                    </div>
+                  ) : vac.añosCumplidos < 1 ? (
+                    <div style={{ flex: 2 }}>
+                      <span style={{ fontSize: 12, color: 'var(--app-text-subtle)', background: 'var(--app-surface-alt)', borderRadius: 6, padding: '4px 10px' }}>
+                        Ingresó el {fmtFecha(new Date(m.fechaIngreso + 'T12:00:00'))} — aún no cumple 1 año
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Antigüedad + período */}
+                      <div style={{ minWidth: 160 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-subtle)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 3 }}>Período actual</div>
+                        <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontWeight: 600 }}>
+                          {vac.añosCumplidos} {vac.añosCumplidos === 1 ? 'año' : 'años'} de antigüedad
+                        </div>
+                        <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 2 }}>
+                          {fmtFecha(vac.desde)} → {fmtFecha(vac.hasta)}
+                        </div>
+                      </div>
+
+                      {/* Números */}
+                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--app-text)', lineHeight: 1 }}>{vac.diasCorresponden}</div>
+                          <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 2 }}>corresponden</div>
+                        </div>
+                        <div style={{ fontSize: 18, color: 'var(--app-border)', fontWeight: 300 }}>–</div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: '#67e8f9', lineHeight: 1 }}>{vac.usados}</div>
+                          <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 2 }}>usados</div>
+                        </div>
+                        <div style={{ fontSize: 18, color: 'var(--app-border)', fontWeight: 300 }}>=</div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: vac.disponibles === 0 ? '#ef4444' : '#4ade80', lineHeight: 1 }}>{vac.disponibles}</div>
+                          <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 2 }}>disponibles</div>
+                        </div>
+                      </div>
+
+                      {/* Barra de progreso */}
+                      <div style={{ minWidth: 100, flex: 1 }}>
+                        <div style={{ height: 6, background: 'var(--app-border)', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${Math.min(100, vac.diasCorresponden > 0 ? (vac.usados / vac.diasCorresponden) * 100 : 0)}%`, background: vac.usados >= vac.diasCorresponden ? '#ef4444' : '#67e8f9', borderRadius: 3, transition: 'width 0.3s' }} />
+                        </div>
+                        <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginTop: 3, textAlign: 'right' }}>
+                          {vac.diasCorresponden > 0 ? Math.round((vac.usados / vac.diasCorresponden) * 100) : 0}% utilizado
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Feriado tooltip */}
       {feriadoTooltip && (
         <div style={{ position: 'fixed', left: feriadoTooltip.x, top: feriadoTooltip.y, transform: 'translate(-50%, -100%)', background: '#1f2937', color: '#fff', fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, whiteSpace: 'nowrap', zIndex: 9999, pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
@@ -756,9 +888,15 @@ export default function Equipo() {
                     style={inp(focusDept ? { border: '2px solid #e53e3e' } : {})} />
                 </div>
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>🎂 Cumpleaños</label>
-                <input type="date" value={form.cumpleanos} onChange={e => setForm(p => ({ ...p, cumpleanos: e.target.value }))} style={inp()} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>🎂 Cumpleaños</label>
+                  <input type="date" value={form.cumpleanos} onChange={e => setForm(p => ({ ...p, cumpleanos: e.target.value }))} style={inp()} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--app-text-2)', marginBottom: 6 }}>📅 Fecha de ingreso</label>
+                  <input type="date" value={form.fechaIngreso} onChange={e => setForm(p => ({ ...p, fechaIngreso: e.target.value }))} style={inp()} />
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '14px 22px', borderTop: '1px solid var(--app-border-light)' }}>
