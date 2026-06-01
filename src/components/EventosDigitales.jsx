@@ -65,7 +65,11 @@ function nextEventDates(dias) {
 function calcFechasEventoSemana(dias, inicio) {
   if (!dias || !dias.length || !inicio) return [];
   const [y, m, d] = inicio.split('-').map(Number);
-  const monday = new Date(y, m - 1, d);
+  const inicioDate = new Date(y, m - 1, d);
+  // Siempre encontrar el lunes real de esa semana, sin importar qué día sea inicio
+  const dow = inicioDate.getDay();
+  const monday = new Date(inicioDate);
+  monday.setDate(inicioDate.getDate() + (dow === 0 ? -6 : 1 - dow));
   return [...dias]
     .sort((a, b) => (a === 0 ? 6 : a - 1) - (b === 0 ? 6 : b - 1))
     .map(dia => {
@@ -559,10 +563,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     const s = series.find(x => x.id === id);
     if (!s) return;
     const fin = new Date().toISOString().split('T')[0];
-    const fechasEvento = (s.diasEvento || []).map(d => {
-      const prox = nextEventDates([d]);
-      return prox[0] ? prox[0].fecha.toISOString().split('T')[0] : null;
-    }).filter(Boolean);
+    const fechasEvento = calcFechasEventoSemana(s.diasEvento || [], s.semana?.inicio || getMondayISO());
     const entrada = {
       inicio: s.semana?.inicio || getMondayISO(),
       fin,
@@ -574,15 +575,18 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       presupuestoGastado: s.semana?.presupuestoGastado || 0,
       vip: s.semana?.vip || 0,
     };
-    const nextD = new Date();
-    nextD.setDate(nextD.getDate() + 1);
+    const hoy = new Date();
+    const dow = hoy.getDay();
+    const daysToNextMon = dow === 0 ? 1 : 8 - dow;
+    const nextD = new Date(hoy);
+    nextD.setDate(hoy.getDate() + daysToNextMon);
     const nextInicio = nextD.toISOString().split('T')[0];
     saveSeries(series.map(x => x.id === id
       ? {
           ...x,
           updatedAt: Date.now(),
           historial: [entrada, ...(x.historial || [])],
-          semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0, fechasEvento: calcProximasFechas(s.diasEvento) },
+          semana: { inicio: nextInicio, registros: 0, meta: s.semana?.meta || 0, presupuestoTotal: s.semana?.presupuestoTotal || 0, presupuestoGastado: 0, vip: 0, fechasEvento: calcFechasEventoSemana(s.diasEvento, nextInicio) },
         }
       : x
     ));
