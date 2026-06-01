@@ -661,7 +661,7 @@ export default function Equipo() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {equipo.map(m => {
+            {equipo.filter(m => m.enAsistencia !== false).map(m => {
               const vac = calcVacaciones(m.fechaIngreso, asistencia, m.id);
               const sinFecha = !m.fechaIngreso;
 
