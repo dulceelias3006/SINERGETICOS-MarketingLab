@@ -20,12 +20,19 @@ const DIAS_SEMANA = [
 
 const DIAS_FULL = { 0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' };
 
+function toLocalISO(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function getMondayISO() {
   const d = new Date();
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
-  return d.toISOString().split('T')[0];
+  return toLocalISO(d);
 }
 
 function fmtFecha(iso) {
@@ -76,7 +83,7 @@ function calcFechasEventoSemana(dias, inicio) {
       const offset = dia === 0 ? 6 : dia - 1;
       const date = new Date(monday);
       date.setDate(monday.getDate() + offset);
-      return date.toISOString().split('T')[0];
+      return toLocalISO(date);
     });
 }
 
@@ -90,15 +97,12 @@ function calcFechasEnRango(dias, inicio, fin) {
     .sort((a, b) => (a === 0 ? 6 : a - 1) - (b === 0 ? 6 : b - 1))
     .map(dia => {
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        if (d.getDay() === dia) return d.toISOString().split('T')[0];
+        if (d.getDay() === dia) return toLocalISO(d);
       }
       return null;
     }).filter(Boolean);
 }
 
-function calcProximasFechas(dias) {
-  return nextEventDates(dias).map(({ fecha }) => fecha.toISOString().split('T')[0]);
-}
 
 function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editable }) {
   const [expandHist, setExpandHist] = useState(false);
@@ -602,7 +606,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   function cerrarSemana(id) {
     const s = series.find(x => x.id === id);
     if (!s) return;
-    const fin = new Date().toISOString().split('T')[0];
+    const fin = toLocalISO(new Date());
     const fechasEvento = calcFechasEventoSemana(s.diasEvento || [], s.semana?.inicio || getMondayISO());
     const entrada = {
       inicio: s.semana?.inicio || getMondayISO(),
