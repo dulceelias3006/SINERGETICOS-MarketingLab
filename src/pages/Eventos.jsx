@@ -327,13 +327,16 @@ export default function Eventos() {
   const digitalesRef = useRef();
   const [vista, setVista] = useState('grid');
   const [filtro, setFiltro] = useState('activo');
+  const [filtroEsp, setFiltroEsp] = useState('activo');
   const [vistaResultados, setVistaResultados] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showRegionesConfig, setShowRegionesConfig] = useState(false);
   const [showHistorial, setShowHistorial] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
+  const [guardandoEn, setGuardandoEn] = useState('presenciales');
   const [form, setForm] = useState(FORM_INIT);
   const [formError, setFormError] = useState(false);
+  const [especiales, setEspeciales] = useState([]);
 
   const [drawerEvento, setDrawerEvento] = useState(null);
   const [showEnlaces, setShowEnlaces] = useState(false);
@@ -348,6 +351,11 @@ export default function Eventos() {
   const canSync = useRef(false);
 
   modoRef.current = modo;
+
+  function saveEspeciales(next) {
+    setEspeciales(next);
+    if (canSync.current) dbSet('eventos_especiales', next);
+  }
 
   function saveEventos(next, desc = '') {
     setUndoStack(prev => [...prev, { snap: eventos, desc }].slice(-20));
@@ -416,7 +424,7 @@ export default function Eventos() {
     const localEv = () => { try { return JSON.parse(localStorage.getItem('eventos')||'null'); } catch { return null; } };
     const localTi = () => { try { return JSON.parse(localStorage.getItem('eventos_tipos')||'null'); } catch { return null; } };
     const localRe = () => { try { return JSON.parse(localStorage.getItem('eventos_regiones')||'null'); } catch { return null; } };
-    Promise.all([dbGet('eventos'), dbGet('eventos_tipos'), dbGet('eventos_regiones'), dbGet('eventos_historial')]).then(([ev, ti, re, hist]) => {
+    Promise.all([dbGet('eventos'), dbGet('eventos_tipos'), dbGet('eventos_regiones'), dbGet('eventos_historial'), dbGet('eventos_especiales')]).then(([ev, ti, re, hist, esp]) => {
       canSync.current = true;
       if (ev !== null) {
         const completados = autoCompletarEventos(ev);
@@ -432,6 +440,7 @@ export default function Eventos() {
         const limite = Date.now() - 7 * 24 * 60 * 60 * 1000;
         setHistorial(hist.filter(e => e.ts >= limite));
       }
+      if (esp !== null) setEspeciales(autoCompletarEventos(esp));
     });
     const s1 = dbSub('eventos', v => setEventos(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
     const s2 = dbSub('eventos_tipos', v => setTipos(p => JSON.stringify(p) === JSON.stringify(v) ? p : v));
@@ -441,7 +450,8 @@ export default function Eventos() {
       const filtrado = (v || []).filter(e => e.ts >= limite);
       setHistorial(p => JSON.stringify(p) === JSON.stringify(filtrado) ? p : filtrado);
     });
-    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); };
+    const s5 = dbSub('eventos_especiales', v => { if (v !== null) setEspeciales(p => JSON.stringify(p) === JSON.stringify(v) ? p : v); });
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); s5.unsubscribe(); };
   }, []);
 
   function saveTipos(next) { setTipos(next); localStorage.setItem('eventos_tipos', JSON.stringify(next)); if (canSync.current) dbSet('eventos_tipos', next); }
@@ -465,23 +475,29 @@ export default function Eventos() {
     if (canSync.current) dbSet('eventos_historial', next);
   }
 
-  const filtrados = eventos
-    .filter(e => filtro === 'todos' || e.estado === filtro)
-    .sort((a, b) => {
-      if (!a.fecha && !b.fecha) return 0;
-      if (!a.fecha) return 1;
-      if (!b.fecha) return -1;
-      return new Date(a.fecha) - new Date(b.fecha);
-    });
+  const sortFecha = (a, b) => {
+    if (!a.fecha && !b.fecha) return 0;
+    if (!a.fecha) return 1;
+    if (!b.fecha) return -1;
+    return new Date(a.fecha) - new Date(b.fecha);
+  };
+  const filtrados = eventos.filter(e => filtro === 'todos' || e.estado === filtro).sort(sortFecha);
   const counts = {
     todos: eventos.length,
     activo: eventos.filter(e => e.estado === 'activo').length,
     planificado: eventos.filter(e => e.estado === 'planificado').length,
     completado: eventos.filter(e => e.estado === 'completado').length,
   };
+  const filtradosEsp = especiales.filter(e => filtroEsp === 'todos' || e.estado === filtroEsp).sort(sortFecha);
+  const countsEsp = {
+    todos: especiales.length,
+    activo: especiales.filter(e => e.estado === 'activo').length,
+    planificado: especiales.filter(e => e.estado === 'planificado').length,
+    completado: especiales.filter(e => e.estado === 'completado').length,
+  };
 
-  function abrir() { setEditandoId(null); setForm(FORM_INIT); setFormError(false); setShowModal(true); }
-  function abrirEditar(ev) { setEditandoId(ev.id); setForm({ ...FORM_INIT, ...ev }); setFormError(false); setShowModal(true); }
+  function abrir(en) { setGuardandoEn(en || modo); setEditandoId(null); setForm(FORM_INIT); setFormError(false); setShowModal(true); }
+  function abrirEditar(ev, en) { setGuardandoEn(en || modo); setEditandoId(ev.id); setForm({ ...FORM_INIT, ...ev }); setFormError(false); setShowModal(true); }
   const CAMPO_LABELS = {
     nombre: 'nombre', tipo: 'tipo', estado: 'estado', region: 'región',
     fecha: 'fecha', hora: 'hora', hora2: '2° horario', ubicacion: 'ubicación',
@@ -492,25 +508,38 @@ export default function Eventos() {
 
   function guardar() {
     if (!form.nombre.trim()) { setFormError(true); return; }
-    if (editandoId) {
-      const old = eventos.find(e => e.id === editandoId);
-      const cambios = Object.keys(CAMPO_LABELS)
-        .filter(k => String(old?.[k] ?? '') !== String(form[k] ?? ''))
-        .map(k => CAMPO_LABELS[k]);
-      const desc = cambios.length > 0 ? `Modificó: ${cambios.join(', ')}` : 'Sin cambios';
-      saveEventos(eventos.map(e => e.id === editandoId ? { ...e, ...form, updatedAt: Date.now() } : e), `edición de "${form.nombre.trim()}"`);
-      log('editado', form.nombre.trim(), desc);
+    if (guardandoEn === 'especiales') {
+      if (editandoId) {
+        saveEspeciales(especiales.map(e => e.id === editandoId ? { ...e, ...form, updatedAt: Date.now() } : e));
+      } else {
+        saveEspeciales([...especiales, { ...form, id: Date.now(), updatedAt: Date.now() }]);
+      }
     } else {
-      saveEventos([...eventos, { ...form, id: Date.now(), updatedAt: Date.now() }], `creación de "${form.nombre.trim()}"`);
-      log('creado', form.nombre.trim(), 'Evento creado');
+      if (editandoId) {
+        const old = eventos.find(e => e.id === editandoId);
+        const cambios = Object.keys(CAMPO_LABELS)
+          .filter(k => String(old?.[k] ?? '') !== String(form[k] ?? ''))
+          .map(k => CAMPO_LABELS[k]);
+        const desc = cambios.length > 0 ? `Modificó: ${cambios.join(', ')}` : 'Sin cambios';
+        saveEventos(eventos.map(e => e.id === editandoId ? { ...e, ...form, updatedAt: Date.now() } : e), `edición de "${form.nombre.trim()}"`);
+        log('editado', form.nombre.trim(), desc);
+      } else {
+        saveEventos([...eventos, { ...form, id: Date.now(), updatedAt: Date.now() }], `creación de "${form.nombre.trim()}"`);
+        log('creado', form.nombre.trim(), 'Evento creado');
+      }
     }
     setShowModal(false);
   }
   function eliminar(id) {
-    const ev = eventos.find(e => e.id === id);
+    const lista = guardandoEn === 'especiales' ? especiales : eventos;
+    const ev = lista.find(e => e.id === id);
     if (confirm('¿Eliminar este evento?')) {
-      saveEventos(eventos.filter(e => e.id !== id), `eliminación de "${ev?.nombre || 'Evento'}"`);
-      log('eliminado', ev?.nombre || 'Evento', 'Evento eliminado');
+      if (guardandoEn === 'especiales') {
+        saveEspeciales(especiales.filter(e => e.id !== id));
+      } else {
+        saveEventos(eventos.filter(e => e.id !== id), `eliminación de "${ev?.nombre || 'Evento'}"`);
+        log('eliminado', ev?.nombre || 'Evento', 'Evento eliminado');
+      }
       setShowModal(false);
     }
   }
@@ -522,6 +551,11 @@ export default function Eventos() {
     const label = AJUSTE_LABELS[campo] || campo;
     saveEventos(eventos.map(e => e.id === id ? { ...e, [campo]: newVal, updatedAt: Date.now() } : e), `ajuste de ${label} en "${ev?.nombre}"`);
     log('ajustado', ev?.nombre || 'Evento', `${label}: ${oldVal.toLocaleString('es-MX')} → ${newVal.toLocaleString('es-MX')}`);
+  }
+  function ajustarEspecial(id, campo, delta) {
+    const ev = especiales.find(e => e.id === id);
+    const newVal = Math.max(0, (Number(ev?.[campo]) || 0) + delta);
+    saveEspeciales(especiales.map(e => e.id === id ? { ...e, [campo]: newVal, updatedAt: Date.now() } : e));
   }
 
   function exportarPDF() {
@@ -673,14 +707,14 @@ export default function Eventos() {
       {/* ── Íconos fijos en topbar ── */}
       <div style={{ position: 'fixed', top: 0, right: 14, height: 48, display: 'flex', alignItems: 'center', gap: 6, zIndex: 30 }}>
         <button
-          onClick={modo === 'presenciales' ? exportarPDF : () => digitalesRef.current?.generarPDF()}
+          onClick={modo === 'digitales' ? () => digitalesRef.current?.generarPDF() : exportarPDF}
           data-tooltip="Reporte PDF"
           style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         </button>
-        {modo === 'presenciales' && (
+        {(modo === 'presenciales' || modo === 'especiales') && (
           <button onClick={() => setShowHistorial(true)} data-tooltip="Historial"
             style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = '#111827'; }}
@@ -707,9 +741,9 @@ export default function Eventos() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 0', borderBottom: '1px solid var(--app-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Eventos</h1>
-          {/* Switcher Presenciales / Digitales */}
+          {/* Switcher Presenciales / Digitales / Especiales */}
           <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 10, padding: 3 }}>
-            {[['presenciales','🏟 Presenciales'],['digitales','📡 Digitales']].map(([key, label]) => (
+            {[['presenciales','🏟 Presenciales'],['digitales','📡 Digitales'],['especiales','⭐ Especiales']].map(([key, label]) => (
               <button key={key} onClick={() => setModo(key)}
                 style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: modo === key ? 700 : 500, background: modo === key ? 'var(--app-surface)' : 'transparent', color: modo === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: modo === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
                 {label}
@@ -719,9 +753,8 @@ export default function Eventos() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          {modo === 'presenciales' ? (
+          {modo === 'presenciales' && (
             <>
-              {/* Vista toggle */}
               <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
                 {[['grid','⊞ Todos'],['regiones','⊟ Regiones']].map(([key, label]) => (
                   <button key={key} onClick={() => setVista(key)}
@@ -730,7 +763,6 @@ export default function Eventos() {
                   </button>
                 ))}
               </div>
-
               {vista === 'regiones' && (
                 <button onClick={() => setShowRegionesConfig(true)} title="Editar colores de regiones"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: 'var(--app-surface)', color: 'var(--app-text-2)', border: '1px solid var(--app-border)', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -738,50 +770,35 @@ export default function Eventos() {
                   Regiones
                 </button>
               )}
-
-              {role === 'superadmin' && (
-                <button onClick={() => setShowEnlaces(true)} data-tooltip="Enlaces rápidos"
-                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#e53e3e'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                  </svg>
-                </button>
-              )}
-              {can('edit') && (
-                <button onClick={abrir} data-tooltip="Nuevo Evento"
-                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>
-                  +
-                </button>
-              )}
             </>
-          ) : (
-            <div style={{ display: 'flex', gap: 8 }}>
-              {role === 'superadmin' && (
-                <button onClick={() => setShowEnlaces(true)} data-tooltip="Enlaces rápidos"
-                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#e53e3e'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                  </svg>
-                </button>
-              )}
-              {can('edit') && (
-                <button onClick={() => digitalesRef.current?.abrir()} data-tooltip="Nueva Serie"
-                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>
-                  +
-                </button>
-              )}
-            </div>
+          )}
+          {(modo === 'presenciales' || modo === 'digitales' || modo === 'especiales') && role === 'superadmin' && (
+            <button onClick={() => setShowEnlaces(true)} data-tooltip="Enlaces rápidos"
+              style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', border: '1px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#e53e3e'; e.currentTarget.style.borderColor = '#fca5a5'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--app-surface-2)'; e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </button>
+          )}
+          {can('edit') && modo === 'presenciales' && (
+            <button onClick={() => abrir('presenciales')} data-tooltip="Nuevo Evento"
+              style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>+</button>
+          )}
+          {can('edit') && modo === 'digitales' && (
+            <button onClick={() => digitalesRef.current?.abrir()} data-tooltip="Nueva Serie"
+              style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>+</button>
+          )}
+          {can('edit') && modo === 'especiales' && (
+            <button onClick={() => abrir('especiales')} data-tooltip="Nuevo Evento Especial"
+              style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 20, fontWeight: 400, cursor: 'pointer', flexShrink: 0 }}>+</button>
           )}
         </div>
       </div>
 
-      {/* ── Filter tabs — solo en modo presenciales ── */}
+      {/* ── Filter tabs — presenciales ── */}
       {modo === 'presenciales' && (
         <div style={{ padding: '12px 28px 0', borderBottom: '1px solid var(--app-border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -796,7 +813,22 @@ export default function Eventos() {
         </div>
       )}
 
-      {/* ── Toggle resultados — solo en completados ── */}
+      {/* ── Filter tabs — especiales ── */}
+      {modo === 'especiales' && (
+        <div style={{ padding: '12px 28px 0', borderBottom: '1px solid var(--app-border)' }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[['activo','Activos'],['planificado','Planificados'],['completado','Completados'],['todos','Todos']].map(([key, label]) => (
+              <button key={key} onClick={() => setFiltroEsp(key)}
+                style={{ padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: filtroEsp === key ? 700 : 500, background: filtroEsp === key ? '#111827' : 'var(--app-surface-2)', color: filtroEsp === key ? '#fff' : 'var(--app-text-muted)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {label}
+                <span style={{ fontSize: 11, background: filtroEsp === key ? 'rgba(255,255,255,0.2)' : 'var(--app-border)', color: filtroEsp === key ? '#fff' : 'var(--app-text-subtle)', borderRadius: 10, padding: '1px 6px', fontWeight: 600 }}>{countsEsp[key]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Toggle resultados — solo en completados presenciales ── */}
       {modo === 'presenciales' && filtro === 'completado' && (
         <div style={{ padding: '10px 28px', borderBottom: '1px solid var(--app-border-light)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12, color: vistaResultados ? 'var(--app-text-subtle)' : 'var(--app-text-2)', fontWeight: vistaResultados ? 400 : 600 }}>Vista eventos</span>
@@ -812,6 +844,39 @@ export default function Eventos() {
 
       {/* ── DIGITALES ── */}
       {modo === 'digitales' && <EventosDigitales ref={digitalesRef} />}
+
+      {/* ── ESPECIALES ── */}
+      {modo === 'especiales' && (
+        <div style={{ padding: '20px 28px' }}>
+          {filtradosEsp.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--app-text-subtle)' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>⭐</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 6 }}>Sin eventos especiales</div>
+              <div style={{ fontSize: 13, marginBottom: 20 }}>Crea el primer evento especial con el botón +</div>
+              {can('edit') && (
+                <button onClick={() => abrir('especiales')}
+                  style={{ padding: '10px 24px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                  + Nuevo Evento Especial
+                </button>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: 16 }}>
+              {filtradosEsp.map(ev => {
+                const estadoObj = ESTADOS_CONFIG.find(e => e.key === ev.estado) || ESTADOS_CONFIG[0];
+                return (
+                  <EventCard
+                    key={ev.id} ev={ev} tipos={tipos} regiones={regiones} estadoObj={estadoObj}
+                    onEdit={can('edit') ? ev => abrirEditar(ev, 'especiales') : undefined}
+                    onAjustar={can('edit') ? ajustarEspecial : undefined}
+                    onResultados={() => {}}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── GRID VIEW ── */}
       {modo === 'presenciales' && vista === 'grid' && (
@@ -928,8 +993,10 @@ export default function Eventos() {
           <div style={{ background: 'var(--app-surface-alt)', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 14px', background: 'var(--app-surface-alt)', borderBottom: '1px solid var(--app-border-light)', position: 'sticky', top: 0, zIndex: 5, borderRadius: '16px 16px 0 0' }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--app-text)' }}>{editandoId ? 'Editar Evento' : 'Nuevo Evento'}</div>
-                <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Completa la información del nuevo evento</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--app-text)' }}>
+                {editandoId ? 'Editar Evento' : guardandoEn === 'especiales' ? 'Nuevo Evento Especial' : 'Nuevo Evento'}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 2 }}>Completa la información del evento</div>
               </div>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#aaa', lineHeight: 1 }}>×</button>
             </div>
