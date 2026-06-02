@@ -80,6 +80,22 @@ function calcFechasEventoSemana(dias, inicio) {
     });
 }
 
+function calcFechasEnRango(dias, inicio, fin) {
+  if (!dias?.length || !inicio || !fin) return calcFechasEventoSemana(dias, inicio);
+  const [sy, sm, sd] = inicio.split('-').map(Number);
+  const [ey, em, ed] = fin.split('-').map(Number);
+  const startDate = new Date(sy, sm - 1, sd);
+  const endDate = new Date(ey, em - 1, ed);
+  return [...dias]
+    .sort((a, b) => (a === 0 ? 6 : a - 1) - (b === 0 ? 6 : b - 1))
+    .map(dia => {
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        if (d.getDay() === dia) return d.toISOString().split('T')[0];
+      }
+      return null;
+    }).filter(Boolean);
+}
+
 function calcProximasFechas(dias) {
   return nextEventDates(dias).map(({ fecha }) => fecha.toISOString().split('T')[0]);
 }
@@ -463,7 +479,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       if (s.historial?.length) {
         const newHist = s.historial.map(h => {
           if (h.diasEvento?.length && h.inicio) {
-            const fresh = calcFechasEventoSemana(h.diasEvento, h.inicio);
+            const fresh = calcFechasEnRango(h.diasEvento, h.inicio, h.fin);
             if (JSON.stringify(fresh) !== JSON.stringify(h.fechasEvento)) {
               return { ...h, fechasEvento: fresh };
             }
