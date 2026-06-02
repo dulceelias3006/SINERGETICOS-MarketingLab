@@ -452,8 +452,11 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
 
   function migrarFechas(arr) {
     return arr.map(s => {
-      if (s.semana && !s.semana.fechasEvento && s.diasEvento?.length && s.semana.inicio) {
-        return { ...s, semana: { ...s.semana, fechasEvento: calcFechasEventoSemana(s.diasEvento, s.semana.inicio) } };
+      if (s.semana && s.diasEvento?.length && s.semana.inicio) {
+        const fresh = calcFechasEventoSemana(s.diasEvento, s.semana.inicio);
+        if (JSON.stringify(fresh) !== JSON.stringify(s.semana.fechasEvento)) {
+          return { ...s, semana: { ...s.semana, fechasEvento: fresh } };
+        }
       }
       return s;
     });
