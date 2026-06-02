@@ -468,12 +468,15 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   }
 
   function migrarFechas(arr) {
+    const currentMonday = getMondayISO();
     return arr.map(s => {
       let updatedSemana = s.semana;
       if (s.semana && s.diasEvento?.length && s.semana.inicio) {
-        const fresh = calcFechasEventoSemana(s.diasEvento, s.semana.inicio);
-        if (JSON.stringify(fresh) !== JSON.stringify(s.semana.fechasEvento)) {
-          updatedSemana = { ...s.semana, fechasEvento: fresh };
+        // Si el inicio está en el futuro (más allá del lunes actual), corregirlo
+        const inicioCorregido = s.semana.inicio > currentMonday ? currentMonday : s.semana.inicio;
+        const fresh = calcFechasEventoSemana(s.diasEvento, inicioCorregido);
+        if (inicioCorregido !== s.semana.inicio || JSON.stringify(fresh) !== JSON.stringify(s.semana.fechasEvento)) {
+          updatedSemana = { ...s.semana, inicio: inicioCorregido, fechasEvento: fresh };
         }
       }
       let updatedHistorial = s.historial;
@@ -612,12 +615,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       presupuestoGastado: s.semana?.presupuestoGastado || 0,
       vip: s.semana?.vip || 0,
     };
-    const hoy = new Date();
-    const dow = hoy.getDay();
-    const daysToNextMon = dow === 0 ? 1 : 8 - dow;
-    const nextD = new Date(hoy);
-    nextD.setDate(hoy.getDate() + daysToNextMon);
-    const nextInicio = nextD.toISOString().split('T')[0];
+    const nextInicio = getMondayISO();
     saveSeries(series.map(x => x.id === id
       ? {
           ...x,
