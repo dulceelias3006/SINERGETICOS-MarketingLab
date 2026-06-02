@@ -424,6 +424,7 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editab
                       <div style={{ fontSize: 11, color: 'var(--app-text-subtle)' }}>
                         {(h.registros || 0).toLocaleString('es-MX')} reg · {h.vip || 0} VIP
                         {hCosto !== null && <span> · ${hCosto.toLocaleString('es-MX')}/reg</span>}
+                        {h.presupuestoGastado > 0 && <span> · ${(h.presupuestoGastado).toLocaleString('es-MX')} gastado</span>}
                       </div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, flexShrink: 0,
