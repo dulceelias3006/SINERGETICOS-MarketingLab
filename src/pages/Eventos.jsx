@@ -327,7 +327,7 @@ export default function Eventos() {
   const digitalesRef = useRef();
   const [vista, setVista] = useState('grid');
   const [filtro, setFiltro] = useState('activo');
-  const [filtroEsp, setFiltroEsp] = useState('activo');
+  const [filtroEsp, setFiltroEsp] = useState('todos');
   const [vistaResultados, setVistaResultados] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showRegionesConfig, setShowRegionesConfig] = useState(false);
@@ -513,6 +513,7 @@ export default function Eventos() {
         saveEspeciales(especiales.map(e => e.id === editandoId ? { ...e, ...form, updatedAt: Date.now() } : e));
       } else {
         saveEspeciales([...especiales, { ...form, id: Date.now(), updatedAt: Date.now() }]);
+        setFiltroEsp(form.estado || 'todos');
       }
     } else {
       if (editandoId) {
