@@ -476,7 +476,8 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   function fixInicio(s) {
     if (!s.semana?.inicio || !s.diasEvento?.length) return s;
     const h0 = s.historial?.[0];
-    if (!h0?.fin || s.semana.inicio > h0.fin) return s;
+    // El bug ocurre cuando la semana nueva quedó con el mismo inicio que la cerrada
+    if (!h0?.fin || !h0?.inicio || s.semana.inicio !== h0.inicio) return s;
     const [y, m, d] = h0.fin.split('-').map(Number);
     const fd = new Date(y, m - 1, d);
     const dow = fd.getDay();
@@ -498,9 +499,9 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       if (s.semana && s.diasEvento?.length && s.semana.inicio) {
         let inicioCorregido = s.semana.inicio;
 
-        // Si el inicio solapa con la entrada más reciente del historial (bug de getMondayISO vs getNextMondayISO)
+        // El bug ocurre cuando la semana nueva quedó con el mismo inicio que la cerrada
         const latestHist = s.historial?.[0];
-        if (latestHist?.fin && inicioCorregido <= latestHist.fin) {
+        if (latestHist?.fin && latestHist?.inicio && inicioCorregido === latestHist.inicio) {
           const [fy, fm, fd] = latestHist.fin.split('-').map(Number);
           const finDate = new Date(fy, fm - 1, fd);
           const dow = finDate.getDay();
