@@ -537,7 +537,13 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       setLoading(false);
     });
     const sub = dbSub('series_digitales', v => {
-      if (v !== null) setSeries(p => JSON.stringify(p) === JSON.stringify(v) ? p : v);
+      if (v !== null) {
+        const migrado = migrarFechas(v);
+        setSeries(p => JSON.stringify(p) === JSON.stringify(migrado) ? p : migrado);
+        if (canSync.current && JSON.stringify(migrado) !== JSON.stringify(v)) {
+          dbSet('series_digitales', migrado);
+        }
+      }
     });
     return () => sub.unsubscribe();
   }, []);
