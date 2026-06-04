@@ -35,6 +35,14 @@ function getMondayISO() {
   return toLocalISO(d);
 }
 
+function getNextMondayISO() {
+  const d = new Date();
+  const day = d.getDay();
+  const daysToNext = day === 0 ? 1 : 8 - day;
+  d.setDate(d.getDate() + daysToNext);
+  return toLocalISO(d);
+}
+
 function fmtFecha(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-').map(Number);
@@ -472,12 +480,22 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   }
 
   function migrarFechas(arr) {
-    const currentMonday = getMondayISO();
     return arr.map(s => {
       let updatedSemana = s.semana;
       if (s.semana && s.diasEvento?.length && s.semana.inicio) {
-        // Si el inicio está en el futuro (más allá del lunes actual), corregirlo
-        const inicioCorregido = s.semana.inicio > currentMonday ? currentMonday : s.semana.inicio;
+        let inicioCorregido = s.semana.inicio;
+
+        // Si el inicio solapa con la entrada más reciente del historial (bug de getMondayISO vs getNextMondayISO)
+        const latestHist = s.historial?.[0];
+        if (latestHist?.fin && inicioCorregido <= latestHist.fin) {
+          const [fy, fm, fd] = latestHist.fin.split('-').map(Number);
+          const finDate = new Date(fy, fm - 1, fd);
+          const dow = finDate.getDay();
+          const daysToNext = dow === 0 ? 1 : 8 - dow;
+          finDate.setDate(finDate.getDate() + daysToNext);
+          inicioCorregido = toLocalISO(finDate);
+        }
+
         const fresh = calcFechasEventoSemana(s.diasEvento, inicioCorregido);
         if (inicioCorregido !== s.semana.inicio || JSON.stringify(fresh) !== JSON.stringify(s.semana.fechasEvento)) {
           updatedSemana = { ...s.semana, inicio: inicioCorregido, fechasEvento: fresh };
@@ -619,7 +637,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       presupuestoGastado: s.semana?.presupuestoGastado || 0,
       vip: s.semana?.vip || 0,
     };
-    const nextInicio = getMondayISO();
+    const nextInicio = getNextMondayISO();
     saveSeries(series.map(x => x.id === id
       ? {
           ...x,
