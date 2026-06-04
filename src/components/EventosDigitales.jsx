@@ -473,10 +473,23 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   const [form, setForm] = useState({ nombre: '', region: 'MEX', estado: 'activo', urlRegistro: '', divisa: 'MXN', meta: 0, presupuestoTotal: 0, diasEvento: [] });
   const [formError, setFormError] = useState(false);
 
+  function fixInicio(s) {
+    if (!s.semana?.inicio || !s.diasEvento?.length) return s;
+    const h0 = s.historial?.[0];
+    if (!h0?.fin || s.semana.inicio > h0.fin) return s;
+    const [y, m, d] = h0.fin.split('-').map(Number);
+    const fd = new Date(y, m - 1, d);
+    const dow = fd.getDay();
+    fd.setDate(fd.getDate() + (dow === 0 ? 1 : 8 - dow));
+    const newInicio = toLocalISO(fd);
+    return { ...s, semana: { ...s.semana, inicio: newInicio, fechasEvento: calcFechasEventoSemana(s.diasEvento, newInicio) } };
+  }
+
   function saveSeries(next) {
-    setSeries(next);
-    localStorage.setItem('series_digitales', JSON.stringify(next));
-    if (canSync.current) dbSet('series_digitales', next);
+    const corrected = next.map(fixInicio);
+    setSeries(corrected);
+    localStorage.setItem('series_digitales', JSON.stringify(corrected));
+    if (canSync.current) dbSet('series_digitales', corrected);
   }
 
   function migrarFechas(arr) {
@@ -527,7 +540,10 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       if (v !== null) {
         const migrado = migrarFechas(v);
         setSeries(migrado);
-        if (JSON.stringify(migrado) !== JSON.stringify(v)) dbSet('series_digitales', migrado);
+        if (JSON.stringify(migrado) !== JSON.stringify(v)) {
+          localStorage.setItem('series_digitales', JSON.stringify(migrado));
+          dbSet('series_digitales', migrado);
+        }
       } else {
         try {
           const local = JSON.parse(localStorage.getItem('series_digitales') || 'null');
