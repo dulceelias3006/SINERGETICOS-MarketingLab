@@ -689,7 +689,7 @@ export default function Equipo() {
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: 1 }}>
                                 {estado?.emoji ? <span style={{ fontSize: 15 }}>{estado.emoji}</span> : null}
                                 {esFeriado && feriadoEstado?.emoji ? <span style={{ fontSize: 15 }}>{feriadoEstado.emoji}</span> : null}
-                                {entry?.note ? <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(0,0,0,0.6)' }}>{entry.note}</span> : null}
+                                {entry?.note && entry?.status !== 'falta_just' ? <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(0,0,0,0.6)' }}>{entry.note}</span> : null}
                               </div>
                             )}
                             {esBirthday && !estado && !esFeriado && (
