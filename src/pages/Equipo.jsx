@@ -708,31 +708,25 @@ export default function Equipo() {
                       <td style={{ position: 'sticky', left: 0, background: mi % 2 === 0 ? '#fff' : '#fafafa', zIndex: 4, padding: '6px 12px', borderBottom: '1px solid var(--app-border-light)', borderRight: '2px solid var(--app-border)', width: nameColWidth, minWidth: nameColWidth, maxWidth: nameColWidth, overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           {renderAvatar(m, 24)}
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
                             {editingAlias === m.id && can('edit_asistencia') ? (
                               <input autoFocus value={aliasInput} onChange={e => setAliasInput(e.target.value)}
                                 onBlur={() => saveAlias(m.id)}
                                 onKeyDown={e => { if (e.key === 'Enter') saveAlias(m.id); if (e.key === 'Escape') setEditingAlias(null); }}
                                 onClick={e => e.stopPropagation()}
-                                style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text)', border: '1px solid #e53e3e', borderRadius: 4, padding: '1px 4px', outline: 'none', width: '100%', background: 'var(--app-surface)' }} />
+                                style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text)', border: '1px solid #e53e3e', borderRadius: 4, padding: '1px 4px', outline: 'none', flex: 1, minWidth: 0, background: 'var(--app-surface)' }} />
                             ) : (
                               <span onClick={can('edit_asistencia') ? e => { e.stopPropagation(); startEditAlias(m); } : undefined} title={can('edit_asistencia') ? "Clic para editar nombre en asistencia" : undefined}
-                                style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text)', cursor: can('edit_asistencia') ? 'text' : 'default', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text)', cursor: can('edit_asistencia') ? 'text' : 'default', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {m.aliasAsistencia || m.nombre}
                               </span>
                             )}
-                            {(() => {
-                              const isBirthdayMonth = m.cumpleanos && m.cumpleanos.slice(5, 7) === String(viewDate.month + 1).padStart(2, '0');
-                              const vacInfo = vacacionesMap[m.id];
-                              if (!isBirthdayMonth && !vacInfo) return null;
-                              const bdDay = isBirthdayMonth ? new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : null;
-                              return (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
-                                  {isBirthdayMonth && <span style={{ fontSize: 10, color: '#d97706', whiteSpace: 'nowrap' }}>🎂 {bdDay}</span>}
-                                  {vacInfo && <span style={{ fontSize: 10, color: '#0891b2', whiteSpace: 'nowrap' }}>🌴 {vacInfo.vac.usados}/{vacInfo.vac.diasCorresponden}</span>}
-                                </div>
-                              );
-                            })()}
+                            {m.cumpleanos && m.cumpleanos.slice(5, 7) === String(viewDate.month + 1).padStart(2, '0') && (
+                              <span style={{ fontSize: 10, color: '#d97706', whiteSpace: 'nowrap', flexShrink: 0 }}>🎂 {new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
+                            )}
+                            {vacacionesMap[m.id] && (
+                              <span style={{ fontSize: 10, color: '#0891b2', whiteSpace: 'nowrap', flexShrink: 0 }}>🌴 {vacacionesMap[m.id].vac.usados}/{vacacionesMap[m.id].vac.diasCorresponden}</span>
+                            )}
                           </div>
                         </div>
                       </td>
