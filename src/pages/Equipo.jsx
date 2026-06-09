@@ -673,6 +673,7 @@ export default function Equipo() {
                         const tooltipParts = [];
                         if (feriadoNombre) tooltipParts.push(feriadoNombre);
                         if (esBirthday && m.cumpleanos) tooltipParts.push(`🎂 ${viewDate.year - parseInt(m.cumpleanos.slice(0, 4))} años`);
+                        if (entry?.status === 'falta_just' && entry?.note) tooltipParts.push(`📋 ${entry.note}`);
                         if (entry?.status === 'vacaciones' && vacacionesMap[m.id]) {
                           const { vac, vacDays } = vacacionesMap[m.id];
                           const idx = vacDays.indexOf(d.dateStr);
