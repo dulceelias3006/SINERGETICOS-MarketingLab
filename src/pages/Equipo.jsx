@@ -723,10 +723,10 @@ export default function Equipo() {
                               </span>
                             )}
                             {m.cumpleanos && m.cumpleanos.slice(5, 7) === String(viewDate.month + 1).padStart(2, '0') && (
-                              <span style={{ fontSize: 10, color: '#d97706', whiteSpace: 'nowrap', flexShrink: 0 }}>🎂 {new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
+                              <span style={{ fontSize: 12, color: '#d97706', whiteSpace: 'nowrap', flexShrink: 0 }}>🎂 {new Date(m.cumpleanos + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
                             )}
                             {vacacionesMap[m.id] && (
-                              <span style={{ fontSize: 10, color: '#0891b2', whiteSpace: 'nowrap', flexShrink: 0 }}>🌴 {vacacionesMap[m.id].vac.usados}/{vacacionesMap[m.id].vac.diasCorresponden}</span>
+                              <span style={{ fontSize: 12, color: '#0891b2', whiteSpace: 'nowrap', flexShrink: 0 }}>🌴 {vacacionesMap[m.id].vac.usados}/{vacacionesMap[m.id].vac.diasCorresponden}</span>
                             )}
                           </div>
                         </div>
