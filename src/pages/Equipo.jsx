@@ -236,7 +236,7 @@ export default function Equipo() {
   const [showNewEstado, setShowNewEstado] = useState(false);
   const [newEstadoForm, setNewEstadoForm] = useState({ label: '', color: '#94a3b8', emoji: '' });
   const [editandoEstadoKey, setEditandoEstadoKey] = useState(null);
-  const [editFormEstado, setEditFormEstado] = useState({ label: '', emoji: '' });
+  const [editFormEstado, setEditFormEstado] = useState({ label: '', emoji: '', color: '#94a3b8' });
   const [editingAlias, setEditingAlias] = useState(null);
   const [aliasInput, setAliasInput] = useState('');
   const [feriadoTooltip, setFeriadoTooltip] = useState(null);
@@ -305,14 +305,15 @@ export default function Equipo() {
     setEstadosConfig(prev => ({ ...prev, [key]: { ...(prev[key] || {}), hidden: true } }));
   }
   function iniciarEditEstado(e) {
-    setEditFormEstado({ label: e.label, emoji: e.emoji || '' });
+    setEditFormEstado({ label: e.label, emoji: e.emoji || '', color: estadoColores[e.key] || e.color });
     setEditandoEstadoKey(e.key);
   }
   function guardarEditEstado() {
     const key = editandoEstadoKey;
     if (!editFormEstado.label.trim()) return;
+    setEstadoColores(prev => ({ ...prev, [key]: editFormEstado.color }));
     if (key.startsWith('custom_')) {
-      setCustomEstados(prev => prev.map(e => e.key === key ? { ...e, label: editFormEstado.label.trim(), emoji: editFormEstado.emoji.trim() } : e));
+      setCustomEstados(prev => prev.map(e => e.key === key ? { ...e, label: editFormEstado.label.trim(), emoji: editFormEstado.emoji.trim(), color: editFormEstado.color } : e));
     } else {
       setEstadosConfig(prev => ({ ...prev, [key]: { ...(prev[key] || {}), label: editFormEstado.label.trim(), emoji: editFormEstado.emoji.trim() } }));
     }
@@ -544,29 +545,24 @@ export default function Equipo() {
               <span style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginRight: 2 }}>Estados:</span>
               {todosEstados.map(e => (
                 <div key={e.key} style={{ display: 'flex', flexDirection: 'column', background: 'var(--app-surface)', border: `1px solid ${editandoEstadoKey === e.key ? '#e53e3e' : 'var(--app-border)'}`, borderRadius: 6, overflow: 'hidden' }}>
-                  {/* Chip normal */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 5px 3px 5px' }}>
-                    {can('edit_asistencia') ? (
-                      <label title="Editar color" style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
-                        <input type="color" value={estadoColores[e.key] || e.color}
-                          onChange={ev => setEstadoColores(prev => ({ ...prev, [e.key]: ev.target.value }))}
-                          style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
-                      </label>
-                    ) : (
-                      <div style={{ width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
-                    )}
+                  {/* Chip — clic abre editor */}
+                  <div onClick={() => can('edit_asistencia') && (editandoEstadoKey === e.key ? setEditandoEstadoKey(null) : iniciarEditEstado(e))}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 6px 4px 5px', cursor: can('edit_asistencia') ? 'pointer' : 'default' }}>
+                    <div style={{ width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
                     <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>{e.emoji} {e.label}</span>
-                    {can('edit_asistencia') && <>
-                      <button onClick={() => editandoEstadoKey === e.key ? setEditandoEstadoKey(null) : iniciarEditEstado(e)} title="Editar nombre/emoji" style={{ background: 'none', border: 'none', cursor: 'pointer', color: editandoEstadoKey === e.key ? '#e53e3e' : '#ccc', fontSize: 11, lineHeight: 1, padding: '0 1px', display: 'flex', alignItems: 'center' }}>✏️</button>
-                      <button onClick={() => { if (confirm(`¿Eliminar el estado "${e.label}"?`)) ocultarEstado(e.key); }} title="Eliminar estado" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 13, lineHeight: 1, padding: '0 1px', display: 'flex', alignItems: 'center' }}>×</button>
-                    </>}
+                    {can('edit_asistencia') && (
+                      <button onClick={ev => { ev.stopPropagation(); if (confirm(`¿Eliminar el estado "${e.label}"?`)) ocultarEstado(e.key); }} title="Eliminar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 14, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
+                    )}
                   </div>
-                  {/* Formulario de edición inline */}
+                  {/* Editor inline */}
                   {editandoEstadoKey === e.key && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderTop: '1px solid #fecaca', background: '#fff5f5' }}>
-                      <input value={editFormEstado.emoji} onChange={ev => setEditFormEstado(p => ({ ...p, emoji: ev.target.value }))} placeholder="emoji" style={{ width: 44, border: '1px solid #fca5a5', borderRadius: 4, padding: '3px 5px', fontSize: 13, outline: 'none', textAlign: 'center' }} />
-                      <input value={editFormEstado.label} onChange={ev => setEditFormEstado(p => ({ ...p, label: ev.target.value }))} placeholder="Nombre" autoFocus onKeyDown={ev => { if (ev.key === 'Enter') guardarEditEstado(); if (ev.key === 'Escape') setEditandoEstadoKey(null); }} style={{ flex: 1, minWidth: 80, border: '1px solid #fca5a5', borderRadius: 4, padding: '3px 6px', fontSize: 12, outline: 'none' }} />
-                      <button onClick={guardarEditEstado} style={{ background: '#e53e3e', border: 'none', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#fff' }}>OK</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderTop: '1px solid #fecaca', background: '#fff5f5' }}>
+                      <label title="Color" style={{ position: 'relative', width: 26, height: 26, borderRadius: 5, background: editFormEstado.color, flexShrink: 0, cursor: 'pointer', border: '2px solid rgba(0,0,0,0.12)' }}>
+                        <input type="color" value={editFormEstado.color} onChange={ev => setEditFormEstado(p => ({ ...p, color: ev.target.value }))} style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
+                      </label>
+                      <input value={editFormEstado.emoji} onChange={ev => setEditFormEstado(p => ({ ...p, emoji: ev.target.value }))} placeholder="emoji" style={{ width: 44, border: '1px solid #fca5a5', borderRadius: 4, padding: '3px 5px', fontSize: 13, outline: 'none', textAlign: 'center', background: '#fff' }} />
+                      <input value={editFormEstado.label} onChange={ev => setEditFormEstado(p => ({ ...p, label: ev.target.value }))} placeholder="Nombre" autoFocus onKeyDown={ev => { if (ev.key === 'Enter') guardarEditEstado(); if (ev.key === 'Escape') setEditandoEstadoKey(null); }} style={{ flex: 1, minWidth: 80, border: '1px solid #fca5a5', borderRadius: 4, padding: '3px 6px', fontSize: 12, outline: 'none', background: '#fff' }} />
+                      <button onClick={guardarEditEstado} style={{ background: '#e53e3e', border: 'none', borderRadius: 4, padding: '4px 9px', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#fff' }}>OK</button>
                     </div>
                   )}
                 </div>
