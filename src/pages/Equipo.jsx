@@ -429,13 +429,13 @@ export default function Equipo() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* Tab toggle */}
           <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 3 }}>
-            {[['miembros','Miembros'],['asistencia','Asistencia'],['vacaciones','🌴 Vacaciones']].map(([key, label]) => (
+            {[['miembros','Miembros'],['asistencia','Asistencia'],['vacaciones','🌴 Vacaciones']].filter(([key]) => key !== 'vacaciones' || can('view_vacaciones')).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === key ? 600 : 400, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#111827' : '#6b7280', boxShadow: tab === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
                 {label}
               </button>
             ))}
           </div>
-          {tab === 'miembros' && can('edit') && (
+          {tab === 'miembros' && can('edit_team') && (
             <button onClick={abrir} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
               + Agregar
             </button>
@@ -455,15 +455,15 @@ export default function Equipo() {
           ) : (
             <div style={{ background: 'var(--app-surface)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               {equipo.map((m, i) => (
-                <div key={m.id} draggable={can('edit')} onDragStart={() => can('edit') && onDragStart(i)} onDragOver={e => can('edit') && onDragOver(e, i)} onDrop={() => can('edit') && onDrop(i)} onDragEnd={onDragEnd}
+                <div key={m.id} draggable={can('edit_team')} onDragStart={() => can('edit_team') && onDragStart(i)} onDragOver={e => can('edit_team') && onDragOver(e, i)} onDrop={() => can('edit_team') && onDrop(i)} onDragEnd={onDragEnd}
                   style={{ opacity: dragIndex === i ? 0.4 : 1, borderTop: dragOver === i && dragIndex !== i ? '2px solid #e53e3e' : '2px solid transparent', transition: 'opacity 0.15s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: expandido === m.id || i === equipo.length - 1 ? 'none' : '1px solid var(--app-border-light)', cursor: 'grab' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
                       <line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/>
                     </svg>
-                    <div style={{ position: 'relative', flexShrink: 0, cursor: 'pointer' }}
-                      onMouseEnter={() => setHoverAvatar(m.id)} onMouseLeave={() => setHoverAvatar(null)}
-                      onClick={e => { e.stopPropagation(); abrirAvatarEditor(m); }}>
+                    <div style={{ position: 'relative', flexShrink: 0, cursor: can('edit_team') ? 'pointer' : 'default' }}
+                      onMouseEnter={() => can('edit_team') && setHoverAvatar(m.id)} onMouseLeave={() => setHoverAvatar(null)}
+                      onClick={e => { if (!can('edit_team')) return; e.stopPropagation(); abrirAvatarEditor(m); }}>
                       {renderAvatar(m, 44)}
                       {hoverAvatar === m.id && (
                         <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
@@ -476,10 +476,10 @@ export default function Equipo() {
                       <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', marginTop: 1 }}>{[m.puesto, m.departamento].filter(Boolean).join(' · ')}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, cursor: 'default' }} onClick={e => e.stopPropagation()}>
-                      {can('edit') && <button onClick={() => toggleAsistencia(m.id)} title={m.enAsistencia === false ? 'Excluido de asistencia (clic para incluir)' : 'Incluido en asistencia (clic para excluir)'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: m.enAsistencia === false ? '#ef4444' : '#bbb', display: 'flex', padding: 4 }}>{m.enAsistencia === false ? <EyeOffIcon /> : <EyeIcon />}</button>}
+                      {can('edit_team') && <button onClick={() => toggleAsistencia(m.id)} title={m.enAsistencia === false ? 'Excluido de asistencia (clic para incluir)' : 'Incluido en asistencia (clic para excluir)'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: m.enAsistencia === false ? '#ef4444' : '#bbb', display: 'flex', padding: 4 }}>{m.enAsistencia === false ? <EyeOffIcon /> : <EyeIcon />}</button>}
                       <button onClick={() => setExpandido(expandido === m.id ? null : m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><ChevronIcon open={expandido === m.id} /></button>
-                      {can('edit') && <button onClick={() => abrirEditar(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><PencilIcon /></button>}
-                      {can('edit') && <button onClick={() => eliminar(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><TrashIcon /></button>}
+                      {can('edit_team') && <button onClick={() => abrirEditar(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><PencilIcon /></button>}
+                      {can('edit_team') && <button onClick={() => eliminar(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', display: 'flex', padding: 4 }}><TrashIcon /></button>}
                     </div>
                   </div>
                   {expandido === m.id && (
@@ -652,7 +652,7 @@ export default function Equipo() {
       )}
 
       {/* ── VACACIONES TAB ── */}
-      {tab === 'vacaciones' && (
+      {tab === 'vacaciones' && can('view_vacaciones') && (
         <div style={{ padding: '20px 24px' }}>
           <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ fontSize: 12, color: 'var(--app-text-subtle)', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '6px 14px' }}>
@@ -680,7 +680,7 @@ export default function Equipo() {
                   {sinFecha ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 2 }}>
                       <span style={{ fontSize: 12, color: '#f59e0b', background: '#fef3c7', borderRadius: 6, padding: '4px 10px', fontWeight: 600 }}>⚠️ Sin fecha de ingreso</span>
-                      {can('edit') && (
+                      {can('edit_team') && (
                         <button onClick={() => abrirEditar(m)} style={{ fontSize: 11, color: '#e53e3e', background: 'none', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600 }}>
                           + Agregar fecha
                         </button>

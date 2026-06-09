@@ -102,6 +102,8 @@ export function AuthProvider({ children }) {
       if (action === 'change_roles')    return false;
       if (action === 'add_users')       return false;
       if (action === 'delete_user')     return false;
+      if (action === 'edit_team')       return false;
+      if (action === 'view_vacaciones') return false;
       return true;
     }
     if (role === 'viewer') {
