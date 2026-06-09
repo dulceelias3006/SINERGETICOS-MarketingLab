@@ -277,14 +277,15 @@ export default function Equipo() {
     const s2 = dbSub('equipo_asistencia', v => { fbAs.current = true; setAsistencia(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
     const s3 = dbSub('equipo_estado_colores', v => { fbEc.current = true; setEstadoColores(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
     const s4 = dbSub('equipo_estados_custom', v => { fbCe.current = true; setCustomEstados(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
-    const s5 = dbSub('equipo_estados_config', v => { fbCfg.current = true; setEstadosConfig(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    const s5 = dbSub('equipo_estados_config', v => { if (v && typeof v === 'object') { fbCfg.current = true; setEstadosConfig(p => JSON.stringify(p)===JSON.stringify(v)?p:v); } });
     return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); s5.unsubscribe(); };
   }, []);
 
+  const cfg = estadosConfig || {};
   const todosEstados = [
     ...ESTADOS
-      .filter(e => !estadosConfig[e.key]?.hidden)
-      .map(e => ({ ...e, label: estadosConfig[e.key]?.label ?? e.label, emoji: estadosConfig[e.key]?.emoji ?? e.emoji })),
+      .filter(e => !cfg[e.key]?.hidden)
+      .map(e => ({ ...e, label: cfg[e.key]?.label ?? e.label, emoji: cfg[e.key]?.emoji ?? e.emoji })),
     ...customEstados,
   ];
   const weekdays = getWeekdays(viewDate.year, viewDate.month);
