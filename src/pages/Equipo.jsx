@@ -230,8 +230,13 @@ export default function Equipo() {
   const [customEstados, setCustomEstados] = useState(() => {
     try { return JSON.parse(localStorage.getItem('equipo_estados_custom') || '[]'); } catch { return []; }
   });
+  const [estadosConfig, setEstadosConfig] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('equipo_estados_config') || '{}'); } catch { return {}; }
+  });
   const [showNewEstado, setShowNewEstado] = useState(false);
   const [newEstadoForm, setNewEstadoForm] = useState({ label: '', color: '#94a3b8', emoji: '' });
+  const [editandoEstadoKey, setEditandoEstadoKey] = useState(null);
+  const [editFormEstado, setEditFormEstado] = useState({ label: '', emoji: '' });
   const [editingAlias, setEditingAlias] = useState(null);
   const [aliasInput, setAliasInput] = useState('');
   const [feriadoTooltip, setFeriadoTooltip] = useState(null);
@@ -248,30 +253,38 @@ export default function Equipo() {
   const [avatarDraft, setAvatarDraft] = useState({ type: 'initials', bg: '#1c1c2a', emoji: '', photo: '' });
   const fileRef = useRef();
   const canSync = useRef(false);
-  const fbEq = useRef(false); const fbAs = useRef(false); const fbEc = useRef(false); const fbCe = useRef(false);
+  const fbEq = useRef(false); const fbAs = useRef(false); const fbEc = useRef(false); const fbCe = useRef(false); const fbCfg = useRef(false);
 
   useEffect(() => { if (fbEq.current) { fbEq.current = false; return; } localStorage.setItem('equipo', JSON.stringify(equipo)); if (canSync.current) dbSet('equipo', equipo); }, [equipo]);
   useEffect(() => { if (fbAs.current) { fbAs.current = false; return; } localStorage.setItem('equipo_asistencia', JSON.stringify(asistencia)); if (canSync.current) dbSet('equipo_asistencia', asistencia); }, [asistencia]);
   useEffect(() => { if (fbEc.current) { fbEc.current = false; return; } localStorage.setItem('equipo_estado_colores', JSON.stringify(estadoColores)); if (canSync.current) dbSet('equipo_estado_colores', estadoColores); }, [estadoColores]);
   useEffect(() => { if (fbCe.current) { fbCe.current = false; return; } localStorage.setItem('equipo_estados_custom', JSON.stringify(customEstados)); if (canSync.current) dbSet('equipo_estados_custom', customEstados); }, [customEstados]);
+  useEffect(() => { if (fbCfg.current) { fbCfg.current = false; return; } localStorage.setItem('equipo_estados_config', JSON.stringify(estadosConfig)); if (canSync.current) dbSet('equipo_estados_config', estadosConfig); }, [estadosConfig]);
 
   useEffect(() => {
-    Promise.all([dbGet('equipo'), dbGet('equipo_asistencia'), dbGet('equipo_estado_colores'), dbGet('equipo_estados_custom')]).then(([eq, as, ec, ce]) => {
+    Promise.all([dbGet('equipo'), dbGet('equipo_asistencia'), dbGet('equipo_estado_colores'), dbGet('equipo_estados_custom'), dbGet('equipo_estados_config')]).then(([eq, as, ec, ce, cfg]) => {
       canSync.current = true;
       const gl = k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch { return null; } };
       if (eq !== null) { fbEq.current = true; setEquipo(eq); } else { const v = gl('equipo'); if (v?.length) dbSet('equipo', v); }
       if (as !== null) { fbAs.current = true; setAsistencia(as); } else { const v = gl('equipo_asistencia'); if (v) dbSet('equipo_asistencia', v); }
       if (ec !== null) { fbEc.current = true; setEstadoColores(ec); } else { const v = gl('equipo_estado_colores'); if (v) dbSet('equipo_estado_colores', v); }
       if (ce !== null) { fbCe.current = true; setCustomEstados(ce); } else { const v = gl('equipo_estados_custom'); if (v?.length) dbSet('equipo_estados_custom', v); }
+      if (cfg !== null) { fbCfg.current = true; setEstadosConfig(cfg); } else { const v = gl('equipo_estados_config'); if (v) dbSet('equipo_estados_config', v); }
     });
     const s1 = dbSub('equipo', v => { fbEq.current = true; setEquipo(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
     const s2 = dbSub('equipo_asistencia', v => { fbAs.current = true; setAsistencia(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
     const s3 = dbSub('equipo_estado_colores', v => { fbEc.current = true; setEstadoColores(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
     const s4 = dbSub('equipo_estados_custom', v => { fbCe.current = true; setCustomEstados(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
-    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); };
+    const s5 = dbSub('equipo_estados_config', v => { fbCfg.current = true; setEstadosConfig(p => JSON.stringify(p)===JSON.stringify(v)?p:v); });
+    return () => { s1.unsubscribe(); s2.unsubscribe(); s3.unsubscribe(); s4.unsubscribe(); s5.unsubscribe(); };
   }, []);
 
-  const todosEstados = [...ESTADOS, ...customEstados];
+  const todosEstados = [
+    ...ESTADOS
+      .filter(e => !estadosConfig[e.key]?.hidden)
+      .map(e => ({ ...e, label: estadosConfig[e.key]?.label ?? e.label, emoji: estadosConfig[e.key]?.emoji ?? e.emoji })),
+    ...customEstados,
+  ];
   const weekdays = getWeekdays(viewDate.year, viewDate.month);
   const feriadosMexico = getFeriadosMexico(viewDate.year);
 
@@ -286,6 +299,24 @@ export default function Equipo() {
   function eliminarEstado(key) {
     setCustomEstados(prev => prev.filter(e => e.key !== key));
     setEstadoColores(prev => { const next = { ...prev }; delete next[key]; return next; });
+  }
+  function ocultarEstado(key) {
+    if (key.startsWith('custom_')) { eliminarEstado(key); return; }
+    setEstadosConfig(prev => ({ ...prev, [key]: { ...(prev[key] || {}), hidden: true } }));
+  }
+  function iniciarEditEstado(e) {
+    setEditFormEstado({ label: e.label, emoji: e.emoji || '' });
+    setEditandoEstadoKey(e.key);
+  }
+  function guardarEditEstado() {
+    const key = editandoEstadoKey;
+    if (!editFormEstado.label.trim()) return;
+    if (key.startsWith('custom_')) {
+      setCustomEstados(prev => prev.map(e => e.key === key ? { ...e, label: editFormEstado.label.trim(), emoji: editFormEstado.emoji.trim() } : e));
+    } else {
+      setEstadosConfig(prev => ({ ...prev, [key]: { ...(prev[key] || {}), label: editFormEstado.label.trim(), emoji: editFormEstado.emoji.trim() } }));
+    }
+    setEditandoEstadoKey(null);
   }
 
   function prevMonth() {
@@ -510,21 +541,33 @@ export default function Equipo() {
           {/* Legend */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginRight: 2 }}>Estados (clic en color para editar):</span>
+              <span style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginRight: 2 }}>Estados:</span>
               {todosEstados.map(e => (
-                <div key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 6, padding: '3px 7px 3px 5px' }}>
-                  {can('edit_asistencia') ? (
-                    <label title={`Editar color: ${e.label}`} style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <input type="color" value={estadoColores[e.key] || e.color}
-                        onChange={ev => setEstadoColores(prev => ({ ...prev, [e.key]: ev.target.value }))}
-                        style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
-                    </label>
-                  ) : (
-                    <div style={{ width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
-                  )}
-                  <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>{e.emoji} {e.label}</span>
-                  {e.key.startsWith('custom_') && can('edit_asistencia') && (
-                    <button onClick={() => eliminarEstado(e.key)} title="Eliminar estado" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 13, lineHeight: 1, padding: '0 0 0 2px', display: 'flex', alignItems: 'center' }}>×</button>
+                <div key={e.key} style={{ display: 'flex', flexDirection: 'column', background: 'var(--app-surface)', border: `1px solid ${editandoEstadoKey === e.key ? '#e53e3e' : 'var(--app-border)'}`, borderRadius: 6, overflow: 'hidden' }}>
+                  {/* Chip normal */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 5px 3px 5px' }}>
+                    {can('edit_asistencia') ? (
+                      <label title="Editar color" style={{ position: 'relative', width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, cursor: 'pointer', display: 'block', border: '1px solid rgba(0,0,0,0.1)' }}>
+                        <input type="color" value={estadoColores[e.key] || e.color}
+                          onChange={ev => setEstadoColores(prev => ({ ...prev, [e.key]: ev.target.value }))}
+                          style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }} />
+                      </label>
+                    ) : (
+                      <div style={{ width: 14, height: 14, borderRadius: 3, background: estadoColores[e.key] || e.color, flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }} />
+                    )}
+                    <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>{e.emoji} {e.label}</span>
+                    {can('edit_asistencia') && <>
+                      <button onClick={() => editandoEstadoKey === e.key ? setEditandoEstadoKey(null) : iniciarEditEstado(e)} title="Editar nombre/emoji" style={{ background: 'none', border: 'none', cursor: 'pointer', color: editandoEstadoKey === e.key ? '#e53e3e' : '#ccc', fontSize: 11, lineHeight: 1, padding: '0 1px', display: 'flex', alignItems: 'center' }}>✏️</button>
+                      <button onClick={() => { if (confirm(`¿Eliminar el estado "${e.label}"?`)) ocultarEstado(e.key); }} title="Eliminar estado" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 13, lineHeight: 1, padding: '0 1px', display: 'flex', alignItems: 'center' }}>×</button>
+                    </>}
+                  </div>
+                  {/* Formulario de edición inline */}
+                  {editandoEstadoKey === e.key && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderTop: '1px solid #fecaca', background: '#fff5f5' }}>
+                      <input value={editFormEstado.emoji} onChange={ev => setEditFormEstado(p => ({ ...p, emoji: ev.target.value }))} placeholder="emoji" style={{ width: 44, border: '1px solid #fca5a5', borderRadius: 4, padding: '3px 5px', fontSize: 13, outline: 'none', textAlign: 'center' }} />
+                      <input value={editFormEstado.label} onChange={ev => setEditFormEstado(p => ({ ...p, label: ev.target.value }))} placeholder="Nombre" autoFocus onKeyDown={ev => { if (ev.key === 'Enter') guardarEditEstado(); if (ev.key === 'Escape') setEditandoEstadoKey(null); }} style={{ flex: 1, minWidth: 80, border: '1px solid #fca5a5', borderRadius: 4, padding: '3px 6px', fontSize: 12, outline: 'none' }} />
+                      <button onClick={guardarEditEstado} style={{ background: '#e53e3e', border: 'none', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#fff' }}>OK</button>
+                    </div>
                   )}
                 </div>
               ))}
