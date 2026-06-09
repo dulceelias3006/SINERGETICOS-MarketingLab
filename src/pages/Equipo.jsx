@@ -676,7 +676,7 @@ export default function Equipo() {
                         if (entry?.status === 'vacaciones' && vacacionesMap[m.id]) {
                           const { vac, vacDays } = vacacionesMap[m.id];
                           const idx = vacDays.indexOf(d.dateStr);
-                          if (idx !== -1) tooltipParts.push(`🌴 Día ${idx + 1} de ${vac.diasCorresponden}`);
+                          if (idx !== -1) tooltipParts.push(`🌴 ${idx + 1}/${vac.diasCorresponden}`);
                         }
                         return (
                           <td key={d.dateStr}
