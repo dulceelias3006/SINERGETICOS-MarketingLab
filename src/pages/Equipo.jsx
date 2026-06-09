@@ -464,7 +464,7 @@ export default function Equipo() {
   const inp = (extra = {}) => ({ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box', ...extra });
 
   const openEstado = openCell ? ESTADOS.find(e => e.key === asistencia[openCell.memberId]?.[openCell.dateStr]?.status) : null;
-  const needsNote = openCell && (asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo_just');
+  const needsNote = openCell && (asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo_just' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'falta_just');
 
   return (
     <div style={{ background: 'var(--app-bg)', minHeight: '100%' }} onClick={() => setOpenCell(null)}>
@@ -817,7 +817,7 @@ export default function Equipo() {
           <div style={{ padding: 6, maxHeight: 320, overflowY: 'auto' }}>
             {todosEstados.map(e => {
               const isCurrent = asistencia[openCell.memberId]?.[openCell.dateStr]?.status === e.key;
-              const needNote = e.key === 'retardo' || e.key === 'retardo_just';
+              const needNote = e.key === 'retardo' || e.key === 'retardo_just' || e.key === 'falta_just';
               const cellColor = estadoColores[e.key] || e.color;
               return (
                 <div key={e.key}>
@@ -829,7 +829,7 @@ export default function Equipo() {
                   </button>
                   {isCurrent && needNote && (
                     <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px 28px' }}>
-                      <input value={noteInput} onChange={ev => setNoteInput(ev.target.value)} placeholder="ej: 30min" style={{ flex: 1, border: '1px solid #ddd', borderRadius: 4, padding: '3px 6px', fontSize: 11, outline: 'none' }} onKeyDown={ev => ev.key === 'Enter' && confirmarNota(e.key)} />
+                      <input value={noteInput} onChange={ev => setNoteInput(ev.target.value)} placeholder={e.key === 'falta_just' ? 'Motivo' : 'ej: 30min'} style={{ flex: 1, border: '1px solid #ddd', borderRadius: 4, padding: '3px 6px', fontSize: 11, outline: 'none' }} onKeyDown={ev => ev.key === 'Enter' && confirmarNota(e.key)} />
                       <button onClick={() => confirmarNota(e.key)} style={{ background: cellColor, border: 'none', borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>OK</button>
                     </div>
                   )}
