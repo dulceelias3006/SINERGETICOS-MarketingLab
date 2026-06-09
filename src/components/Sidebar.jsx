@@ -171,7 +171,12 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const roleLabel = ROLE_LABELS[role] || '';
 
   const isAdmin = role === 'admin' || role === 'superadmin';
-  const visibleItems = navItems.filter(item => item.path !== '/usuarios' || isAdmin);
+  const isViewer = role === 'viewer';
+  const visibleItems = navItems.filter(item => {
+    if (item.path === '/usuarios') return isAdmin;
+    if (item.path === '/equipo') return !isViewer;
+    return true;
+  });
 
   return (
     <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>

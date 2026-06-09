@@ -132,7 +132,7 @@ function AppContent() {
               <Route path="/accesos"   element={<Accesos />} />
               <Route path="/eventos"   element={<Eventos />} />
               <Route path="/analiticas" element={<Analiticas />} />
-              <Route path="/equipo"    element={<Equipo />} />
+              <Route path="/equipo"    element={role === 'viewer' ? <Dashboard /> : <Equipo />} />
               <Route path="/tickets"   element={<Tickets />} />
               <Route path="/usuarios"  element={(role === 'admin' || role === 'superadmin') ? <Usuarios /> : <Dashboard />} />
             </Routes>
