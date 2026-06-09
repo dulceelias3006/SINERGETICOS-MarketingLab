@@ -254,6 +254,8 @@ export default function Equipo() {
   const fileRef = useRef();
   const canSync = useRef(false);
   const fbEq = useRef(false); const fbAs = useRef(false); const fbEc = useRef(false); const fbCe = useRef(false); const fbCfg = useRef(false);
+  const fillDragRef = useRef(null);
+  const [fillDrag, setFillDrag] = useState(null);
 
   useEffect(() => { if (fbEq.current) { fbEq.current = false; return; } localStorage.setItem('equipo', JSON.stringify(equipo)); if (canSync.current) dbSet('equipo', equipo); }, [equipo]);
   useEffect(() => { if (fbAs.current) { fbAs.current = false; return; } localStorage.setItem('equipo_asistencia', JSON.stringify(asistencia)); if (canSync.current) dbSet('equipo_asistencia', asistencia); }, [asistencia]);
@@ -287,6 +289,21 @@ export default function Equipo() {
   ];
   const weekdays = getWeekdays(viewDate.year, viewDate.month);
   const feriadosMexico = getFeriadosMexico(viewDate.year);
+
+  const fillCells = (() => {
+    if (!fillDrag) return new Set();
+    const members = equipo.filter(m => m.enAsistencia !== false).map(m => m.id);
+    const dates = weekdays.map(d => d.dateStr);
+    const minM = Math.min(members.indexOf(fillDrag.memberId), members.indexOf(fillDrag.endMemberId));
+    const maxM = Math.max(members.indexOf(fillDrag.memberId), members.indexOf(fillDrag.endMemberId));
+    const minD = Math.min(dates.indexOf(fillDrag.dateStr), dates.indexOf(fillDrag.endDateStr));
+    const maxD = Math.max(dates.indexOf(fillDrag.dateStr), dates.indexOf(fillDrag.endDateStr));
+    const cells = new Set();
+    for (let mi = minM; mi <= maxM; mi++)
+      for (let di = minD; di <= maxD; di++)
+        cells.add(`${members[mi]}:${dates[di]}`);
+    return cells;
+  })();
 
   const vacacionesMap = {};
   equipo.filter(m => m.enAsistencia !== false).forEach(m => {
@@ -420,6 +437,52 @@ export default function Equipo() {
       if (expandido === id) setExpandido(null);
     }
   }
+  function startFillDrag(e, memberId, dateStr) {
+    e.preventDefault(); e.stopPropagation();
+    const entry = asistencia[memberId]?.[dateStr];
+    if (!entry) return;
+    const drag = { memberId, dateStr, status: entry.status, note: entry.note || '', endMemberId: memberId, endDateStr: dateStr };
+    fillDragRef.current = drag;
+    setFillDrag(drag);
+    const onUp = () => {
+      if (fillDragRef.current) {
+        const d = fillDragRef.current;
+        const members = equipo.filter(m => m.enAsistencia !== false).map(m => m.id);
+        const wds = weekdays.map(w => w.dateStr);
+        const minM = Math.min(members.indexOf(d.memberId), members.indexOf(d.endMemberId));
+        const maxM = Math.max(members.indexOf(d.memberId), members.indexOf(d.endMemberId));
+        const minDi = Math.min(wds.indexOf(d.dateStr), wds.indexOf(d.endDateStr));
+        const maxDi = Math.max(wds.indexOf(d.dateStr), wds.indexOf(d.endDateStr));
+        if (minM !== maxM || minDi !== maxDi) {
+          setAsistencia(prev => {
+            const next = { ...prev };
+            for (let mi = minM; mi <= maxM; mi++) {
+              const mId = members[mi];
+              const md = { ...(next[mId] || {}) };
+              for (let di = minDi; di <= maxDi; di++) {
+                const dStr = wds[di];
+                if (mi === members.indexOf(d.memberId) && dStr === d.dateStr) continue;
+                md[dStr] = { status: d.status, note: d.note };
+              }
+              next[mId] = md;
+            }
+            return next;
+          });
+        }
+        fillDragRef.current = null;
+        setFillDrag(null);
+      }
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mouseup', onUp);
+  }
+  function updateFillDrag(memberId, dateStr) {
+    if (!fillDragRef.current) return;
+    const drag = { ...fillDragRef.current, endMemberId: memberId, endDateStr: dateStr };
+    fillDragRef.current = drag;
+    setFillDrag(drag);
+  }
+
   function onDragStart(i) { setDragIndex(i); }
   function onDragOver(e, i) { e.preventDefault(); if (i !== dragIndex) setDragOver(i); }
   function onDrop(i) {
@@ -680,12 +743,17 @@ export default function Equipo() {
                           const idx = vacDays.indexOf(d.dateStr);
                           if (idx !== -1) tooltipParts.push(`🌴 ${idx + 1}/${vac.diasCorresponden}`);
                         }
+                        const isFillTarget = fillCells.has(`${m.id}:${d.dateStr}`);
+                        const isFillSource = fillDrag?.memberId === m.id && fillDrag?.dateStr === d.dateStr;
                         return (
                           <td key={d.dateStr}
-                            onClick={can('edit_asistencia') ? e => clickCell(e, m.id, d.dateStr) : undefined}
-                            onMouseEnter={tooltipParts.length ? e => { const r = e.currentTarget.getBoundingClientRect(); setFeriadoTooltip({ text: tooltipParts.join(' · '), x: r.left + r.width / 2, y: r.top - 6 }); } : undefined}
-                            onMouseLeave={tooltipParts.length ? () => setFeriadoTooltip(null) : undefined}
-                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid var(--app-border-light)', borderLeft: d.isMonday ? '2px solid var(--app-border)' : '1px solid var(--app-border-light)', background: color || 'transparent', cursor: can('edit_asistencia') ? 'pointer' : 'default', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle' }}>
+                            onClick={can('edit_asistencia') ? e => { if (fillDragRef.current) return; clickCell(e, m.id, d.dateStr); } : undefined}
+                            onMouseEnter={e => {
+                              updateFillDrag(m.id, d.dateStr);
+                              if (tooltipParts.length && !fillDragRef.current) { const r = e.currentTarget.getBoundingClientRect(); setFeriadoTooltip({ text: tooltipParts.join(' · '), x: r.left + r.width / 2, y: r.top - 6 }); }
+                            }}
+                            onMouseLeave={() => setFeriadoTooltip(null)}
+                            style={{ position: 'relative', padding: 0, borderBottom: '1px solid var(--app-border-light)', borderLeft: d.isMonday ? '2px solid var(--app-border)' : '1px solid var(--app-border-light)', background: color || 'transparent', cursor: fillDrag ? 'crosshair' : can('edit_asistencia') ? 'pointer' : 'default', textAlign: 'center', height: 30, minWidth: 26, width: 26, verticalAlign: 'middle', boxShadow: isFillTarget && !isFillSource ? 'inset 0 0 0 2px #e53e3e' : 'none' }}>
                             {(estado || esFeriado) && (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: 1 }}>
                                 {estado?.emoji ? <span style={{ fontSize: 15 }}>{estado.emoji}</span> : null}
@@ -698,6 +766,10 @@ export default function Equipo() {
                             )}
                             {esBirthday && (estado || esFeriado) && (
                               <span style={{ position: 'absolute', top: 1, right: 1, fontSize: 8, lineHeight: 1 }}>🎂</span>
+                            )}
+                            {can('edit_asistencia') && estado && (
+                              <div onMouseDown={e => startFillDrag(e, m.id, d.dateStr)}
+                                style={{ position: 'absolute', bottom: 1, right: 1, width: 6, height: 6, background: '#fff', border: '1.5px solid #555', borderRadius: 1, cursor: 'crosshair', zIndex: 3 }} />
                             )}
                           </td>
                         );
