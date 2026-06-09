@@ -811,7 +811,7 @@ export default function Equipo() {
 
       {/* Cell popover */}
       {openCell && (
-        <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', left: Math.min(openCell.x, window.innerWidth - 230), top: Math.min(openCell.y, window.innerHeight - 60), transform: openCell.y + 40 > window.innerHeight - 60 ? 'translateY(-100%)' : 'none', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 200, width: 220, overflow: 'hidden' }}>
+        <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', left: Math.min(openCell.x, window.innerWidth - 230), top: openCell.y + 420 > window.innerHeight ? openCell.y : Math.min(openCell.y, window.innerHeight - 420), transform: openCell.y + 420 > window.innerHeight ? 'translateY(-100%)' : 'none', background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 200, width: 220, overflow: 'hidden' }}>
           <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--app-border-light)', fontSize: 11, color: 'var(--app-text-subtle)', fontWeight: 600 }}>
             {openCell.dateStr}
           </div>
