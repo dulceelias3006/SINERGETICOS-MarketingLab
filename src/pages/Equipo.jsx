@@ -288,6 +288,22 @@ export default function Equipo() {
   const weekdays = getWeekdays(viewDate.year, viewDate.month);
   const feriadosMexico = getFeriadosMexico(viewDate.year);
 
+  const vacacionesMap = {};
+  equipo.filter(m => m.enAsistencia !== false).forEach(m => {
+    const vac = calcVacaciones(m.fechaIngreso, asistencia, m.id);
+    if (!vac || vac.diasCorresponden === 0) return;
+    const registros = asistencia[String(m.id)] || {};
+    const vacDays = Object.entries(registros)
+      .filter(([fecha, ent]) => {
+        if (ent?.status !== 'vacaciones') return false;
+        const dObj = new Date(fecha + 'T12:00:00');
+        return dObj >= vac.desde && dObj < vac.hasta;
+      })
+      .map(([fecha]) => fecha)
+      .sort();
+    vacacionesMap[m.id] = { vac, vacDays };
+  });
+
   function agregarEstado() {
     if (!newEstadoForm.label.trim()) return;
     const key = 'custom_' + Date.now();
@@ -657,6 +673,11 @@ export default function Equipo() {
                         const tooltipParts = [];
                         if (feriadoNombre) tooltipParts.push(feriadoNombre);
                         if (esBirthday && m.cumpleanos) tooltipParts.push(`🎂 ${viewDate.year - parseInt(m.cumpleanos.slice(0, 4))} años`);
+                        if (entry?.status === 'vacaciones' && vacacionesMap[m.id]) {
+                          const { vac, vacDays } = vacacionesMap[m.id];
+                          const idx = vacDays.indexOf(d.dateStr);
+                          if (idx !== -1) tooltipParts.push(`🌴 Día ${idx + 1} de ${vac.diasCorresponden}`);
+                        }
                         return (
                           <td key={d.dateStr}
                             onClick={can('edit_asistencia') ? e => clickCell(e, m.id, d.dateStr) : undefined}
