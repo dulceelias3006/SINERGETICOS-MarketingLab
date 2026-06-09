@@ -464,7 +464,7 @@ export default function Equipo() {
   const inp = (extra = {}) => ({ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', background: 'var(--app-surface)', boxSizing: 'border-box', ...extra });
 
   const openEstado = openCell ? ESTADOS.find(e => e.key === asistencia[openCell.memberId]?.[openCell.dateStr]?.status) : null;
-  const needsNote = openCell && (asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo_just' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'falta_just');
+  const needsNote = openCell && (asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'retardo_just' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'falta_just' || asistencia[openCell.memberId]?.[openCell.dateStr]?.status === 'feriado');
 
   return (
     <div style={{ background: 'var(--app-bg)', minHeight: '100%' }} onClick={() => setOpenCell(null)}>
@@ -674,6 +674,7 @@ export default function Equipo() {
                         if (feriadoNombre) tooltipParts.push(feriadoNombre);
                         if (esBirthday && m.cumpleanos) tooltipParts.push(`🎂 ${viewDate.year - parseInt(m.cumpleanos.slice(0, 4))} años`);
                         if (entry?.status === 'falta_just' && entry?.note) tooltipParts.push(`📋 ${entry.note}`);
+                        if (entry?.status === 'feriado' && entry?.note) tooltipParts.push(`🎉 ${entry.note}`);
                         if (entry?.status === 'vacaciones' && vacacionesMap[m.id]) {
                           const { vac, vacDays } = vacacionesMap[m.id];
                           const idx = vacDays.indexOf(d.dateStr);
@@ -689,7 +690,7 @@ export default function Equipo() {
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', lineHeight: 1 }}>
                                 {estado?.emoji ? <span style={{ fontSize: 15 }}>{estado.emoji}</span> : null}
                                 {esFeriado && feriadoEstado?.emoji ? <span style={{ fontSize: 15 }}>{feriadoEstado.emoji}</span> : null}
-                                {entry?.note && entry?.status !== 'falta_just' ? <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(0,0,0,0.6)' }}>{entry.note}</span> : null}
+                                {entry?.note && entry?.status !== 'falta_just' && entry?.status !== 'feriado' ? <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(0,0,0,0.6)' }}>{entry.note}</span> : null}
                               </div>
                             )}
                             {esBirthday && !estado && !esFeriado && (
@@ -818,7 +819,7 @@ export default function Equipo() {
           <div style={{ padding: 6, maxHeight: 320, overflowY: 'auto' }}>
             {todosEstados.map(e => {
               const isCurrent = asistencia[openCell.memberId]?.[openCell.dateStr]?.status === e.key;
-              const needNote = e.key === 'retardo' || e.key === 'retardo_just' || e.key === 'falta_just';
+              const needNote = e.key === 'retardo' || e.key === 'retardo_just' || e.key === 'falta_just' || e.key === 'feriado';
               const cellColor = estadoColores[e.key] || e.color;
               return (
                 <div key={e.key}>
@@ -830,7 +831,7 @@ export default function Equipo() {
                   </button>
                   {isCurrent && needNote && (
                     <div style={{ display: 'flex', gap: 4, padding: '2px 8px 6px 28px' }}>
-                      <input value={noteInput} onChange={ev => setNoteInput(ev.target.value)} placeholder={e.key === 'falta_just' ? 'Motivo' : 'ej: 30min'} style={{ flex: 1, border: '1px solid #ddd', borderRadius: 4, padding: '3px 6px', fontSize: 11, outline: 'none' }} onKeyDown={ev => ev.key === 'Enter' && confirmarNota(e.key)} />
+                      <input value={noteInput} onChange={ev => setNoteInput(ev.target.value)} placeholder={e.key === 'falta_just' ? 'Motivo' : e.key === 'feriado' ? 'Descripción' : 'ej: 30min'} style={{ flex: 1, border: '1px solid #ddd', borderRadius: 4, padding: '3px 6px', fontSize: 11, outline: 'none' }} onKeyDown={ev => ev.key === 'Enter' && confirmarNota(e.key)} />
                       <button onClick={() => confirmarNota(e.key)} style={{ background: cellColor, border: 'none', borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>OK</button>
                     </div>
                   )}
