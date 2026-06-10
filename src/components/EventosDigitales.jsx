@@ -310,9 +310,8 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, onTogg
             <div style={{ fontSize: 10, color: 'var(--app-text-subtle)', marginBottom: 4 }}>Costo/Reg</div>
             <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
               color: costoReg === null ? 'var(--app-text-subtle)'
-                : costoReg < 50 ? '#16a34a'
-                : costoReg < 120 ? '#f59e0b'
-                : '#ef4444' }}>
+                : s.region === 'USA' ? (costoReg < 70 ? '#16a34a' : costoReg <= 90 ? '#f59e0b' : '#ef4444')
+                : (costoReg < 50 ? '#16a34a' : costoReg < 120 ? '#f59e0b' : '#ef4444') }}>
               {costoReg === null ? '—' : `$${costoReg.toLocaleString('es-MX')}`}
             </div>
           </div>
@@ -726,7 +725,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
           <td style="text-align:right;color:#6b7280">${(sem.meta || 0).toLocaleString('es-MX')}</td>
           <td style="text-align:right;font-weight:700;color:${pctColor(pct)}">${pct}%</td>
           <td style="text-align:right">${gastadoStr}</td>
-          <td style="text-align:right;font-weight:700;color:${costo === null ? '#9ca3af' : costo < 50 ? '#16a34a' : costo < 120 ? '#d97706' : '#dc2626'};white-space:nowrap">${costo === null ? '—' : '$' + costo.toLocaleString('es-MX')}</td>
+          <td style="text-align:right;font-weight:700;color:${costo === null ? '#9ca3af' : s.region === 'USA' ? (costo < 70 ? '#16a34a' : costo <= 90 ? '#d97706' : '#dc2626') : (costo < 50 ? '#16a34a' : costo < 120 ? '#d97706' : '#dc2626')};white-space:nowrap">${costo === null ? '—' : '$' + costo.toLocaleString('es-MX')}</td>
         </tr>`;
     }).join('');
 
