@@ -678,7 +678,6 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     const activas = series.filter(s => s.estado === 'activo');
     const totalReg  = activas.reduce((s, x) => s + (x.semana?.registros || 0), 0);
     const totalMeta = activas.reduce((s, x) => s + (x.semana?.meta || 0), 0);
-    const totalVip  = activas.reduce((s, x) => s + (x.semana?.vip || 0), 0);
     const totalGasto = activas.reduce((s, x) => s + (x.semana?.presupuestoGastado || 0), 0);
     const pctGlobal = totalMeta > 0 ? Math.round(totalReg / totalMeta * 100) : 0;
     const pctColor = p => p >= 100 ? '#16a34a' : p >= 60 ? '#d97706' : '#dc2626';
@@ -691,18 +690,23 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       const gastadoPct = sem.presupuestoTotal > 0
         ? Math.round((sem.presupuestoGastado || 0) / sem.presupuestoTotal * 100) : 0;
       const dias = (s.diasEvento || []).map(d => DIAS_FULL[d]).join(' & ') || '—';
+      const fechaEvtStr = (sem.fechasEvento || []).length
+        ? sem.fechasEvento.map(iso => { const [y2,m2,d2] = iso.split('-').map(Number); const dt = new Date(y2, m2 - 1, d2); return DIAS_FULL[dt.getDay()] + ' ' + d2; }).join(' & ')
+        : fmtFecha(sem.inicio);
       const reg = REGIONES.find(r => r.id === s.region);
+      const gastadoStr = sem.presupuestoTotal > 0
+        ? `$${(sem.presupuestoGastado || 0).toLocaleString('es-MX')} <span style="font-size:10px;color:#9ca3af">de $${sem.presupuestoTotal.toLocaleString('es-MX')} (${gastadoPct}%)</span>`
+        : `$${(sem.presupuestoGastado || 0).toLocaleString('es-MX')}`;
       return `
         <tr>
           <td style="font-weight:600">${s.nombre}</td>
           <td><span style="font-size:10px;font-weight:700;background:${reg ? reg.color + '22' : '#f3f4f6'};color:${reg ? reg.color : '#6b7280'};padding:2px 7px;border-radius:5px">${s.region || '—'}</span></td>
           <td style="color:#6b7280">${dias}</td>
-          <td style="color:#6b7280">${fmtFecha(sem.inicio)}</td>
+          <td style="color:#6b7280">${fechaEvtStr}</td>
           <td style="text-align:right;font-weight:600">${(sem.registros || 0).toLocaleString('es-MX')}</td>
           <td style="text-align:right;color:#6b7280">${(sem.meta || 0).toLocaleString('es-MX')}</td>
           <td style="text-align:right;font-weight:700;color:${pctColor(pct)}">${pct}%</td>
-          <td style="text-align:right">${sem.vip || 0}</td>
-          <td style="text-align:right">${(sem.presupuestoGastado || 0).toLocaleString('es-MX')} <span style="font-size:10px;color:#9ca3af">(${gastadoPct}%)</span></td>
+          <td style="text-align:right">${gastadoStr}</td>
           <td style="text-align:right;font-weight:700;color:${costo === null ? '#9ca3af' : costo < 50 ? '#16a34a' : costo < 120 ? '#d97706' : '#dc2626'};white-space:nowrap">${costo === null ? '—' : '$' + costo.toLocaleString('es-MX')}</td>
         </tr>`;
     }).join('');
@@ -725,18 +729,11 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     </style></head><body>
     <h1>📡 Reporte Eventos Digitales</h1>
     <div class="sub">${hoyStr} · ${activas.length} serie${activas.length !== 1 ? 's' : ''} activa${activas.length !== 1 ? 's' : ''}</div>
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Series activas</div><div class="stat-value">${activas.length}</div></div>
-      <div class="stat"><div class="stat-label">Registros totales</div><div class="stat-value">${totalReg.toLocaleString('es-MX')}</div></div>
-      <div class="stat"><div class="stat-label">Meta total</div><div class="stat-value">${totalMeta.toLocaleString('es-MX')}</div></div>
-      <div class="stat"><div class="stat-label">Avance global</div><div class="stat-value" style="color:${pctColor(pctGlobal)}">${pctGlobal}%</div></div>
-      <div class="stat"><div class="stat-label">VIP total</div><div class="stat-value">${totalVip.toLocaleString('es-MX')}</div></div>
-    </div>
     <table>
       <thead><tr>
-        <th>Serie</th><th>Región</th><th>Días evento</th><th>Semana del</th>
+        <th>Serie</th><th>Región</th><th>Días evento</th><th>Fecha evento</th>
         <th style="text-align:right">Registros</th><th style="text-align:right">Meta</th>
-        <th style="text-align:right">%Reg</th><th style="text-align:right">VIP</th>
+        <th style="text-align:right">%Reg</th>
         <th style="text-align:right">Gastado</th><th style="text-align:right">Costo/Reg</th>
       </tr></thead>
       <tbody>${filas}</tbody>
