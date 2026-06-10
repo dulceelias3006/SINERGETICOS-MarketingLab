@@ -112,7 +112,7 @@ function calcFechasEnRango(dias, inicio, fin) {
 }
 
 
-function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editable }) {
+function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, onToggleExcluir, editable }) {
   const [expandHist, setExpandHist] = useState(false);
   const [confirmCerrar, setConfirmCerrar] = useState(false);
   const [editGasto, setEditGasto] = useState(null);
@@ -359,6 +359,21 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, editab
             </span>
           </div>
         )}
+      </div>
+
+      {/* Toggle excluir del reporte */}
+      <div
+        onClick={editable ? () => onToggleExcluir(s.id) : undefined}
+        style={{ borderTop: '1px solid var(--app-border)', padding: '9px 18px', display: 'flex', alignItems: 'center', gap: 8, cursor: editable ? 'pointer' : 'default', background: s.excluirDeReporte ? '#fef3c722' : 'transparent', transition: 'background 0.15s' }}
+        onMouseEnter={editable ? e => { e.currentTarget.style.background = s.excluirDeReporte ? '#fef3c744' : 'var(--app-surface-2)'; } : undefined}
+        onMouseLeave={editable ? e => { e.currentTarget.style.background = s.excluirDeReporte ? '#fef3c722' : 'transparent'; } : undefined}
+      >
+        <div style={{ width: 15, height: 15, borderRadius: 4, border: `1.5px solid ${s.excluirDeReporte ? '#d97706' : 'var(--app-border)'}`, background: s.excluirDeReporte ? '#d97706' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+          {s.excluirDeReporte && <span style={{ color: '#fff', fontSize: 9, fontWeight: 900, lineHeight: 1 }}>✕</span>}
+        </div>
+        <span style={{ fontSize: 11, color: s.excluirDeReporte ? '#d97706' : 'var(--app-text-subtle)' }}>
+          Excluir del reporte
+        </span>
       </div>
 
       {/* Historial expandible */}
@@ -637,6 +652,10 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     ));
   }
 
+  function toggleExcluir(id) {
+    saveSeries(series.map(s => s.id === id ? { ...s, excluirDeReporte: !s.excluirDeReporte } : s));
+  }
+
   function editarHistorial(id, idx, datos) {
     saveSeries(series.map(s => s.id === id
       ? { ...s, updatedAt: Date.now(), historial: s.historial.map((h, i) => i === idx ? { ...h, ...datos } : h) }
@@ -675,7 +694,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   function generarPDF() {
     const hoy = new Date();
     const hoyStr = hoy.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const activas = series.filter(s => s.estado === 'activo');
+    const activas = series.filter(s => s.estado === 'activo' && !s.excluirDeReporte);
     const totalReg  = activas.reduce((s, x) => s + (x.semana?.registros || 0), 0);
     const totalMeta = activas.reduce((s, x) => s + (x.semana?.meta || 0), 0);
     const totalGasto = activas.reduce((s, x) => s + (x.semana?.presupuestoGastado || 0), 0);
@@ -786,7 +805,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, marginBottom: pausadasSeries.length ? 28 : 0 }}>
                 {activasSeries.map(s => (
-                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} editable={can('edit')} />
+                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} onToggleExcluir={toggleExcluir} editable={can('edit')} />
                 ))}
               </div>
             </>
@@ -800,7 +819,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
                 {pausadasSeries.map(s => (
-                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} editable={can('edit')} />
+                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} onToggleExcluir={toggleExcluir} editable={can('edit')} />
                 ))}
               </div>
             </>
