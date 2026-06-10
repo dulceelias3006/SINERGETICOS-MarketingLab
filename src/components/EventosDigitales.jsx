@@ -731,7 +731,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     }).join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>Reporte Digitales</title>
+    <title>Reporte Webinars</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: -apple-system, Arial, sans-serif; padding: 32px 36px; color: #111827; font-size: 13px; }
@@ -746,7 +746,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       td { padding: 10px 10px; border-bottom: 1px solid #f3f4f6; font-size: 12px; color: #111827; vertical-align: middle; }
       tr:last-child td { border-bottom: none; }
     </style></head><body>
-    <h1>📡 Reporte Eventos Digitales</h1>
+    <h1>📡 Reporte Webinars</h1>
     <div class="sub">${hoyStr} · ${activas.length} serie${activas.length !== 1 ? 's' : ''} activa${activas.length !== 1 ? 's' : ''}</div>
     <table>
       <thead><tr>
@@ -783,9 +783,9 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       {series.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '100px 20px' }}>
           <div style={{ fontSize: 44, marginBottom: 16 }}>📡</div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)', marginBottom: 8 }}>Sin series digitales</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)', marginBottom: 8 }}>Sin webinars</div>
           <div style={{ fontSize: 13, color: 'var(--app-text-muted)', marginBottom: 28, maxWidth: 320, margin: '0 auto 28px' }}>
-            Crea una serie para cada evento digital recurrente. Actualiza los datos semana a semana y ciérrala al terminar el ciclo.
+            Crea una serie para cada webinar recurrente. Actualiza los datos semana a semana y ciérrala al terminar el ciclo.
           </div>
           {can('edit') && (
             <button onClick={abrir}

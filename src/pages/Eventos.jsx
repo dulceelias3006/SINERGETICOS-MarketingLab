@@ -744,7 +744,7 @@ export default function Eventos() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Eventos</h1>
           {/* Switcher Presenciales / Digitales / Especiales */}
           <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 10, padding: 3 }}>
-            {[['presenciales','🏟 Presenciales'],['digitales','📡 Digitales'],['especiales','⭐ Especiales']].map(([key, label]) => (
+            {[['presenciales','🏟 Presenciales'],['digitales','📡 Webinars'],['especiales','⭐ Especiales']].map(([key, label]) => (
               <button key={key} onClick={() => setModo(key)}
                 style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: modo === key ? 700 : 500, background: modo === key ? 'var(--app-surface)' : 'transparent', color: modo === key ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: modo === key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
                 {label}
