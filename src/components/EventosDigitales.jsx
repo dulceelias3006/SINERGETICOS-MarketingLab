@@ -719,7 +719,6 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
         <tr>
           <td style="font-weight:600">${s.nombre}</td>
           <td><span style="font-size:10px;font-weight:700;background:${reg ? reg.color + '22' : '#f3f4f6'};color:${reg ? reg.color : '#6b7280'};padding:2px 7px;border-radius:5px">${s.region || '—'}</span></td>
-          <td style="color:#6b7280">${dias}</td>
           <td style="color:#6b7280">${fechaEvtStr}</td>
           <td style="text-align:right;font-weight:600">${(sem.registros || 0).toLocaleString('es-MX')}</td>
           <td style="text-align:right;color:#6b7280">${(sem.meta || 0).toLocaleString('es-MX')}</td>
@@ -749,7 +748,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     <div class="sub">${hoyStr} · ${activas.length} serie${activas.length !== 1 ? 's' : ''} activa${activas.length !== 1 ? 's' : ''}</div>
     <table>
       <thead><tr>
-        <th>Serie</th><th>Región</th><th>Días evento</th><th>Fecha evento</th>
+        <th>Serie</th><th>Región</th><th>Fecha evento</th>
         <th style="text-align:right">Registros</th><th style="text-align:right">Meta</th>
         <th style="text-align:right">%Reg</th>
         <th style="text-align:right">Gastado</th><th style="text-align:right">Costo/Reg</th>
