@@ -14,10 +14,14 @@ const ESTADOS_BASE = [
   { key: 'retardo_just', label: 'Retardo Just.',     color: '#f59e0b', emoji: '⏰' },
 ];
 
+function displayNombre(m) {
+  return m.alias || m.nombre?.split(' ')[0] || '?';
+}
+
 function cumplesDia(iso, equipo) {
   const mmdd = iso.slice(5);
   return (equipo || []).filter(m => m.cumpleanos && m.cumpleanos.slice(5) === mmdd)
-    .map(m => ({ nombre: m.alias || m.nombre || '?' }));
+    .map(m => ({ nombre: displayNombre(m) }));
 }
 
 function asistenciaDia(iso, equipo, asistencia, estadoColores, customEstados, estadosConfig) {
@@ -30,7 +34,7 @@ function asistenciaDia(iso, equipo, asistencia, estadoColores, customEstados, es
       || { key: entry.status, label: entry.status, color: '#6b7280', emoji: '•' };
     const cfg = (estadosConfig || {})[entry.status] || {};
     acc.push({
-      nombre: m.alias || m.nombre || '?',
+      nombre: displayNombre(m),
       status: entry.status,
       label: cfg.label || base.label,
       color: (estadoColores || {})[entry.status] || base.color,
@@ -270,7 +274,7 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist, 
                     {all.slice(0, 2).map(a => (
                       <span key={a.key}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: a.color + '28', border: `1px solid ${a.color}55`, borderRadius: 3, padding: '1px 4px', fontSize: 9, color: 'var(--app-text)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden' }}>
-                        {a.emoji} {a.nombre.split(' ')[0]}
+                        {a.emoji} {a.nombre}
                       </span>
                     ))}
                     {all.length > 2 && (
@@ -332,7 +336,7 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
                 <div key={'cumple-' + c.nombre}
                   style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#f59e0b22', border: '1px solid #f59e0b50', borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
                   <span style={{ fontSize: 10 }}>🎂</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nombre.split(' ')[0]}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nombre}</span>
                   <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· Cumpleaños</span>
                 </div>
               ))}
@@ -340,7 +344,7 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
                 <div key={a.nombre + a.status}
                   style={{ display: 'flex', alignItems: 'center', gap: 3, background: a.color + '22', border: `1px solid ${a.color}50`, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
                   <span style={{ fontSize: 10 }}>{a.emoji}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre.split(' ')[0]}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre}</span>
                   <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· {a.label}</span>
                 </div>
               ))}
