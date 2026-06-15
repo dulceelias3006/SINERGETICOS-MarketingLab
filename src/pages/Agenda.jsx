@@ -14,6 +14,12 @@ const ESTADOS_BASE = [
   { key: 'retardo_just', label: 'Retardo Just.',     color: '#f59e0b', emoji: '⏰' },
 ];
 
+function cumplesDia(iso, equipo) {
+  const mmdd = iso.slice(5);
+  return (equipo || []).filter(m => m.cumpleanos && m.cumpleanos.slice(5) === mmdd)
+    .map(m => ({ nombre: m.alias || m.nombre || '?' }));
+}
+
 function asistenciaDia(iso, equipo, asistencia, estadoColores, customEstados, estadosConfig) {
   const miembros = (equipo || []).filter(m => m.enAsistencia !== false);
   return miembros.reduce((acc, m) => {
@@ -195,7 +201,7 @@ function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose }) {
 }
 
 // ── VISTA MES ─────────────────────────────────────────────────────
-function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist }) {
+function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist, getCumple }) {
   const primerDia = new Date(navDate.getFullYear(), navDate.getMonth(), 1);
   const inicioGrid = new Date(primerDia);
   inicioGrid.setDate(1 - primerDia.getDay());
@@ -254,17 +260,21 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist }
               )}
               {(() => {
                 const asist = getAsist(iso);
-                if (!asist.length) return null;
+                const cumples = getCumple(iso);
+                if (!asist.length && !cumples.length) return null;
+                const cumpleChips = cumples.map(c => ({ nombre: c.nombre, color: '#f59e0b', emoji: '🎂', key: 'cumple-' + c.nombre }));
+                const asistChips = asist.map(a => ({ ...a, key: a.nombre + a.status }));
+                const all = [...cumpleChips, ...asistChips];
                 return (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginTop: 3 }}>
-                    {asist.slice(0, 2).map(a => (
-                      <span key={a.nombre + a.status}
+                    {all.slice(0, 2).map(a => (
+                      <span key={a.key}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: a.color + '28', border: `1px solid ${a.color}55`, borderRadius: 3, padding: '1px 4px', fontSize: 9, color: 'var(--app-text)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden' }}>
                         {a.emoji} {a.nombre.split(' ')[0]}
                       </span>
                     ))}
-                    {asist.length > 2 && (
-                      <span style={{ fontSize: 9, color: 'var(--app-text-muted)', display: 'flex', alignItems: 'center' }}>+{asist.length - 2}</span>
+                    {all.length > 2 && (
+                      <span style={{ fontSize: 9, color: 'var(--app-text-muted)', display: 'flex', alignItems: 'center' }}>+{all.length - 2}</span>
                     )}
                   </div>
                 );
@@ -278,7 +288,7 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist }
 }
 
 // ── VISTA SEMANA ──────────────────────────────────────────────────
-function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist }) {
+function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist, getCumple }) {
   const hoyISO = toISO(hoy);
   const domingo = getDomingoDe(navDate);
   const diasSemana = Array.from({ length: 7 }, (_, i) => {
@@ -316,6 +326,14 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
                 <div key={ev.id} onClick={e => onEventoClick(ev, e)}
                   style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}>
                   {ev.titulo}
+                </div>
+              ))}
+              {getCumple(iso).map(c => (
+                <div key={'cumple-' + c.nombre}
+                  style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#f59e0b22', border: '1px solid #f59e0b50', borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
+                  <span style={{ fontSize: 10 }}>🎂</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nombre.split(' ')[0]}</span>
+                  <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· Cumpleaños</span>
                 </div>
               ))}
               {getAsist(iso).map(a => (
@@ -474,6 +492,9 @@ export default function Agenda() {
   function getAsist(iso) {
     return asistenciaDia(iso, equipoData, asistenciaData, estadoColoresData, customEstadosData, estadosConfigData);
   }
+  function getCumple(iso) {
+    return cumplesDia(iso, equipoData);
+  }
 
   function nuevoEvento(iso, hora) {
     const fecha = iso || toISO(new Date());
@@ -542,11 +563,11 @@ export default function Agenda() {
         ? <VistaMes hoy={hoy} navDate={navDate} eventos={eventos}
             onDiaClick={iso => nuevoEvento(iso, null)}
             onEventoClick={editarEvento}
-            getAsist={getAsist} />
+            getAsist={getAsist} getCumple={getCumple} />
         : <VistaSemana hoy={hoy} navDate={navDate} eventos={eventos}
             onSlotClick={nuevoEvento}
             onEventoClick={editarEvento}
-            getAsist={getAsist} />
+            getAsist={getAsist} getCumple={getCumple} />
       }
 
       {/* Modal */}
