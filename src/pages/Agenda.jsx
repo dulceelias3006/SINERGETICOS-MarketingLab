@@ -69,7 +69,7 @@ function horaFin1(horaInicio) {
 }
 
 // ── MODAL ──────────────────────────────────────────────────────────
-function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose }) {
+function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose, equipo = [] }) {
   const [ev, setEv] = useState(init);
   const [emailInput, setEmailInput] = useState('');
   const set = (k, v) => setEv(p => ({ ...p, [k]: v }));
@@ -159,7 +159,47 @@ function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose }) {
 
         {/* Invitados */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginBottom: 8 }}>Invitados</div>
+          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginBottom: 10 }}>Invitados</div>
+
+          {/* Miembros del equipo */}
+          {equipo.filter(m => m.email).length > 0 && (() => {
+            const conEmail = equipo.filter(m => m.email);
+            const todosEmails = conEmail.map(m => m.email.toLowerCase());
+            const todosSeleccionados = todosEmails.every(e => ev.invitados.includes(e));
+            function toggleTodos() {
+              set('invitados', todosSeleccionados
+                ? ev.invitados.filter(e => !todosEmails.includes(e))
+                : [...new Set([...ev.invitados, ...todosEmails])]);
+            }
+            return (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Del equipo</span>
+                  <button onClick={toggleTodos}
+                    style={{ fontSize: 11, fontWeight: 700, color: '#4a9eff', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    {todosSeleccionados ? 'Quitar todos' : 'Seleccionar todos'}
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {conEmail.map(m => {
+                    const email = m.email.toLowerCase();
+                    const sel = ev.invitados.includes(email);
+                    return (
+                      <button key={m.id}
+                        onClick={() => set('invitados', sel ? ev.invitados.filter(e => e !== email) : [...ev.invitados, email])}
+                        title={email}
+                        style={{ padding: '5px 12px', borderRadius: 20, border: `1.5px solid ${sel ? '#4a9eff' : 'var(--app-border)'}`, background: sel ? '#4a9eff18' : 'var(--app-surface-2)', color: sel ? '#4a9eff' : 'var(--app-text)', fontSize: 12, fontWeight: sel ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s' }}>
+                        {displayNombre(m)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Correo externo */}
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Otro correo</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <input value={emailInput} onChange={e => setEmailInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addEmail()}
@@ -167,15 +207,21 @@ function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose }) {
             <button onClick={addEmail}
               style={{ padding: '9px 14px', background: 'var(--app-surface-2)', border: '1.5px solid var(--app-border)', borderRadius: 8, cursor: 'pointer', fontSize: 16, color: 'var(--app-text)', fontWeight: 700 }}>+</button>
           </div>
+
+          {/* Chips de todos los invitados */}
           {ev.invitados.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              {ev.invitados.map(email => (
-                <span key={email} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 6, padding: '3px 8px', fontSize: 12 }}>
-                  {email}
-                  <button onClick={() => set('invitados', ev.invitados.filter(x => x !== email))}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-muted)', padding: 0, fontSize: 16, lineHeight: 1 }}>×</button>
-                </span>
-              ))}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+              {ev.invitados.map(email => {
+                const miembro = equipo.find(m => m.email?.toLowerCase() === email);
+                return (
+                  <span key={email} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', borderRadius: 6, padding: '3px 8px', fontSize: 12 }}>
+                    {miembro && <span style={{ fontWeight: 600, color: 'var(--app-text)' }}>{displayNombre(miembro)}</span>}
+                    <span style={{ color: 'var(--app-text-muted)' }}>{email}</span>
+                    <button onClick={() => set('invitados', ev.invitados.filter(x => x !== email))}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-text-muted)', padding: 0, fontSize: 16, lineHeight: 1 }}>×</button>
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>
@@ -703,6 +749,7 @@ export default function Agenda() {
           onGuardar={guardar}
           onEliminar={eliminar}
           onClose={() => setModal(null)}
+          equipo={equipoData}
         />
       )}
     </div>
