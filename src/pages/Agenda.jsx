@@ -15,7 +15,7 @@ const ESTADOS_BASE = [
 ];
 
 function displayNombre(m) {
-  return m.alias || m.nombre?.split(' ')[0] || '?';
+  return m.aliasAsistencia || m.nombre?.split(' ')[0] || '?';
 }
 
 function cumplesDia(iso, equipo) {
