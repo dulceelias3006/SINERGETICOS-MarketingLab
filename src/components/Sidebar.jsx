@@ -48,6 +48,15 @@ const IcoTicket = () => (
     <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
   </svg>
 );
+const IcoAgenda = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2"/>
+    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+    <line x1="3" y1="10" x2="21" y2="10"/>
+    <circle cx="16" cy="16" r="3"/>
+    <polyline points="16 14.5 16 16 17 17"/>
+  </svg>
+);
 const IcoUserGear = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -88,6 +97,7 @@ const navItems = [
   { path: '/analiticas', label: 'Analíticas', icon: <IcoBar /> },
   { path: '/equipo',     label: 'Equipo',     icon: <IcoUsers /> },
   { path: '/tickets',    label: 'Tickets',    icon: <IcoTicket /> },
+  { path: '/agenda',     label: 'Agenda',     icon: <IcoAgenda /> },
   { path: '/usuarios',   label: 'Usuarios',   icon: <IcoUserGear /> },
 ];
 
@@ -175,6 +185,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const visibleItems = navItems.filter(item => {
     if (item.path === '/usuarios') return isAdmin;
     if (item.path === '/equipo') return !isViewer;
+    if (item.path === '/agenda') return role === 'superadmin';
     return true;
   });
 

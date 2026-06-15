@@ -10,6 +10,7 @@ import Eventos from './pages/Eventos';
 import Analiticas from './pages/Analiticas';
 import Equipo from './pages/Equipo';
 import Tickets from './pages/Tickets';
+import Agenda from './pages/Agenda';
 import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
 import Pendiente from './pages/Pendiente';
@@ -134,6 +135,7 @@ function AppContent() {
               <Route path="/analiticas" element={<Analiticas />} />
               <Route path="/equipo"    element={role === 'viewer' ? <Dashboard /> : <Equipo />} />
               <Route path="/tickets"   element={<Tickets />} />
+              <Route path="/agenda"    element={role === 'superadmin' ? <Agenda /> : <Dashboard />} />
               <Route path="/usuarios"  element={(role === 'admin' || role === 'superadmin') ? <Usuarios /> : <Dashboard />} />
             </Routes>
           </div>
