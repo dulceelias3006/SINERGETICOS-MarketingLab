@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+const GCAL_CLIENT_ID = '559033586509-pbuqu2478s4terdb0c22b3t4akhuicit.apps.googleusercontent.com';
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const GCAL_COLOR_MAP = {
+  '#e53e3e': '11', '#ea580c': '6', '#f59e0b': '5', '#16a34a': '2',
+  '#0891b2': '7',  '#4a9eff': '1', '#7c3aed': '3',  '#ec4899': '4',
+};
+
 const COLORES = ['#e53e3e','#ea580c','#f59e0b','#16a34a','#0891b2','#4a9eff','#7c3aed','#ec4899'];
 
 const ESTADOS_BASE = [
@@ -589,6 +596,11 @@ export default function Agenda() {
   const [customEstadosData, setCustomEstadosData] = useState([]);
   const [estadosConfigData, setEstadosConfigData] = useState({});
 
+  const [gcalToken, setGcalToken] = useState(null);
+  const [gcalReady, setGcalReady] = useState(false);
+  const [gcalSyncing, setGcalSyncing] = useState(false);
+  const tokenClientRef = useRef(null);
+
   useEffect(() => {
     dbGet('agenda_eventos').then(v => { if (Array.isArray(v)) setEventos(v); });
     const sub = dbSub('agenda_eventos', v => {
@@ -602,19 +614,92 @@ export default function Agenda() {
     return () => sub?.unsubscribe?.();
   }, []);
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = () => setGcalReady(true);
+    document.head.appendChild(script);
+    return () => { try { document.head.removeChild(script); } catch(_) {} };
+  }, []);
+
   if (role !== 'superadmin') return null;
 
+  function conectarGCal() {
+    if (!gcalReady || !window.google) return;
+    if (!tokenClientRef.current) {
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: GCAL_CLIENT_ID,
+        scope: GCAL_SCOPE,
+        callback: (response) => {
+          if (response.access_token) setGcalToken(response.access_token);
+        },
+      });
+    }
+    tokenClientRef.current.requestAccessToken();
+  }
+
+  async function sincronizarGCal(ev, token) {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mexico_City';
+    const body = {
+      summary: ev.titulo,
+      description: ev.descripcion || '',
+      start: ev.todoElDia
+        ? { date: ev.fechaInicio }
+        : { dateTime: `${ev.fechaInicio}T${ev.horaInicio || '09:00'}:00`, timeZone: tz },
+      end: ev.todoElDia
+        ? { date: ev.fechaFin || ev.fechaInicio }
+        : { dateTime: `${ev.fechaFin || ev.fechaInicio}T${ev.horaFin || ev.horaInicio || '10:00'}:00`, timeZone: tz },
+      attendees: (ev.invitados || []).map(email => ({ email })),
+      colorId: GCAL_COLOR_MAP[ev.color] || '1',
+    };
+    const isUpdate = !!ev.gcalId;
+    const url = isUpdate
+      ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${ev.gcalId}?sendUpdates=all`
+      : `https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all`;
+    const res = await fetch(url, {
+      method: isUpdate ? 'PUT' : 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 401) { setGcalToken(null); return null; }
+    const data = await res.json();
+    return data.id || ev.gcalId || null;
+  }
+
   async function guardar(ev) {
+    let evFinal = { ...ev };
+    if (gcalToken) {
+      setGcalSyncing(true);
+      try {
+        const gcalId = await sincronizarGCal(ev, gcalToken);
+        if (gcalId) evFinal = { ...ev, gcalId };
+      } catch (err) {
+        console.error('Error sync GCal:', err);
+      }
+      setGcalSyncing(false);
+    }
     fbRef.current = true;
     const nuevos = eventos.find(e => e.id === ev.id)
-      ? eventos.map(e => e.id === ev.id ? ev : e)
-      : [...eventos, ev];
+      ? eventos.map(e => e.id === ev.id ? evFinal : e)
+      : [...eventos, evFinal];
     setEventos(nuevos);
     await dbSet('agenda_eventos', nuevos);
     fbRef.current = false;
   }
 
   async function eliminar(id) {
+    const ev = eventos.find(e => e.id === id);
+    if (gcalToken && ev?.gcalId) {
+      try {
+        await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/primary/events/${ev.gcalId}?sendUpdates=all`,
+          { method: 'DELETE', headers: { 'Authorization': `Bearer ${gcalToken}` } }
+        );
+      } catch (err) {
+        console.error('Error eliminando evento GCal:', err);
+      }
+    }
     fbRef.current = true;
     const nuevos = eventos.filter(e => e.id !== id);
     setEventos(nuevos);
@@ -713,6 +798,18 @@ export default function Agenda() {
               </button>
             ))}
           </div>
+
+          <button onClick={gcalToken ? () => setGcalToken(null) : conectarGCal}
+            disabled={!gcalReady && !gcalToken}
+            title={gcalToken ? 'Desconectar Google Calendar' : 'Conectar Google Calendar'}
+            style={{ padding: '7px 14px', background: gcalToken ? '#16a34a18' : 'var(--app-surface-2)', border: `1.5px solid ${gcalToken ? '#16a34a' : 'var(--app-border)'}`, borderRadius: 8, color: gcalToken ? '#16a34a' : 'var(--app-text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+            {gcalSyncing ? '⏳' : gcalToken ? '✓' : (
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            )}
+            {gcalSyncing ? 'Sincronizando…' : gcalToken ? 'Google Cal. conectado' : 'Conectar Google Cal.'}
+          </button>
 
           <button onClick={() => nuevoEvento(null, null)}
             style={{ padding: '7px 16px', background: '#e53e3e', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
