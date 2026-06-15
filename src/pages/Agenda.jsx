@@ -417,6 +417,116 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
   );
 }
 
+// ── VISTA DÍA ─────────────────────────────────────────────────────
+function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist, getCumple }) {
+  const iso = toISO(navDate);
+  const hoyISO = toISO(hoy);
+  const esHoy = iso === hoyISO;
+  const horas = Array.from({ length: HORA_FIN - HORA_INI }, (_, i) => HORA_INI + i);
+  const ahora = new Date();
+  const minActual = ahora.getHours() * 60 + ahora.getMinutes();
+  const topActual = (minActual - HORA_INI * 60) / 60 * PX_HR;
+
+  const evsTodo = eventos.filter(ev => (ev.todoElDia || !ev.horaInicio) && evtEnDia(ev, iso));
+  const evsDia  = eventos.filter(ev => ev.fechaInicio === iso && !ev.todoElDia && ev.horaInicio);
+  const cumples = getCumple(iso);
+  const asist   = getAsist(iso);
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      {/* Encabezado */}
+      <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr', borderBottom: '2px solid var(--app-border)', position: 'sticky', top: 0, background: 'var(--app-surface)', zIndex: 10, flexShrink: 0 }}>
+        <div style={{ borderRight: '1px solid var(--app-border)', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', paddingRight: 6, paddingBottom: 6 }}>
+          <span style={{ fontSize: 9, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.3 }}>todo<br/>día</span>
+        </div>
+        <div style={{ padding: '10px 16px 8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: (evsTodo.length || cumples.length || asist.length) ? 8 : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {DIAS_CORTO[navDate.getDay()]}
+              </span>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: esHoy ? '#e53e3e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: esHoy ? '#fff' : 'var(--app-text)' }}>{navDate.getDate()}</span>
+              </div>
+            </div>
+          </div>
+          {/* Todo el día */}
+          {evsTodo.map(ev => (
+            <div key={ev.id} onClick={e => onEventoClick(ev, e)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: ev.color, color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 5, padding: '3px 8px', marginRight: 4, marginBottom: 4, cursor: 'pointer' }}>
+              {ev.titulo}
+            </div>
+          ))}
+          {/* Cumpleaños */}
+          {cumples.map(c => (
+            <div key={'cumple-' + c.nombre}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b22', border: '1px solid #f59e0b50', borderRadius: 5, padding: '3px 8px', marginRight: 4, marginBottom: 4, cursor: 'default' }}>
+              <span style={{ fontSize: 11 }}>🎂</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text)' }}>{c.nombre}</span>
+              <span style={{ fontSize: 10, color: 'var(--app-text-muted)' }}>· Cumpleaños</span>
+            </div>
+          ))}
+          {/* Asistencia */}
+          {asist.map(a => (
+            <div key={a.nombre + a.status}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: a.color + '22', border: `1px solid ${a.color}50`, borderRadius: 5, padding: '3px 8px', marginRight: 4, marginBottom: 4, cursor: 'default' }}>
+              <span style={{ fontSize: 11 }}>{a.emoji}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text)' }}>{a.nombre}</span>
+              <span style={{ fontSize: 10, color: 'var(--app-text-muted)' }}>· {a.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Grid de horas */}
+      <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr', flex: 1 }}>
+        {/* Horas */}
+        <div style={{ borderRight: '1px solid var(--app-border)' }}>
+          {horas.map(h => (
+            <div key={h} style={{ height: PX_HR, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingRight: 8, boxSizing: 'border-box' }}>
+              <span style={{ fontSize: 10, color: 'var(--app-text-muted)', lineHeight: 1, marginTop: -6 }}>
+                {String(h).padStart(2,'0')}:00
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Columna del día */}
+        <div style={{ position: 'relative', background: esHoy ? 'rgba(229,62,62,0.02)' : 'transparent' }}>
+          {horas.map(h => (
+            <div key={h}
+              onClick={() => onSlotClick(iso, `${String(h).padStart(2,'0')}:00`)}
+              style={{ height: PX_HR, borderTop: '1px solid var(--app-border)', cursor: 'pointer', boxSizing: 'border-box' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(74,158,255,0.07)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'} />
+          ))}
+
+          {evsDia.map(ev => {
+            const [hI, mI] = ev.horaInicio.split(':').map(Number);
+            const [hF, mF] = (ev.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
+            const top    = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
+            const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
+            return (
+              <div key={ev.id} onClick={e => onEventoClick(ev, e)}
+                style={{ position: 'absolute', top, left: 4, right: 4, height, background: ev.color, borderRadius: 8, padding: '5px 10px', overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{ev.titulo}</div>
+                {height > 36 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{ev.horaInicio} – {ev.horaFin}</div>}
+                {height > 60 && ev.descripcion && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 4 }}>{ev.descripcion}</div>}
+              </div>
+            );
+          })}
+
+          {esHoy && minActual >= HORA_INI * 60 && minActual <= HORA_FIN * 60 && (
+            <div style={{ position: 'absolute', left: 0, right: 0, top: topActual, height: 2, background: '#e53e3e', zIndex: 2, pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', left: -4, top: -4, width: 10, height: 10, borderRadius: '50%', background: '#e53e3e' }} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── PRINCIPAL ─────────────────────────────────────────────────────
 export default function Agenda() {
   const { role } = useAuth();
@@ -470,7 +580,8 @@ export default function Agenda() {
     setNavDate(d => {
       const n = new Date(d);
       if (vista === 'mes') n.setMonth(n.getMonth() - 1);
-      else n.setDate(n.getDate() - 7);
+      else if (vista === 'semana') n.setDate(n.getDate() - 7);
+      else n.setDate(n.getDate() - 1);
       return n;
     });
   }
@@ -479,13 +590,15 @@ export default function Agenda() {
     setNavDate(d => {
       const n = new Date(d);
       if (vista === 'mes') n.setMonth(n.getMonth() + 1);
-      else n.setDate(n.getDate() + 7);
+      else if (vista === 'semana') n.setDate(n.getDate() + 7);
+      else n.setDate(n.getDate() + 1);
       return n;
     });
   }
 
   function tituloNav() {
     if (vista === 'mes') return `${MESES[navDate.getMonth()]} ${navDate.getFullYear()}`;
+    if (vista === 'dia') return `${DIAS_CORTO[navDate.getDay()]} ${navDate.getDate()} de ${MESES[navDate.getMonth()]} ${navDate.getFullYear()}`;
     const dom = getDomingoDe(navDate);
     const sab = new Date(dom); sab.setDate(dom.getDate() + 6);
     if (dom.getMonth() === sab.getMonth())
@@ -547,7 +660,7 @@ export default function Agenda() {
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           {/* Switcher vista */}
           <div style={{ display: 'flex', background: 'var(--app-surface-2)', borderRadius: 8, padding: 2 }}>
-            {[['mes','Mes'],['semana','Semana']].map(([k, l]) => (
+            {[['mes','Mes'],['semana','Semana'],['dia','Día']].map(([k, l]) => (
               <button key={k} onClick={() => setVista(k)}
                 style={{ padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: vista === k ? 700 : 500, background: vista === k ? 'var(--app-surface)' : 'transparent', color: vista === k ? 'var(--app-text)' : 'var(--app-text-muted)', boxShadow: vista === k ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
                 {l}
@@ -563,16 +676,24 @@ export default function Agenda() {
       </div>
 
       {/* Cuerpo */}
-      {vista === 'mes'
-        ? <VistaMes hoy={hoy} navDate={navDate} eventos={eventos}
-            onDiaClick={iso => nuevoEvento(iso, null)}
-            onEventoClick={editarEvento}
-            getAsist={getAsist} getCumple={getCumple} />
-        : <VistaSemana hoy={hoy} navDate={navDate} eventos={eventos}
-            onSlotClick={nuevoEvento}
-            onEventoClick={editarEvento}
-            getAsist={getAsist} getCumple={getCumple} />
-      }
+      {vista === 'mes' && (
+        <VistaMes hoy={hoy} navDate={navDate} eventos={eventos}
+          onDiaClick={iso => { setNavDate(new Date(iso + 'T00:00:00')); setVista('dia'); }}
+          onEventoClick={editarEvento}
+          getAsist={getAsist} getCumple={getCumple} />
+      )}
+      {vista === 'semana' && (
+        <VistaSemana hoy={hoy} navDate={navDate} eventos={eventos}
+          onSlotClick={nuevoEvento}
+          onEventoClick={editarEvento}
+          getAsist={getAsist} getCumple={getCumple} />
+      )}
+      {vista === 'dia' && (
+        <VistaDia hoy={hoy} navDate={navDate} eventos={eventos}
+          onSlotClick={nuevoEvento}
+          onEventoClick={editarEvento}
+          getAsist={getAsist} getCumple={getCumple} />
+      )}
 
       {/* Modal */}
       {modal && (
