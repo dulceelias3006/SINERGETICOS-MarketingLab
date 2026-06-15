@@ -97,7 +97,7 @@ const navItems = [
   { path: '/analiticas', label: 'Analíticas', icon: <IcoBar /> },
   { path: '/equipo',     label: 'Equipo',     icon: <IcoUsers /> },
   { path: '/tickets',    label: 'Tickets',    icon: <IcoTicket /> },
-  { path: '/agenda',     label: 'Agenda',     icon: <IcoAgenda /> },
+  { path: '/agenda',     label: 'Calendario',  icon: <IcoAgenda /> },
   { path: '/usuarios',   label: 'Usuarios',   icon: <IcoUserGear /> },
 ];
 

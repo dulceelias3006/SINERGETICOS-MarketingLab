@@ -428,7 +428,7 @@ export default function Agenda() {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--app-bg)' }}>
       {/* Barra superior */}
       <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--app-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--app-text)' }}>📅 Agenda</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--app-text)' }}>📅 Calendario</h1>
 
         <button onClick={() => setNavDate(new Date())}
           style={{ padding: '5px 12px', background: 'var(--app-surface-2)', border: '1.5px solid var(--app-border)', borderRadius: 7, fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', cursor: 'pointer' }}>
