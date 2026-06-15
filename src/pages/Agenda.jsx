@@ -3,6 +3,36 @@ import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const COLORES = ['#e53e3e','#ea580c','#f59e0b','#16a34a','#0891b2','#4a9eff','#7c3aed','#ec4899'];
+
+const ESTADOS_BASE = [
+  { key: 'falta',        label: 'Falta',             color: '#ef4444', emoji: '❌' },
+  { key: 'vacaciones',   label: 'Vacaciones',        color: '#22d3ee', emoji: '🌴' },
+  { key: 'homeoffice',   label: 'Home Office',       color: '#94a3b8', emoji: '💻' },
+  { key: 'falta_just',   label: 'Falta Justificada', color: '#a855f7', emoji: '📋' },
+  { key: 'feriado',      label: 'Feriado',           color: '#e879f9', emoji: '🎉' },
+  { key: 'retardo',      label: 'Retardo',           color: '#f59e0b', emoji: '⏰' },
+  { key: 'retardo_just', label: 'Retardo Just.',     color: '#f59e0b', emoji: '⏰' },
+];
+
+function asistenciaDia(iso, equipo, asistencia, estadoColores, customEstados, estadosConfig) {
+  const miembros = (equipo || []).filter(m => m.enAsistencia !== false);
+  return miembros.reduce((acc, m) => {
+    const entry = asistencia?.[String(m.id)]?.[iso];
+    if (!entry?.status) return acc;
+    const base = ESTADOS_BASE.find(e => e.key === entry.status)
+      || (customEstados || []).find(e => e.key === entry.status)
+      || { key: entry.status, label: entry.status, color: '#6b7280', emoji: '•' };
+    const cfg = (estadosConfig || {})[entry.status] || {};
+    acc.push({
+      nombre: m.alias || m.nombre || '?',
+      status: entry.status,
+      label: cfg.label || base.label,
+      color: (estadoColores || {})[entry.status] || base.color,
+      emoji: cfg.emoji !== undefined ? cfg.emoji : base.emoji,
+    });
+    return acc;
+  }, []);
+}
 const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HORA_INI = 6;
@@ -165,7 +195,7 @@ function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose }) {
 }
 
 // ── VISTA MES ─────────────────────────────────────────────────────
-function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick }) {
+function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist }) {
   const primerDia = new Date(navDate.getFullYear(), navDate.getMonth(), 1);
   const inicioGrid = new Date(primerDia);
   inicioGrid.setDate(1 - primerDia.getDay());
@@ -222,6 +252,23 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick }) {
               {evs.length > 3 && (
                 <div style={{ fontSize: 10, color: 'var(--app-text-muted)', paddingLeft: 5 }}>+{evs.length - 3} más</div>
               )}
+              {(() => {
+                const asist = getAsist(iso);
+                if (!asist.length) return null;
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginTop: 3 }}>
+                    {asist.slice(0, 2).map(a => (
+                      <span key={a.nombre + a.status}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: a.color + '28', border: `1px solid ${a.color}55`, borderRadius: 3, padding: '1px 4px', fontSize: 9, color: 'var(--app-text)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden' }}>
+                        {a.emoji} {a.nombre.split(' ')[0]}
+                      </span>
+                    ))}
+                    {asist.length > 2 && (
+                      <span style={{ fontSize: 9, color: 'var(--app-text-muted)', display: 'flex', alignItems: 'center' }}>+{asist.length - 2}</span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
@@ -231,7 +278,7 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick }) {
 }
 
 // ── VISTA SEMANA ──────────────────────────────────────────────────
-function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick }) {
+function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist }) {
   const hoyISO = toISO(hoy);
   const domingo = getDomingoDe(navDate);
   const diasSemana = Array.from({ length: 7 }, (_, i) => {
@@ -269,6 +316,14 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick }) {
                 <div key={ev.id} onClick={e => onEventoClick(ev, e)}
                   style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}>
                   {ev.titulo}
+                </div>
+              ))}
+              {getAsist(iso).map(a => (
+                <div key={a.nombre + a.status}
+                  style={{ display: 'flex', alignItems: 'center', gap: 3, background: a.color + '22', border: `1px solid ${a.color}50`, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
+                  <span style={{ fontSize: 10 }}>{a.emoji}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre.split(' ')[0]}</span>
+                  <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· {a.label}</span>
                 </div>
               ))}
             </div>
@@ -350,11 +405,22 @@ export default function Agenda() {
   const [modal, setModal] = useState(null);
   const fbRef = useRef(false);
 
+  const [equipoData, setEquipoData] = useState([]);
+  const [asistenciaData, setAsistenciaData] = useState({});
+  const [estadoColoresData, setEstadoColoresData] = useState({});
+  const [customEstadosData, setCustomEstadosData] = useState([]);
+  const [estadosConfigData, setEstadosConfigData] = useState({});
+
   useEffect(() => {
     dbGet('agenda_eventos').then(v => { if (Array.isArray(v)) setEventos(v); });
     const sub = dbSub('agenda_eventos', v => {
       if (!fbRef.current && Array.isArray(v)) setEventos(v);
     });
+    dbGet('equipo').then(v => { if (Array.isArray(v)) setEquipoData(v); });
+    dbGet('equipo_asistencia').then(v => { if (v && typeof v === 'object') setAsistenciaData(v); });
+    dbGet('equipo_estado_colores').then(v => { if (v && typeof v === 'object') setEstadoColoresData(v); });
+    dbGet('equipo_estados_custom').then(v => { if (Array.isArray(v)) setCustomEstadosData(v); });
+    dbGet('equipo_estados_config').then(v => { if (v && typeof v === 'object') setEstadosConfigData(v); });
     return () => sub?.unsubscribe?.();
   }, []);
 
@@ -403,6 +469,10 @@ export default function Agenda() {
     if (dom.getMonth() === sab.getMonth())
       return `${dom.getDate()} – ${sab.getDate()} de ${MESES[dom.getMonth()]} ${dom.getFullYear()}`;
     return `${dom.getDate()} ${MESES[dom.getMonth()].slice(0,3)} – ${sab.getDate()} ${MESES[sab.getMonth()].slice(0,3)} ${dom.getFullYear()}`;
+  }
+
+  function getAsist(iso) {
+    return asistenciaDia(iso, equipoData, asistenciaData, estadoColoresData, customEstadosData, estadosConfigData);
   }
 
   function nuevoEvento(iso, hora) {
@@ -471,10 +541,12 @@ export default function Agenda() {
       {vista === 'mes'
         ? <VistaMes hoy={hoy} navDate={navDate} eventos={eventos}
             onDiaClick={iso => nuevoEvento(iso, null)}
-            onEventoClick={editarEvento} />
+            onEventoClick={editarEvento}
+            getAsist={getAsist} />
         : <VistaSemana hoy={hoy} navDate={navDate} eventos={eventos}
             onSlotClick={nuevoEvento}
-            onEventoClick={editarEvento} />
+            onEventoClick={editarEvento}
+            getAsist={getAsist} />
       }
 
       {/* Modal */}
