@@ -599,6 +599,7 @@ export default function Agenda() {
   const [gcalToken, setGcalToken] = useState(null);
   const [gcalReady, setGcalReady] = useState(false);
   const [gcalSyncing, setGcalSyncing] = useState(false);
+  const [gcalError, setGcalError] = useState(null);
   const tokenClientRef = useRef(null);
 
   useEffect(() => {
@@ -662,7 +663,11 @@ export default function Agenda() {
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (res.status === 401) { setGcalToken(null); return null; }
+    if (res.status === 401) { setGcalToken(null); throw new Error('Token expirado, reconecta Google Calendar'); }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(`Error ${res.status}: ${errData.error?.message || 'Error desconocido'}`);
+    }
     const data = await res.json();
     return data.id || ev.gcalId || null;
   }
@@ -671,11 +676,13 @@ export default function Agenda() {
     let evFinal = { ...ev };
     if (gcalToken) {
       setGcalSyncing(true);
+      setGcalError(null);
       try {
         const gcalId = await sincronizarGCal(ev, gcalToken);
         if (gcalId) evFinal = { ...ev, gcalId };
       } catch (err) {
         console.error('Error sync GCal:', err);
+        setGcalError(err.message);
       }
       setGcalSyncing(false);
     }
@@ -768,6 +775,11 @@ export default function Agenda() {
       {/* Barra superior */}
       <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--app-surface)', flexShrink: 0, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--app-text)' }}>📅 Calendario</h1>
+        {gcalError && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 7, padding: '5px 12px', fontSize: 12, color: '#dc2626', maxWidth: 400 }}>
+            ⚠️ Google Cal: {gcalError}
+          </div>
+        )}
 
         <button onClick={() => setNavDate(new Date())}
           style={{ padding: '5px 12px', background: 'var(--app-surface-2)', border: '1.5px solid var(--app-border)', borderRadius: 7, fontSize: 12, fontWeight: 600, color: 'var(--app-text-muted)', cursor: 'pointer' }}>
