@@ -596,7 +596,7 @@ export default function Agenda() {
   const [customEstadosData, setCustomEstadosData] = useState([]);
   const [estadosConfigData, setEstadosConfigData] = useState({});
 
-  const [gcalToken, setGcalToken] = useState(null);
+  const [gcalToken, setGcalToken] = useState(() => localStorage.getItem('gcal_token') || null);
   const [gcalReady, setGcalReady] = useState(false);
   const [gcalSyncing, setGcalSyncing] = useState(false);
   const [gcalError, setGcalError] = useState(null);
@@ -633,7 +633,10 @@ export default function Agenda() {
         client_id: GCAL_CLIENT_ID,
         scope: GCAL_SCOPE,
         callback: (response) => {
-          if (response.access_token) setGcalToken(response.access_token);
+          if (response.access_token) {
+            setGcalToken(response.access_token);
+            localStorage.setItem('gcal_token', response.access_token);
+          }
         },
       });
     }
@@ -663,7 +666,7 @@ export default function Agenda() {
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (res.status === 401) { setGcalToken(null); throw new Error('Token expirado, reconecta Google Calendar'); }
+    if (res.status === 401) { setGcalToken(null); localStorage.removeItem('gcal_token'); throw new Error('Token expirado, reconecta Google Calendar'); }
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(`Error ${res.status}: ${errData.error?.message || 'Error desconocido'}`);
@@ -811,10 +814,11 @@ export default function Agenda() {
             ))}
           </div>
 
-          <button onClick={gcalToken ? () => setGcalToken(null) : conectarGCal}
+          <button
             disabled={!gcalReady && !gcalToken}
             title={gcalToken ? 'Desconectar Google Calendar' : 'Conectar Google Calendar'}
-            style={{ padding: '7px 14px', background: gcalToken ? '#16a34a18' : 'var(--app-surface-2)', border: `1.5px solid ${gcalToken ? '#16a34a' : 'var(--app-border)'}`, borderRadius: 8, color: gcalToken ? '#16a34a' : 'var(--app-text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+            style={{ padding: '7px 14px', background: gcalToken ? '#16a34a18' : 'var(--app-surface-2)', border: `1.5px solid ${gcalToken ? '#16a34a' : 'var(--app-border)'}`, borderRadius: 8, color: gcalToken ? '#16a34a' : 'var(--app-text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
+            onClick={gcalToken ? () => { setGcalToken(null); localStorage.removeItem('gcal_token'); } : conectarGCal}>
             {gcalSyncing ? '⏳' : gcalToken ? '✓' : (
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
