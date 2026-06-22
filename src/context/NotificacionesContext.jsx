@@ -13,10 +13,13 @@ function fmtFecha(iso, horaInicio, horaFin, todoElDia) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
-  const fecha = `${DIAS[dt.getDay()]} ${d} ${MESES[m - 1]}`;
-  if (todoElDia) return `${fecha} · Todo el día`;
+  const hoy = new Date();
+  const manana = new Date(hoy); manana.setDate(hoy.getDate() + 1);
+  const fmt = x => `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+  const fechaLabel = iso === fmt(hoy) ? 'Hoy' : iso === fmt(manana) ? 'Mañana' : `${DIAS[dt.getDay()]} ${d} ${MESES[m - 1]}`;
+  if (todoElDia) return `${fechaLabel} · Todo el día`;
   const hora = horaInicio ? `${horaInicio}${horaFin ? ' – ' + horaFin : ''}` : '';
-  return hora ? `${fecha} · ${hora}` : fecha;
+  return hora ? `${fechaLabel} · ${hora}` : fechaLabel;
 }
 
 function clasificar(evs, ultimaVisita, emailMio) {
