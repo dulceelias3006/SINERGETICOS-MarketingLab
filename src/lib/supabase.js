@@ -14,8 +14,9 @@ export async function dbSet(key, value) {
   await sb.from('app_data').upsert({ key, value, updated_at: new Date().toISOString() });
 }
 
+let _subSeq = 0;
 export function dbSub(key, callback) {
-  return sb.channel('ch_' + key)
+  return sb.channel(`ch_${key}_${++_subSeq}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'app_data', filter: 'key=eq.' + key },
       p => { if (p.new?.value !== undefined) callback(p.new.value); })
     .subscribe();
