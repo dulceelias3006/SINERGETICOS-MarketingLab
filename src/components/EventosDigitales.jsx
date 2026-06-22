@@ -182,9 +182,9 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, onTogg
             <a href={s.urlRegistro} target="_blank" rel="noreferrer" style={{ marginLeft: 8, color: '#4a9eff', textDecoration: 'none' }}>↗ Link</a>
           )}
         </div>
-        {sem.fechasEvento?.length > 0 && (
+        {s.diasEvento?.length > 0 && sem.inicio && (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {sem.fechasEvento.map(iso => {
+            {calcFechasEventoSemana(s.diasEvento, sem.inicio).map(iso => {
               const [y, m, d] = iso.split('-').map(Number);
               const date = new Date(y, m - 1, d);
               return (
@@ -440,9 +440,10 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, onTogg
                         {fmtFecha(h.inicio)} → {fmtFecha(h.fin)}
                         {h.diasEvento?.length > 0 && (
                           <span style={{ marginLeft: 6, fontWeight: 400, color: '#4a9eff' }}>
-                            · {h.diasEvento.map((d, i) => {
-                                const fecha = h.fechasEvento?.[i];
-                                return fecha ? `${DIAS_FULL[d]} ${fmtFecha(fecha)}` : DIAS_FULL[d];
+                            · {calcFechasEnRango(h.diasEvento, h.inicio, h.fin).map(iso => {
+                                const [y2, m2, d2] = iso.split('-').map(Number);
+                                const dt = new Date(y2, m2 - 1, d2);
+                                return `${DIAS_FULL[dt.getDay()]} ${fmtFecha(iso)}`;
                               }).join(' & ')}
                           </span>
                         )}
@@ -509,41 +510,15 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
 
   function migrarFechas(arr) {
     return arr.map(s => {
-      let updatedSemana = s.semana;
-      if (s.semana && s.diasEvento?.length && s.semana.inicio) {
-        let inicioCorregido = s.semana.inicio;
-
-        // El bug ocurre cuando la semana nueva quedó con el mismo inicio que la cerrada
-        const latestHist = s.historial?.[0];
-        if (latestHist?.fin && latestHist?.inicio && inicioCorregido === latestHist.inicio) {
-          const [fy, fm, fd] = latestHist.fin.split('-').map(Number);
-          const finDate = new Date(fy, fm - 1, fd);
-          const dow = finDate.getDay();
-          const daysToNext = dow === 0 ? 1 : 8 - dow;
-          finDate.setDate(finDate.getDate() + daysToNext);
-          inicioCorregido = toLocalISO(finDate);
-        }
-
-        const fresh = calcFechasEventoSemana(s.diasEvento, inicioCorregido);
-        if (inicioCorregido !== s.semana.inicio || JSON.stringify(fresh) !== JSON.stringify(s.semana.fechasEvento)) {
-          updatedSemana = { ...s.semana, inicio: inicioCorregido, fechasEvento: fresh };
-        }
-      }
-      let updatedHistorial = s.historial;
-      if (s.historial?.length) {
-        const newHist = s.historial.map(h => {
-          if (h.diasEvento?.length && h.inicio) {
-            const fresh = calcFechasEnRango(h.diasEvento, h.inicio, h.fin);
-            if (JSON.stringify(fresh) !== JSON.stringify(h.fechasEvento)) {
-              return { ...h, fechasEvento: fresh };
-            }
-          }
-          return h;
-        });
-        if (JSON.stringify(newHist) !== JSON.stringify(s.historial)) updatedHistorial = newHist;
-      }
-      if (updatedSemana !== s.semana || updatedHistorial !== s.historial) {
-        return { ...s, semana: updatedSemana, historial: updatedHistorial };
+      if (!s.semana?.inicio || !s.diasEvento?.length) return s;
+      // Solo corregir inicio si quedó igual al de la última semana cerrada (bug de avance)
+      const latestHist = s.historial?.[0];
+      if (latestHist?.fin && latestHist?.inicio && s.semana.inicio === latestHist.inicio) {
+        const [fy, fm, fd] = latestHist.fin.split('-').map(Number);
+        const finDate = new Date(fy, fm - 1, fd);
+        const dow = finDate.getDay();
+        finDate.setDate(finDate.getDate() + (dow === 0 ? 1 : 8 - dow));
+        return { ...s, semana: { ...s.semana, inicio: toLocalISO(finDate) } };
       }
       return s;
     });
@@ -708,8 +683,9 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
       const gastadoPct = sem.presupuestoTotal > 0
         ? Math.round((sem.presupuestoGastado || 0) / sem.presupuestoTotal * 100) : 0;
       const dias = (s.diasEvento || []).map(d => DIAS_FULL[d]).join(' & ') || '—';
-      const fechaEvtStr = (sem.fechasEvento || []).length
-        ? sem.fechasEvento.map(iso => { const [y2,m2,d2] = iso.split('-').map(Number); const dt = new Date(y2, m2 - 1, d2); return DIAS_FULL[dt.getDay()] + ' ' + d2; }).join(' & ')
+      const fechasEvt = s.diasEvento?.length && sem.inicio ? calcFechasEventoSemana(s.diasEvento, sem.inicio) : [];
+      const fechaEvtStr = fechasEvt.length
+        ? fechasEvt.map(iso => { const [y2,m2,d2] = iso.split('-').map(Number); const dt = new Date(y2, m2 - 1, d2); return DIAS_FULL[dt.getDay()] + ' ' + d2; }).join(' & ')
         : fmtFecha(sem.inicio);
       const reg = REGIONES.find(r => r.id === s.region);
       const gastadoStr = sem.presupuestoTotal > 0
