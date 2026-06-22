@@ -185,7 +185,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const visibleItems = navItems.filter(item => {
     if (item.path === '/usuarios') return isAdmin;
     if (item.path === '/equipo') return !isViewer;
-    if (item.path === '/agenda') return role === 'superadmin';
+    if (item.path === '/agenda') return true;
     return true;
   });
 

@@ -582,7 +582,7 @@ function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist,
 
 // ── PRINCIPAL ─────────────────────────────────────────────────────
 export default function Agenda() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [vista, setVista] = useState('mes');
   const [hoy] = useState(() => new Date());
   const [navDate, setNavDate] = useState(() => new Date());
@@ -591,6 +591,7 @@ export default function Agenda() {
   const fbRef = useRef(false);
 
   const [equipoData, setEquipoData] = useState([]);
+  const [equipoReady, setEquipoReady] = useState(false);
   const [asistenciaData, setAsistenciaData] = useState({});
   const [estadoColoresData, setEstadoColoresData] = useState({});
   const [customEstadosData, setCustomEstadosData] = useState([]);
@@ -607,7 +608,7 @@ export default function Agenda() {
     const sub = dbSub('agenda_eventos', v => {
       if (!fbRef.current && Array.isArray(v)) setEventos(v);
     });
-    dbGet('equipo').then(v => { if (Array.isArray(v)) setEquipoData(v); });
+    dbGet('equipo').then(v => { if (Array.isArray(v)) setEquipoData(v); setEquipoReady(true); });
     dbGet('equipo_asistencia').then(v => { if (v && typeof v === 'object') setAsistenciaData(v); });
     dbGet('equipo_estado_colores').then(v => { if (v && typeof v === 'object') setEstadoColoresData(v); });
     dbGet('equipo_estados_custom').then(v => { if (Array.isArray(v)) setCustomEstadosData(v); });
@@ -624,7 +625,23 @@ export default function Agenda() {
     return () => { try { document.head.removeChild(script); } catch(_) {} };
   }, []);
 
-  if (role !== 'superadmin') return null;
+  const emailUsuario = user?.email?.toLowerCase();
+  const esMiembro = equipoData.some(m => m.email?.toLowerCase() === emailUsuario);
+  const tieneAcceso = role === 'superadmin' || esMiembro;
+  const puedeEditar = role === 'superadmin' || (esMiembro && role === 'editor');
+
+  if (!equipoReady && role !== 'superadmin') return (
+    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--app-text-muted)', fontSize: 14 }}>
+      Cargando…
+    </div>
+  );
+
+  if (!tieneAcceso) return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--app-text-muted)' }}>
+      <span style={{ fontSize: 36 }}>🔒</span>
+      <span style={{ fontSize: 15, fontWeight: 600 }}>No tienes acceso al Calendario</span>
+    </div>
+  );
 
   function conectarGCal() {
     if (!gcalReady || !window.google) return;
@@ -755,6 +772,7 @@ export default function Agenda() {
   }
 
   function nuevoEvento(iso, hora) {
+    if (!puedeEditar) return;
     const fecha = iso || toISO(new Date());
     const hi = hora || '09:00';
     setModal({
@@ -770,6 +788,7 @@ export default function Agenda() {
 
   function editarEvento(ev, e) {
     e.stopPropagation();
+    if (!puedeEditar) return;
     setModal({ mode: 'editar', evento: { ...ev } });
   }
 
@@ -827,10 +846,12 @@ export default function Agenda() {
             {gcalSyncing ? 'Sincronizando…' : gcalToken ? 'Google Cal. conectado' : 'Conectar Google Cal.'}
           </button>
 
-          <button onClick={() => nuevoEvento(null, null)}
-            style={{ padding: '7px 16px', background: '#e53e3e', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            + Nuevo
-          </button>
+          {puedeEditar && (
+            <button onClick={() => nuevoEvento(null, null)}
+              style={{ padding: '7px 16px', background: '#e53e3e', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              + Nuevo
+            </button>
+          )}
         </div>
       </div>
 
