@@ -52,7 +52,7 @@ export function NotificacionesProvider({ children }) {
         if (prev.find(t => t.tid === tid)) return prev;
         return [...prev, { tid, titulo: ev.titulo, fecha: ev.fechaInicio }];
       });
-      setTimeout(() => setToasts(prev => prev.filter(t => t.tid !== tid)), 5500);
+      setTimeout(() => setToasts(prev => prev.filter(t => t.tid !== tid)), 30000);
     });
   }
 
@@ -69,10 +69,10 @@ export function NotificacionesProvider({ children }) {
     <NotifCtx.Provider value={{ badge, marcarVisto }}>
       {children}
       {toasts.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}>
           {toasts.map(t => (
-            <div key={t.tid}
-              style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderLeft: '4px solid #e53e3e', borderRadius: 12, padding: '13px 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: 280, maxWidth: 360, display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'all' }}>
+            <div key={t.tid} onClick={() => quitarToast(t.tid)}
+              style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderLeft: '4px solid #e53e3e', borderRadius: 12, padding: '13px 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: 280, maxWidth: 360, display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'all', cursor: 'pointer' }}>
               <span style={{ fontSize: 22, flexShrink: 0 }}>📅</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--app-text)', marginBottom: 2 }}>Nuevo evento en el Calendario</div>
