@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useNotificaciones } from '../context/NotificacionesContext';
 
 const GCAL_CLIENT_ID = '559033586509-pbuqu2478s4terdb0c22b3t4akhuicit.apps.googleusercontent.com';
 const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
@@ -583,6 +584,7 @@ function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist,
 // ── PRINCIPAL ─────────────────────────────────────────────────────
 export default function Agenda() {
   const { role, user } = useAuth();
+  const { marcarVisto } = useNotificaciones();
   const [vista, setVista] = useState('mes');
   const [hoy] = useState(() => new Date());
   const [navDate, setNavDate] = useState(() => new Date());
@@ -604,6 +606,7 @@ export default function Agenda() {
   const tokenClientRef = useRef(null);
 
   useEffect(() => {
+    marcarVisto();
     dbGet('agenda_eventos').then(v => { if (Array.isArray(v)) setEventos(v); });
     const sub = dbSub('agenda_eventos', v => {
       if (!fbRef.current && Array.isArray(v)) setEventos(v);
@@ -706,6 +709,7 @@ export default function Agenda() {
       }
       setGcalSyncing(false);
     }
+    evFinal = { ...evFinal, creadoPor: evFinal.creadoPor || user?.email || '' };
     fbRef.current = true;
     const nuevos = eventos.find(e => e.id === ev.id)
       ? eventos.map(e => e.id === ev.id ? evFinal : e)

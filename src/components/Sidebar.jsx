@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotificaciones } from '../context/NotificacionesContext';
 
 const IcoDashboard = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -174,6 +175,7 @@ function ModalCambiarPass({ onClose }) {
 export default function Sidebar({ collapsed, isMobile, onToggle }) {
   const { user, role, nombre: nombreAuth, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { badge } = useNotificaciones();
   const [showCambiarPass, setShowCambiarPass] = useState(false);
 
   const nombre = nombreAuth || user?.email?.split('@')[0] || 'Usuario';
@@ -263,6 +265,7 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             className={({ isActive }) => isActive ? 'nav-active' : undefined}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
+              position: 'relative',
               gap: collapsed ? 0 : 12, padding: collapsed ? '11px 0' : '11px 14px',
               margin: collapsed ? '2px 6px' : '2px 10px', borderRadius: 10,
               color: isActive ? '#ffffff' : 'var(--sidebar-text)',
@@ -274,7 +277,12 @@ export default function Sidebar({ collapsed, isMobile, onToggle }) {
             onMouseLeave={e => { if (!e.currentTarget.classList.contains('nav-active')) e.currentTarget.style.background = 'transparent'; }}
           >
             {item.icon}
-            {!collapsed && item.label}
+            {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+            {item.path === '/agenda' && badge > 0 && (
+              collapsed
+                ? <span style={{ position: 'absolute', top: 7, right: 7, width: 8, height: 8, borderRadius: '50%', background: '#e53e3e' }} />
+                : <span style={{ background: '#e53e3e', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badge > 9 ? '9+' : badge}</span>
+            )}
           </NavLink>
         ))}
 

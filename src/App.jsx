@@ -11,6 +11,7 @@ import Analiticas from './pages/Analiticas';
 import Equipo from './pages/Equipo';
 import Tickets from './pages/Tickets';
 import Agenda from './pages/Agenda';
+import { NotificacionesProvider } from './context/NotificacionesContext';
 import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
 import Pendiente from './pages/Pendiente';
@@ -74,18 +75,6 @@ function NuevaContrasena() {
 
 function AppContent() {
   const { user, role, loading, recoveryMode } = useAuth();
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [collapsed, setCollapsed] = useState(window.innerWidth <= 768);
-
-  useEffect(() => {
-    const onResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  useEffect(() => {
-    if (windowWidth <= 768) setCollapsed(true);
-  }, [windowWidth]);
 
   if (loading) {
     return (
@@ -98,6 +87,28 @@ function AppContent() {
   if (recoveryMode) return <NuevaContrasena />;
   if (!user) return <Login />;
   if (role === 'pending' || role === null) return <Pendiente />;
+
+  // A partir de aquí el usuario está autenticado — activamos notificaciones
+  return (
+    <NotificacionesProvider>
+      <AppAutenticado role={role} />
+    </NotificacionesProvider>
+  );
+}
+
+function AppAutenticado({ role }) {
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [collapsed, setCollapsed] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    if (windowWidth <= 768) setCollapsed(true);
+  }, [windowWidth]);
 
   const isMobile = windowWidth <= 768;
 
