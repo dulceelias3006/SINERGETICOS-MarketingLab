@@ -279,7 +279,7 @@ function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose, equ
 }
 
 // ── VISTA MES ─────────────────────────────────────────────────────
-function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStart, dragPreview, getAsist, getCumple }) {
+function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStart, dragPreview, canEditEvt, getAsist, getCumple }) {
   const primerDia = new Date(navDate.getFullYear(), navDate.getMonth(), 1);
   const inicioGrid = new Date(primerDia);
   inicioGrid.setDate(1 - primerDia.getDay());
@@ -336,11 +336,13 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStar
                   <>
                     {evsShow.slice(0, 3).map(ev => {
                       const isDragging = dragPreview?.id === ev.id;
+                      const canEdit = canEditEvt ? canEditEvt(ev) : false;
+                      const draggable = ev.fechaInicio === iso && canEdit;
                       return (
                         <div key={ev.id}
-                          onMouseDown={ev.fechaInicio === iso ? e => { e.stopPropagation(); onDragStart(ev, 'mover-dia', e); } : undefined}
+                          onMouseDown={draggable ? e => { e.stopPropagation(); onDragStart(ev, 'mover-dia', e); } : undefined}
                           onClick={e => e.stopPropagation()}
-                          style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: ev.fechaInicio === iso ? (isDragging ? 'grabbing' : 'grab') : 'default', opacity: isDragging ? 0.7 : 1, userSelect: 'none' }}>
+                          style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: draggable ? (isDragging ? 'grabbing' : 'grab') : 'default', opacity: isDragging ? 0.7 : 1, userSelect: 'none' }}>
                           {!ev.todoElDia && ev.horaInicio && <span style={{ opacity: 0.85 }}>{ev.horaInicio} </span>}
                           {ev.titulo}
                         </div>
@@ -382,7 +384,7 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStar
 }
 
 // ── VISTA SEMANA ──────────────────────────────────────────────────
-function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragStart, dragPreview, getAsist, getCumple }) {
+function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragStart, dragPreview, canEditEvt, getAsist, getCumple }) {
   const hoyISO = toISO(hoy);
   const domingo = getDomingoDe(navDate);
   const diasSemana = Array.from({ length: 7 }, (_, i) => {
@@ -480,23 +482,24 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDrag
                 return [...filtered, ...extra].map(ev => {
                   const d = (dragPreview?.id === ev.id) ? { ...ev, ...dragPreview } : ev;
                   const isDragging = dragPreview?.id === ev.id;
+                  const canEdit = canEditEvt ? canEditEvt(ev) : false;
                   const [hI, mI] = d.horaInicio.split(':').map(Number);
                   const [hF, mF] = (d.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
                   const top = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
                   const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
                   return (
                     <div key={ev.id}
-                      onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'mover', e); }}
+                      onMouseDown={e => { e.stopPropagation(); if (canEdit) onDragStart(ev, 'mover', e); }}
                       onClick={e => e.stopPropagation()}
-                      style={{ position: 'absolute', top, left: 2, right: 2, height, background: d.color, borderRadius: 6, overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', zIndex: isDragging ? 10 : 1, boxSizing: 'border-box', userSelect: 'none', pointerEvents: isDragging ? 'none' : 'auto' }}>
-                      <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-top', e); }}
-                        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 3 }} />
+                      style={{ position: 'absolute', top, left: 2, right: 2, height, background: d.color, borderRadius: 6, overflow: 'hidden', cursor: isDragging ? 'grabbing' : canEdit ? 'grab' : 'default', zIndex: isDragging ? 10 : 1, boxSizing: 'border-box', userSelect: 'none', pointerEvents: isDragging ? 'none' : 'auto' }}>
+                      {canEdit && <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-top', e); }}
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 3 }} />}
                       <div style={{ padding: '3px 6px', pointerEvents: 'none' }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.titulo}</div>
                         {height > 32 && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>{d.horaInicio} – {d.horaFin}</div>}
                       </div>
-                      <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-bottom', e); }}
-                        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 3, background: 'rgba(0,0,0,0.15)', borderRadius: '0 0 6px 6px' }} />
+                      {canEdit && <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-bottom', e); }}
+                        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 3, background: 'rgba(0,0,0,0.15)', borderRadius: '0 0 6px 6px' }} />}
                     </div>
                   );
                 });
@@ -517,7 +520,7 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDrag
 }
 
 // ── VISTA DÍA ─────────────────────────────────────────────────────
-function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragStart, dragPreview, getAsist, getCumple }) {
+function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragStart, dragPreview, canEditEvt, getAsist, getCumple }) {
   const iso = toISO(navDate);
   const hoyISO = toISO(hoy);
   const esHoy = iso === hoyISO;
@@ -607,24 +610,25 @@ function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragSta
             return [...filtered, ...extra].map(ev => {
               const d = (dragPreview?.id === ev.id) ? { ...ev, ...dragPreview } : ev;
               const isDragging = dragPreview?.id === ev.id;
+              const canEdit = canEditEvt ? canEditEvt(ev) : false;
               const [hI, mI] = d.horaInicio.split(':').map(Number);
               const [hF, mF] = (d.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
               const top    = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
               const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
               return (
                 <div key={ev.id}
-                  onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'mover', e); }}
+                  onMouseDown={e => { e.stopPropagation(); if (canEdit) onDragStart(ev, 'mover', e); }}
                   onClick={e => e.stopPropagation()}
-                  style={{ position: 'absolute', top, left: 4, right: 4, height, background: d.color, borderRadius: 8, overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', zIndex: isDragging ? 10 : 1, boxSizing: 'border-box', userSelect: 'none', pointerEvents: isDragging ? 'none' : 'auto' }}>
-                  <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-top', e); }}
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, cursor: 'ns-resize', zIndex: 3 }} />
+                  style={{ position: 'absolute', top, left: 4, right: 4, height, background: d.color, borderRadius: 8, overflow: 'hidden', cursor: isDragging ? 'grabbing' : canEdit ? 'grab' : 'default', zIndex: isDragging ? 10 : 1, boxSizing: 'border-box', userSelect: 'none', pointerEvents: isDragging ? 'none' : 'auto' }}>
+                  {canEdit && <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-top', e); }}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, cursor: 'ns-resize', zIndex: 3 }} />}
                   <div style={{ padding: '5px 10px', pointerEvents: 'none' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{d.titulo}</div>
                     {height > 36 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{d.horaInicio} – {d.horaFin}</div>}
                     {height > 60 && d.descripcion && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 4 }}>{d.descripcion}</div>}
                   </div>
-                  <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-bottom', e); }}
-                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 8, cursor: 'ns-resize', zIndex: 3, background: 'rgba(0,0,0,0.12)', borderRadius: '0 0 8px 8px' }} />
+                  {canEdit && <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-bottom', e); }}
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 8, cursor: 'ns-resize', zIndex: 3, background: 'rgba(0,0,0,0.12)', borderRadius: '0 0 8px 8px' }} />}
                 </div>
               );
             });
@@ -754,13 +758,19 @@ export default function Agenda() {
     };
   }, []);
 
-  guardarRef.current = guardar;
-  editarRef.current = ev => setModal({ mode: 'editar', evento: { ...ev } });
-
   const emailUsuario = user?.email?.toLowerCase();
   const esMiembro = equipoData.some(m => m.email?.toLowerCase() === emailUsuario);
   const tieneAcceso = role === 'superadmin' || esMiembro;
   const puedeEditar = role === 'superadmin' || (esMiembro && role === 'editor');
+
+  function puedeEditarEv(ev) {
+    if (role === 'superadmin') return true;
+    if (!puedeEditar) return false;
+    return ev.creadoPor?.toLowerCase() === emailUsuario;
+  }
+
+  guardarRef.current = guardar;
+  editarRef.current = ev => { if (puedeEditarEv(ev)) setModal({ mode: 'editar', evento: { ...ev } }); };
 
   if (!equipoReady && role !== 'superadmin') return (
     <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--app-text-muted)', fontSize: 14 }}>
@@ -936,12 +946,12 @@ export default function Agenda() {
 
   function editarEvento(ev, e) {
     e.stopPropagation();
-    if (!puedeEditar) return;
+    if (!puedeEditarEv(ev)) return;
     setModal({ mode: 'editar', evento: { ...ev } });
   }
 
   function iniciarDrag(ev, tipo, e) {
-    if (!puedeEditar) return;
+    if (!puedeEditarEv(ev)) return;
     e.preventDefault();
     e.stopPropagation();
     const durMin = Math.max(15, timeToMin(ev.horaFin) - timeToMin(ev.horaInicio));
@@ -1026,21 +1036,21 @@ export default function Agenda() {
         <VistaMes hoy={hoy} navDate={navDate} eventos={eventos}
           onDiaClick={iso => { setNavDate(new Date(iso + 'T00:00:00')); setVista('dia'); }}
           onEventoClick={editarEvento}
-          onDragStart={iniciarDrag} dragPreview={dragPreview}
+          onDragStart={iniciarDrag} dragPreview={dragPreview} canEditEvt={puedeEditarEv}
           getAsist={getAsist} getCumple={getCumple} />
       )}
       {vista === 'semana' && (
         <VistaSemana hoy={hoy} navDate={navDate} eventos={eventos}
           onSlotClick={nuevoEvento}
           onEventoClick={editarEvento}
-          onDragStart={iniciarDrag} dragPreview={dragPreview}
+          onDragStart={iniciarDrag} dragPreview={dragPreview} canEditEvt={puedeEditarEv}
           getAsist={getAsist} getCumple={getCumple} />
       )}
       {vista === 'dia' && (
         <VistaDia hoy={hoy} navDate={navDate} eventos={eventos}
           onSlotClick={nuevoEvento}
           onEventoClick={editarEvento}
-          onDragStart={iniciarDrag} dragPreview={dragPreview}
+          onDragStart={iniciarDrag} dragPreview={dragPreview} canEditEvt={puedeEditarEv}
           getAsist={getAsist} getCumple={getCumple} />
       )}
 
