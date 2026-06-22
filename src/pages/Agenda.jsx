@@ -77,6 +77,25 @@ function horaFin1(horaInicio) {
   return `${String(Math.min(h + 1, 23)).padStart(2,'0')}:00`;
 }
 
+function timeToMin(t) {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+function minToTime(total) {
+  const s = Math.round(total / 15) * 15;
+  const clamped = Math.max(HORA_INI * 60, Math.min(HORA_FIN * 60, s));
+  return `${String(Math.floor(clamped / 60)).padStart(2,'0')}:${String(clamped % 60).padStart(2,'0')}`;
+}
+function addDays(iso, n) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return toISO(d);
+}
+function dayDiff(iso1, iso2) {
+  return Math.round((new Date(iso2 + 'T00:00:00') - new Date(iso1 + 'T00:00:00')) / 86400000);
+}
+
 // ── MODAL ──────────────────────────────────────────────────────────
 function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose, equipo = [] }) {
   const [ev, setEv] = useState(init);
@@ -260,7 +279,7 @@ function EventoModal({ evento: init, isEdit, onGuardar, onEliminar, onClose, equ
 }
 
 // ── VISTA MES ─────────────────────────────────────────────────────
-function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist, getCumple }) {
+function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStart, dragPreview, getAsist, getCumple }) {
   const primerDia = new Date(navDate.getFullYear(), navDate.getMonth(), 1);
   const inicioGrid = new Date(primerDia);
   inicioGrid.setDate(1 - primerDia.getDay());
@@ -291,7 +310,7 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist, 
           const esMes = d.getMonth() === mes;
           const evs = eventos.filter(ev => evtEnDia(ev, iso));
           return (
-            <div key={iso} onClick={() => onDiaClick(iso)}
+            <div key={iso} data-dayiso={iso} onClick={() => onDiaClick(iso)}
               style={{
                 borderRight: (i + 1) % 7 === 0 ? 'none' : '1px solid var(--app-border)',
                 borderBottom: '1px solid var(--app-border)',
@@ -307,16 +326,32 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist, 
                   {d.getDate()}
                 </span>
               </div>
-              {evs.slice(0, 3).map(ev => (
-                <div key={ev.id} onClick={e => onEventoClick(ev, e)}
-                  style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}>
-                  {!ev.todoElDia && ev.horaInicio && <span style={{ opacity: 0.85 }}>{ev.horaInicio} </span>}
-                  {ev.titulo}
-                </div>
-              ))}
-              {evs.length > 3 && (
-                <div style={{ fontSize: 10, color: 'var(--app-text-muted)', paddingLeft: 5 }}>+{evs.length - 3} más</div>
-              )}
+              {(() => {
+                const base = evs;
+                const filtered = base.filter(ev => !(dragPreview?.id === ev.id && dragPreview.fechaInicio !== iso));
+                const extra = (dragPreview?.fechaInicio === iso && !base.find(e => e.id === dragPreview.id))
+                  ? [dragPreview] : [];
+                const evsShow = [...extra, ...filtered];
+                return (
+                  <>
+                    {evsShow.slice(0, 3).map(ev => {
+                      const isDragging = dragPreview?.id === ev.id;
+                      return (
+                        <div key={ev.id}
+                          onMouseDown={ev.fechaInicio === iso ? e => { e.stopPropagation(); onDragStart(ev, 'mover-dia', e); } : undefined}
+                          onClick={e => e.stopPropagation()}
+                          style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: ev.fechaInicio === iso ? (isDragging ? 'grabbing' : 'grab') : 'default', opacity: isDragging ? 0.7 : 1, userSelect: 'none' }}>
+                          {!ev.todoElDia && ev.horaInicio && <span style={{ opacity: 0.85 }}>{ev.horaInicio} </span>}
+                          {ev.titulo}
+                        </div>
+                      );
+                    })}
+                    {evsShow.length > 3 && (
+                      <div style={{ fontSize: 10, color: 'var(--app-text-muted)', paddingLeft: 5 }}>+{evsShow.length - 3} más</div>
+                    )}
+                  </>
+                );
+              })()}
               {(() => {
                 const asist = getAsist(iso);
                 const cumples = getCumple(iso);
@@ -347,7 +382,7 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, getAsist, 
 }
 
 // ── VISTA SEMANA ──────────────────────────────────────────────────
-function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist, getCumple }) {
+function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragStart, dragPreview, getAsist, getCumple }) {
   const hoyISO = toISO(hoy);
   const domingo = getDomingoDe(navDate);
   const diasSemana = Array.from({ length: 7 }, (_, i) => {
@@ -427,7 +462,7 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
           const esHoy = iso === hoyISO;
           const evsDia = eventos.filter(ev => ev.fechaInicio === iso && !ev.todoElDia && ev.horaInicio);
           return (
-            <div key={iso} style={{ borderLeft: '1px solid var(--app-border)', position: 'relative', background: esHoy ? 'rgba(229,62,62,0.02)' : 'transparent' }}>
+            <div key={iso} data-coliso={iso} style={{ borderLeft: '1px solid var(--app-border)', position: 'relative', background: esHoy ? 'rgba(229,62,62,0.02)' : 'transparent' }}>
               {/* Slots de hora */}
               {horas.map(h => (
                 <div key={h}
@@ -438,25 +473,34 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
               ))}
 
               {/* Eventos con hora */}
-              {evsDia.map(ev => {
-                const [hI, mI] = ev.horaInicio.split(':').map(Number);
-                const [hF, mF] = (ev.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
-                const top = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
-                const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
-                return (
-                  <div key={ev.id} onClick={e => onEventoClick(ev, e)}
-                    style={{ position: 'absolute', top, left: 2, right: 2, height, background: ev.color, borderRadius: 6, padding: '3px 6px', overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {ev.titulo}
-                    </div>
-                    {height > 32 && (
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>
-                        {ev.horaInicio} – {ev.horaFin}
+              {(() => {
+                const filtered = evsDia.filter(ev => !(dragPreview?.id === ev.id && dragPreview.fechaInicio !== iso));
+                const extra = (dragPreview?.fechaInicio === iso && dragPreview.horaInicio && !evsDia.find(e => e.id === dragPreview.id))
+                  ? [dragPreview] : [];
+                return [...filtered, ...extra].map(ev => {
+                  const d = (dragPreview?.id === ev.id) ? { ...ev, ...dragPreview } : ev;
+                  const isDragging = dragPreview?.id === ev.id;
+                  const [hI, mI] = d.horaInicio.split(':').map(Number);
+                  const [hF, mF] = (d.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
+                  const top = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
+                  const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
+                  return (
+                    <div key={ev.id}
+                      onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'mover', e); }}
+                      onClick={e => e.stopPropagation()}
+                      style={{ position: 'absolute', top, left: 2, right: 2, height, background: d.color, borderRadius: 6, overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', zIndex: isDragging ? 10 : 1, boxSizing: 'border-box', userSelect: 'none', pointerEvents: isDragging ? 'none' : 'auto' }}>
+                      <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-top', e); }}
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 3 }} />
+                      <div style={{ padding: '3px 6px', pointerEvents: 'none' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.titulo}</div>
+                        {height > 32 && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>{d.horaInicio} – {d.horaFin}</div>}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-bottom', e); }}
+                        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, cursor: 'ns-resize', zIndex: 3, background: 'rgba(0,0,0,0.15)', borderRadius: '0 0 6px 6px' }} />
+                    </div>
+                  );
+                });
+              })()}
 
               {/* Indicador hora actual */}
               {esHoy && minActual >= HORA_INI * 60 && minActual <= HORA_FIN * 60 && (
@@ -473,7 +517,7 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsi
 }
 
 // ── VISTA DÍA ─────────────────────────────────────────────────────
-function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist, getCumple }) {
+function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDragStart, dragPreview, getAsist, getCumple }) {
   const iso = toISO(navDate);
   const hoyISO = toISO(hoy);
   const esHoy = iso === hoyISO;
@@ -556,20 +600,35 @@ function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist,
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'} />
           ))}
 
-          {evsDia.map(ev => {
-            const [hI, mI] = ev.horaInicio.split(':').map(Number);
-            const [hF, mF] = (ev.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
-            const top    = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
-            const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
-            return (
-              <div key={ev.id} onClick={e => onEventoClick(ev, e)}
-                style={{ position: 'absolute', top, left: 4, right: 4, height, background: ev.color, borderRadius: 8, padding: '5px 10px', overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{ev.titulo}</div>
-                {height > 36 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{ev.horaInicio} – {ev.horaFin}</div>}
-                {height > 60 && ev.descripcion && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 4 }}>{ev.descripcion}</div>}
-              </div>
-            );
-          })}
+          {(() => {
+            const filtered = evsDia.filter(ev => !(dragPreview?.id === ev.id && dragPreview.fechaInicio !== iso));
+            const extra = (dragPreview?.fechaInicio === iso && dragPreview.horaInicio && !evsDia.find(e => e.id === dragPreview.id))
+              ? [dragPreview] : [];
+            return [...filtered, ...extra].map(ev => {
+              const d = (dragPreview?.id === ev.id) ? { ...ev, ...dragPreview } : ev;
+              const isDragging = dragPreview?.id === ev.id;
+              const [hI, mI] = d.horaInicio.split(':').map(Number);
+              const [hF, mF] = (d.horaFin || `${HORA_FIN}:00`).split(':').map(Number);
+              const top    = (hI * 60 + mI - HORA_INI * 60) / 60 * PX_HR;
+              const height = Math.max(22, ((hF * 60 + mF) - (hI * 60 + mI)) / 60 * PX_HR - 2);
+              return (
+                <div key={ev.id}
+                  onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'mover', e); }}
+                  onClick={e => e.stopPropagation()}
+                  style={{ position: 'absolute', top, left: 4, right: 4, height, background: d.color, borderRadius: 8, overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', zIndex: isDragging ? 10 : 1, boxSizing: 'border-box', userSelect: 'none', pointerEvents: isDragging ? 'none' : 'auto' }}>
+                  <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-top', e); }}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, cursor: 'ns-resize', zIndex: 3 }} />
+                  <div style={{ padding: '5px 10px', pointerEvents: 'none' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{d.titulo}</div>
+                    {height > 36 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{d.horaInicio} – {d.horaFin}</div>}
+                    {height > 60 && d.descripcion && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 4 }}>{d.descripcion}</div>}
+                  </div>
+                  <div onMouseDown={e => { e.stopPropagation(); onDragStart(ev, 'resize-bottom', e); }}
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 8, cursor: 'ns-resize', zIndex: 3, background: 'rgba(0,0,0,0.12)', borderRadius: '0 0 8px 8px' }} />
+                </div>
+              );
+            });
+          })()}
 
           {esHoy && minActual >= HORA_INI * 60 && minActual <= HORA_FIN * 60 && (
             <div style={{ position: 'absolute', left: 0, right: 0, top: topActual, height: 2, background: '#e53e3e', zIndex: 2, pointerEvents: 'none' }}>
@@ -608,6 +667,12 @@ export default function Agenda() {
   const [gcalError, setGcalError] = useState(null);
   const tokenClientRef = useRef(null);
 
+  const dragRef = useRef(null);
+  const dragPreviewRef = useRef(null);
+  const guardarRef = useRef(null);
+  const editarRef = useRef(null);
+  const [dragPreview, setDragPreview] = useState(null);
+
   useEffect(() => {
     marcarVisto();
     const eventoParam = searchParams.get('evento');
@@ -642,6 +707,55 @@ export default function Agenda() {
     document.head.appendChild(script);
     return () => { try { document.head.removeChild(script); } catch(_) {} };
   }, []);
+
+  useEffect(() => {
+    function onMove(e) {
+      if (!dragRef.current) return;
+      const { tipo, ev, startY, startMin, durMin, durDias } = dragRef.current;
+      const deltaMins = Math.round((e.clientY - startY) / PX_HR * 60 / 15) * 15;
+      const preview = { ...ev };
+
+      if (tipo === 'mover') {
+        const ns = Math.max(HORA_INI * 60, Math.min(HORA_FIN * 60 - durMin, startMin + deltaMins));
+        preview.horaInicio = minToTime(ns);
+        preview.horaFin = minToTime(ns + durMin);
+        const col = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-coliso]');
+        if (col) { preview.fechaInicio = col.dataset.coliso; preview.fechaFin = col.dataset.coliso; }
+      } else if (tipo === 'resize-bottom') {
+        preview.horaFin = minToTime(Math.max(startMin - durMin + 15, Math.min(HORA_FIN * 60, startMin + deltaMins)));
+      } else if (tipo === 'resize-top') {
+        preview.horaInicio = minToTime(Math.max(HORA_INI * 60, Math.min(timeToMin(ev.horaFin) - 15, startMin + deltaMins)));
+      } else if (tipo === 'mover-dia') {
+        const day = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-dayiso]');
+        if (day) { preview.fechaInicio = day.dataset.dayiso; preview.fechaFin = addDays(day.dataset.dayiso, durDias); }
+      }
+
+      dragPreviewRef.current = preview;
+      setDragPreview({ ...preview });
+    }
+
+    function onUp(e) {
+      if (!dragRef.current) return;
+      const moved = Math.abs(e.clientY - dragRef.current.startY) > 5 || Math.abs(e.clientX - dragRef.current.startX) > 5;
+      if (moved && dragPreviewRef.current) guardarRef.current?.(dragPreviewRef.current);
+      else if (!moved) editarRef.current?.(dragRef.current.ev);
+      dragRef.current = null;
+      dragPreviewRef.current = null;
+      setDragPreview(null);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+
+  guardarRef.current = guardar;
+  editarRef.current = ev => setModal({ mode: 'editar', evento: { ...ev } });
 
   const emailUsuario = user?.email?.toLowerCase();
   const esMiembro = equipoData.some(m => m.email?.toLowerCase() === emailUsuario);
@@ -826,6 +940,24 @@ export default function Agenda() {
     setModal({ mode: 'editar', evento: { ...ev } });
   }
 
+  function iniciarDrag(ev, tipo, e) {
+    if (!puedeEditar) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const durMin = Math.max(15, timeToMin(ev.horaFin) - timeToMin(ev.horaInicio));
+    const durDias = dayDiff(ev.fechaInicio, ev.fechaFin || ev.fechaInicio);
+    dragRef.current = {
+      tipo, ev: { ...ev },
+      startY: e.clientY, startX: e.clientX,
+      startMin: tipo === 'resize-bottom' ? timeToMin(ev.horaFin) : timeToMin(ev.horaInicio),
+      durMin, durDias,
+    };
+    dragPreviewRef.current = { ...ev };
+    setDragPreview({ ...ev });
+    document.body.style.cursor = 'grabbing';
+    document.body.style.userSelect = 'none';
+  }
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--app-bg)' }}>
       {/* Barra superior */}
@@ -894,18 +1026,21 @@ export default function Agenda() {
         <VistaMes hoy={hoy} navDate={navDate} eventos={eventos}
           onDiaClick={iso => { setNavDate(new Date(iso + 'T00:00:00')); setVista('dia'); }}
           onEventoClick={editarEvento}
+          onDragStart={iniciarDrag} dragPreview={dragPreview}
           getAsist={getAsist} getCumple={getCumple} />
       )}
       {vista === 'semana' && (
         <VistaSemana hoy={hoy} navDate={navDate} eventos={eventos}
           onSlotClick={nuevoEvento}
           onEventoClick={editarEvento}
+          onDragStart={iniciarDrag} dragPreview={dragPreview}
           getAsist={getAsist} getCumple={getCumple} />
       )}
       {vista === 'dia' && (
         <VistaDia hoy={hoy} navDate={navDate} eventos={eventos}
           onSlotClick={nuevoEvento}
           onEventoClick={editarEvento}
+          onDragStart={iniciarDrag} dragPreview={dragPreview}
           getAsist={getAsist} getCumple={getCumple} />
       )}
 
