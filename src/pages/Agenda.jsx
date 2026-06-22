@@ -709,7 +709,22 @@ export default function Agenda() {
       }
       setGcalSyncing(false);
     }
-    evFinal = { ...evFinal, creadoPor: evFinal.creadoPor || user?.email || '' };
+    const miembro = equipoData.find(m => m.email?.toLowerCase() === user?.email?.toLowerCase());
+    const miNombre = displayNombre(miembro) || user?.email?.split('@')[0] || 'Alguien';
+    const evAnterior = eventos.find(e => e.id === ev.id);
+    const cambioHorario = evAnterior && (
+      ev.fechaInicio !== evAnterior.fechaInicio ||
+      ev.fechaFin !== evAnterior.fechaFin ||
+      ev.horaInicio !== evAnterior.horaInicio ||
+      ev.horaFin !== evAnterior.horaFin ||
+      ev.todoElDia !== evAnterior.todoElDia
+    );
+    evFinal = {
+      ...evFinal,
+      creadoPor: evFinal.creadoPor || user?.email || '',
+      creadoPorNombre: evFinal.creadoPorNombre || miNombre,
+      ...(cambioHorario ? { lastUpdated: Date.now(), modificadoPor: user?.email, modificadoPorNombre: miNombre } : {}),
+    };
     fbRef.current = true;
     const nuevos = eventos.find(e => e.id === ev.id)
       ? eventos.map(e => e.id === ev.id ? evFinal : e)
