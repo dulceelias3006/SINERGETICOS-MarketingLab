@@ -88,12 +88,7 @@ function AppContent() {
   if (!user) return <Login />;
   if (role === 'pending' || role === null) return <Pendiente />;
 
-  // A partir de aquí el usuario está autenticado — activamos notificaciones
-  return (
-    <NotificacionesProvider>
-      <AppAutenticado role={role} />
-    </NotificacionesProvider>
-  );
+  return <AppAutenticado role={role} />;
 }
 
 function AppAutenticado({ role }) {
@@ -114,6 +109,7 @@ function AppAutenticado({ role }) {
 
   return (
     <BrowserRouter>
+      <NotificacionesProvider>
       <div className="app-layout">
         {isMobile && !collapsed && (
           <div onClick={() => setCollapsed(true)}
@@ -152,6 +148,7 @@ function AppAutenticado({ role }) {
           </div>
         </main>
       </div>
+      </NotificacionesProvider>
     </BrowserRouter>
   );
 }

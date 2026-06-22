@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { dbGet, dbSet, dbSub } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useNotificaciones } from '../context/NotificacionesContext';
@@ -585,6 +586,8 @@ function VistaDia({ hoy, navDate, eventos, onSlotClick, onEventoClick, getAsist,
 export default function Agenda() {
   const { role, user } = useAuth();
   const { marcarVisto } = useNotificaciones();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pendingEventoRef = useRef(null);
   const [vista, setVista] = useState('mes');
   const [hoy] = useState(() => new Date());
   const [navDate, setNavDate] = useState(() => new Date());
@@ -607,16 +610,28 @@ export default function Agenda() {
 
   useEffect(() => {
     marcarVisto();
+    const eventoParam = searchParams.get('evento');
+    if (eventoParam) { pendingEventoRef.current = eventoParam; setSearchParams({}); }
     dbGet('agenda_eventos').then(v => { if (Array.isArray(v)) setEventos(v); });
     const sub = dbSub('agenda_eventos', v => {
       if (!fbRef.current && Array.isArray(v)) setEventos(v);
     });
     dbGet('equipo').then(v => { if (Array.isArray(v)) setEquipoData(v); setEquipoReady(true); });
+    return () => sub?.unsubscribe?.();
+  }, []);
+
+  useEffect(() => {
+    if (pendingEventoRef.current && eventos.length > 0) {
+      const ev = eventos.find(e => String(e.id) === pendingEventoRef.current);
+      if (ev) { setModal({ mode: 'editar', evento: { ...ev } }); pendingEventoRef.current = null; }
+    }
+  }, [eventos]);
+
+  useEffect(() => {
     dbGet('equipo_asistencia').then(v => { if (v && typeof v === 'object') setAsistenciaData(v); });
     dbGet('equipo_estado_colores').then(v => { if (v && typeof v === 'object') setEstadoColoresData(v); });
     dbGet('equipo_estados_custom').then(v => { if (Array.isArray(v)) setCustomEstadosData(v); });
     dbGet('equipo_estados_config').then(v => { if (v && typeof v === 'object') setEstadosConfigData(v); });
-    return () => sub?.unsubscribe?.();
   }, []);
 
   useEffect(() => {
