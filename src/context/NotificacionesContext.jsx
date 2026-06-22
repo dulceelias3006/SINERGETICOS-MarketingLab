@@ -9,53 +9,61 @@ export function NotificacionesProvider({ children }) {
   const { user } = useAuth();
   const [toasts, setToasts] = useState([]);
   const [badge, setBadge] = useState(0);
-  const conocidosRef = useRef(new Set());
   const listoRef = useRef(false);
+  const emailMioRef = useRef(null);
 
   useEffect(() => {
-    const guardados = JSON.parse(localStorage.getItem('notif_conocidos') || '[]');
-    conocidosRef.current = new Set(guardados);
+    emailMioRef.current = user?.email?.toLowerCase() || null;
+    const ultimaVisita = parseInt(localStorage.getItem('agenda_ultima_visita') || '0', 10);
 
-    let sub;
     dbGet('agenda_eventos').then(evs => {
       if (Array.isArray(evs)) {
-        evs.forEach(ev => conocidosRef.current.add(ev.id));
-        guardar();
+        // Contar eventos creados después de la última visita por otros usuarios
+        const perdidos = evs.filter(ev =>
+          ev.id > ultimaVisita &&
+          ev.creadoPor?.toLowerCase() !== emailMioRef.current
+        );
+        if (perdidos.length > 0) setBadge(perdidos.length);
       }
       listoRef.current = true;
-      sub = dbSub('agenda_eventos', handleCambio);
     });
 
+    const sub = dbSub('agenda_eventos', handleCambio);
     return () => sub?.unsubscribe?.();
   }, []);
 
-  function guardar() {
-    localStorage.setItem('notif_conocidos', JSON.stringify([...conocidosRef.current]));
-  }
-
   function handleCambio(evs) {
     if (!listoRef.current || !Array.isArray(evs)) return;
-    const emailMio = user?.email?.toLowerCase();
+    const ultimaVisita = parseInt(localStorage.getItem('agenda_ultima_visita') || '0', 10);
+
     const nuevos = evs.filter(ev =>
-      !conocidosRef.current.has(ev.id) &&
-      ev.creadoPor?.toLowerCase() !== emailMio
+      ev.id > ultimaVisita &&
+      ev.creadoPor?.toLowerCase() !== emailMioRef.current
     );
     if (!nuevos.length) return;
 
-    nuevos.forEach(ev => conocidosRef.current.add(ev.id));
-    guardar();
-    setBadge(prev => prev + nuevos.length);
+    setBadge(nuevos.length);
 
-    nuevos.forEach(ev => {
+    // Solo mostrar toasts para eventos recién creados (últimos 30 segundos)
+    const ahora = Date.now();
+    nuevos.filter(ev => ahora - ev.id < 30000).forEach(ev => {
       const tid = `${ev.id}_t`;
-      setToasts(prev => [...prev, { tid, titulo: ev.titulo, fecha: ev.fechaInicio }]);
+      setToasts(prev => {
+        if (prev.find(t => t.tid === tid)) return prev;
+        return [...prev, { tid, titulo: ev.titulo, fecha: ev.fechaInicio }];
+      });
       setTimeout(() => setToasts(prev => prev.filter(t => t.tid !== tid)), 5500);
     });
   }
 
-  function marcarVisto() { setBadge(0); }
+  function marcarVisto() {
+    localStorage.setItem('agenda_ultima_visita', String(Date.now()));
+    setBadge(0);
+  }
 
-  function quitarToast(tid) { setToasts(prev => prev.filter(t => t.tid !== tid)); }
+  function quitarToast(tid) {
+    setToasts(prev => prev.filter(t => t.tid !== tid));
+  }
 
   return (
     <NotifCtx.Provider value={{ badge, marcarVisto }}>
