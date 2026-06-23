@@ -112,7 +112,7 @@ function calcFechasEnRango(dias, inicio, fin) {
 }
 
 
-function SerieCard({ s, onAjustar, onEditar, onCerrar, onRetroceder, onEditarHistorial, onToggleExcluir, editable }) {
+function SerieCard({ s, onAjustar, onEditar, onCerrar, onEditarHistorial, onToggleExcluir, editable }) {
   const [expandHist, setExpandHist] = useState(false);
   const [confirmCerrar, setConfirmCerrar] = useState(false);
   const [editGasto, setEditGasto] = useState(null);
@@ -125,7 +125,6 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onRetroceder, onEditarHis
   const vipInputRef = useRef();
 
   const sem = s.semana || {};
-  const esFuturo = sem.inicio && sem.inicio > getMondayISO();
   const pct = sem.meta > 0 ? Math.min(100, Math.round((sem.registros || 0) / sem.meta * 100)) : 0;
   const gastadoPct = sem.presupuestoTotal > 0 ? Math.round((sem.presupuestoGastado || 0) / sem.presupuestoTotal * 100) : 0;
   const costoReg = sem.registros > 0 && sem.presupuestoGastado > 0
@@ -176,8 +175,7 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onRetroceder, onEditarHis
             )}
           </div>
         </div>
-        <div style={{ fontSize: 11, color: esFuturo ? '#f59e0b' : 'var(--app-text-subtle)', marginBottom: s.diasEvento?.length ? 6 : 0 }}>
-          {esFuturo && <span style={{ marginRight: 4 }}>⚠️</span>}
+        <div style={{ fontSize: 11, color: 'var(--app-text-subtle)', marginBottom: s.diasEvento?.length ? 6 : 0 }}>
           Semana del {fmtFecha(sem.inicio)}
           {s.historial?.length > 0 && <span style={{ marginLeft: 8 }}>· {s.historial.length} sem. anteriores</span>}
           {s.urlRegistro && (
@@ -330,14 +328,9 @@ function SerieCard({ s, onAjustar, onEditar, onCerrar, onRetroceder, onEditarHis
             {s.historial?.length > 0 && <span style={{ fontSize: 11, fontWeight: 700 }}>{s.historial.length}</span>}
           </button>
 
-          {/* Cerrar / Retroceder semana */}
+          {/* Cerrar semana */}
           {editable && (
-            esFuturo && s.historial?.length > 0 ? (
-              <button onClick={() => onRetroceder(s.id)}
-                style={{ flex: 1, padding: '7px 0', background: '#f59e0b', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
-                ↩ Retroceder semana
-              </button>
-            ) : confirmCerrar ? (
+            confirmCerrar ? (
               <div style={{ display: 'flex', gap: 4, flex: 1 }}>
                 <button onClick={() => { onCerrar(s.id); setConfirmCerrar(false); }}
                   style={{ flex: 1, padding: '7px 0', background: '#22c55e', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
@@ -516,10 +509,21 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
   }
 
   function migrarFechas(arr) {
+    const currentMonday = getMondayISO();
     return arr.map(s => {
       if (!s.semana?.inicio || !s.diasEvento?.length) return s;
-      // Solo corregir inicio si quedó igual al de la última semana cerrada (bug de avance)
       const latestHist = s.historial?.[0];
+
+      // Si inicio está en el futuro pero el historial no tiene entrada de esta semana,
+      // significa que el avance fue incorrecto (bug del migrarFechas anterior)
+      if (s.semana.inicio > currentMonday) {
+        if (!latestHist || latestHist.inicio < currentMonday) {
+          return { ...s, semana: { ...s.semana, inicio: currentMonday } };
+        }
+        return s;
+      }
+
+      // Corregir inicio si quedó igual al de la última semana cerrada (bug de avance)
       if (latestHist?.fin && latestHist?.inicio && s.semana.inicio === latestHist.inicio) {
         const [fy, fm, fd] = latestHist.fin.split('-').map(Number);
         const finDate = new Date(fy, fm - 1, fd);
@@ -527,6 +531,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
         finDate.setDate(finDate.getDate() + (dow === 0 ? 1 : 8 - dow));
         return { ...s, semana: { ...s.semana, inicio: toLocalISO(finDate) } };
       }
+
       return s;
     });
   }
@@ -641,28 +646,6 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
     saveSeries(series.map(s => s.id === id
       ? { ...s, updatedAt: Date.now(), historial: s.historial.map((h, i) => i === idx ? { ...h, ...datos } : h) }
       : s
-    ));
-  }
-
-  function retrocederSemana(id) {
-    const s = series.find(x => x.id === id);
-    if (!s || !s.historial?.length) return;
-    const [last, ...rest] = s.historial;
-    saveSeries(series.map(x => x.id === id
-      ? {
-          ...x,
-          updatedAt: Date.now(),
-          historial: rest,
-          semana: {
-            inicio: last.inicio,
-            registros: last.registros || 0,
-            meta: last.meta || 0,
-            presupuestoTotal: last.presupuestoTotal || 0,
-            presupuestoGastado: last.presupuestoGastado || 0,
-            vip: last.vip || 0,
-          },
-        }
-      : x
     ));
   }
 
@@ -808,7 +791,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, marginBottom: pausadasSeries.length ? 28 : 0 }}>
                 {activasSeries.map(s => (
-                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onRetroceder={retrocederSemana} onEditarHistorial={editarHistorial} onToggleExcluir={toggleExcluir} editable={can('edit')} />
+                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} onToggleExcluir={toggleExcluir} editable={can('edit')} />
                 ))}
               </div>
             </>
@@ -822,7 +805,7 @@ const EventosDigitales = forwardRef(function EventosDigitales(_, ref) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
                 {pausadasSeries.map(s => (
-                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onRetroceder={retrocederSemana} onEditarHistorial={editarHistorial} onToggleExcluir={toggleExcluir} editable={can('edit')} />
+                  <SerieCard key={s.id} s={s} onAjustar={ajustar} onEditar={abrirEditar} onCerrar={cerrarSemana} onEditarHistorial={editarHistorial} onToggleExcluir={toggleExcluir} editable={can('edit')} />
                 ))}
               </div>
             </>
