@@ -392,6 +392,21 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDrag
     d.setDate(domingo.getDate() + i);
     return d;
   });
+  const isosSemana = diasSemana.map(d => toISO(d));
+  const evsTodoDia = eventos.filter(ev => (ev.todoElDia || !ev.horaInicio) && isosSemana.some(iso => evtEnDia(ev, iso)));
+  const evtsConFila = (() => {
+    const sorted = [...evsTodoDia].sort((a, b) => a.fechaInicio.localeCompare(b.fechaInicio));
+    const rowEnds = [];
+    return sorted.map(ev => {
+      const ini = ev.fechaInicio < isosSemana[0] ? isosSemana[0] : ev.fechaInicio;
+      const fin = (ev.fechaFin || ev.fechaInicio) > isosSemana[6] ? isosSemana[6] : (ev.fechaFin || ev.fechaInicio);
+      let row = 0;
+      while (row < rowEnds.length && rowEnds[row] >= ini) row++;
+      rowEnds[row] = fin;
+      return { ev, row, ini, fin };
+    });
+  })();
+  const alturaAllDay = Math.max(28, evtsConFila.reduce((m, x) => Math.max(m, x.row + 1), 0) * 24 + 8);
   const horas = Array.from({ length: HORA_FIN - HORA_INI }, (_, i) => HORA_INI + i);
   const ahora = new Date();
   const minActual = ahora.getHours() * 60 + ahora.getMinutes();
@@ -400,49 +415,87 @@ function VistaSemana({ hoy, navDate, eventos, onSlotClick, onEventoClick, onDrag
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       {/* Encabezado días + fila todo-el-día */}
-      <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '2px solid var(--app-border)', position: 'sticky', top: 0, background: 'var(--app-surface)', zIndex: 10, flexShrink: 0 }}>
-        <div style={{ borderRight: '1px solid var(--app-border)', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', paddingRight: 6, paddingBottom: 6 }}>
-          <span style={{ fontSize: 9, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.3 }}>todo<br/>día</span>
-        </div>
-        {diasSemana.map((d, i) => {
-          const iso = toISO(d);
-          const esHoy = iso === hoyISO;
-          const evsTodo = eventos.filter(ev => (ev.todoElDia || !ev.horaInicio) && evtEnDia(ev, iso));
-          return (
-            <div key={iso} style={{ borderLeft: i > 0 ? '1px solid var(--app-border)' : 'none', padding: '6px 4px 4px' }}>
-              <div style={{ textAlign: 'center', marginBottom: 4 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  {DIAS_CORTO[i]}
+      <div style={{ position: 'sticky', top: 0, background: 'var(--app-surface)', zIndex: 10, flexShrink: 0, borderBottom: '2px solid var(--app-border)' }}>
+        {/* Fila nombres/números de días */}
+        <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '1px solid var(--app-border)' }}>
+          <div style={{ borderRight: '1px solid var(--app-border)', minHeight: 56 }} />
+          {diasSemana.map((d, i) => {
+            const iso = toISO(d);
+            const esHoy = iso === hoyISO;
+            return (
+              <div key={iso} style={{ borderLeft: i > 0 ? '1px solid var(--app-border)' : 'none', padding: '6px 4px 4px' }}>
+                <div style={{ textAlign: 'center', marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                    {DIAS_CORTO[i]}
+                  </div>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: esHoy ? '#e53e3e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '2px auto' }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: esHoy ? '#fff' : 'var(--app-text)' }}>{d.getDate()}</span>
+                  </div>
                 </div>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: esHoy ? '#e53e3e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '2px auto' }}>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: esHoy ? '#fff' : 'var(--app-text)' }}>{d.getDate()}</span>
-                </div>
+                {getCumple(iso).map(c => (
+                  <div key={'cumple-' + c.nombre}
+                    style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#f59e0b22', border: '1px solid #f59e0b50', borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
+                    <span style={{ fontSize: 10 }}>🎂</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nombre}</span>
+                    <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· Cumpleaños</span>
+                  </div>
+                ))}
+                {getAsist(iso).map(a => (
+                  <div key={a.nombre + a.status}
+                    style={{ display: 'flex', alignItems: 'center', gap: 3, background: a.color + '22', border: `1px solid ${a.color}50`, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
+                    <span style={{ fontSize: 10 }}>{a.emoji}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre}</span>
+                    <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· {a.label}</span>
+                  </div>
+                ))}
               </div>
-              {evsTodo.map(ev => (
-                <div key={ev.id} onClick={e => onEventoClick(ev, e)}
-                  style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}>
-                  {ev.titulo}
+            );
+          })}
+        </div>
+        {/* Fila de barras continuas (todo el día / multi-día) */}
+        <div style={{ display: 'flex', minHeight: alturaAllDay }}>
+          <div style={{ width: 56, borderRight: '1px solid var(--app-border)', flexShrink: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', paddingRight: 6, paddingBottom: 4 }}>
+            <span style={{ fontSize: 9, color: 'var(--app-text-muted)', textTransform: 'uppercase', letterSpacing: 0.3 }}>todo<br/>día</span>
+          </div>
+          <div style={{ flex: 1, position: 'relative' }}>
+            {isosSemana.slice(1).map((iso, i) => (
+              <div key={iso} style={{ position: 'absolute', top: 0, bottom: 0, left: `${((i + 1) / 7) * 100}%`, width: '1px', background: 'var(--app-border)', pointerEvents: 'none' }} />
+            ))}
+            {evtsConFila.map(({ ev, row, ini, fin }) => {
+              const startIdx = isosSemana.indexOf(ini);
+              const endIdx = isosSemana.indexOf(fin);
+              const iniciaAqui = ev.fechaInicio >= isosSemana[0];
+              const terminaAqui = (ev.fechaFin || ev.fechaInicio) <= isosSemana[6];
+              return (
+                <div key={ev.id}
+                  onClick={e => onEventoClick(ev, e)}
+                  style={{
+                    position: 'absolute',
+                    top: row * 24 + 4,
+                    left: `calc(${(startIdx / 7) * 100}% + ${iniciaAqui ? 2 : 0}px)`,
+                    width: `calc(${((endIdx - startIdx + 1) / 7) * 100}% - ${(iniciaAqui ? 2 : 0) + (terminaAqui ? 2 : 0)}px)`,
+                    height: 20,
+                    background: ev.color,
+                    borderRadius: `${iniciaAqui ? 10 : 0}px ${terminaAqui ? 10 : 0}px ${terminaAqui ? 10 : 0}px ${iniciaAqui ? 10 : 0}px`,
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    paddingLeft: iniciaAqui ? 8 : 4,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    alignItems: 'center',
+                    userSelect: 'none',
+                  }}>
+                  {iniciaAqui && ev.titulo}
                 </div>
-              ))}
-              {getCumple(iso).map(c => (
-                <div key={'cumple-' + c.nombre}
-                  style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#f59e0b22', border: '1px solid #f59e0b50', borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
-                  <span style={{ fontSize: 10 }}>🎂</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nombre}</span>
-                  <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· Cumpleaños</span>
-                </div>
-              ))}
-              {getAsist(iso).map(a => (
-                <div key={a.nombre + a.status}
-                  style={{ display: 'flex', alignItems: 'center', gap: 3, background: a.color + '22', border: `1px solid ${a.color}50`, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'default' }}>
-                  <span style={{ fontSize: 10 }}>{a.emoji}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.nombre}</span>
-                  <span style={{ fontSize: 9, color: 'var(--app-text-muted)' }}>· {a.label}</span>
-                </div>
-              ))}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Grid de horas */}
