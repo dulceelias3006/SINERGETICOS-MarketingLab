@@ -1023,7 +1023,7 @@ export default function Agenda() {
           </button>
 
           {puedeEditar && (
-            <button onClick={() => nuevoEvento(null, null)}
+            <button onClick={() => nuevoEvento(toISO(navDate), null)}
               style={{ padding: '7px 16px', background: '#e53e3e', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               + Nuevo
             </button>
