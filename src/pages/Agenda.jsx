@@ -292,6 +292,8 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStar
     return d;
   });
 
+  const semanas = Array.from({ length: 6 }, (_, s) => dias.slice(s * 7, s * 7 + 7));
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Encabezado días */}
@@ -302,79 +304,142 @@ function VistaMes({ hoy, navDate, eventos, onDiaClick, onEventoClick, onDragStar
           </div>
         ))}
       </div>
-      {/* Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridTemplateRows: 'repeat(6, 1fr)', flex: 1, overflow: 'hidden' }}>
-        {dias.map((d, i) => {
-          const iso = toISO(d);
-          const esHoy = iso === hoyISO;
-          const esMes = d.getMonth() === mes;
-          const evs = eventos.filter(ev => evtEnDia(ev, iso));
+      {/* 6 filas de semana */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {semanas.map((semDias, semIdx) => {
+          const isosSem = semDias.map(d => toISO(d));
+
+          // Eventos multi-día que cruzan esta semana
+          const multiEvts = eventos.filter(ev =>
+            ev.fechaFin && ev.fechaFin !== ev.fechaInicio &&
+            ev.fechaInicio <= isosSem[6] && ev.fechaFin >= isosSem[0]
+          );
+          const multiIds = new Set(multiEvts.map(e => e.id));
+
+          // Asignar filas a las barras (sin solapamiento)
+          const sorted = [...multiEvts].sort((a, b) => a.fechaInicio.localeCompare(b.fechaInicio));
+          const rowEnds = [];
+          const spanEvts = sorted.map(ev => {
+            const ini = ev.fechaInicio < isosSem[0] ? isosSem[0] : ev.fechaInicio;
+            const fin = ev.fechaFin > isosSem[6] ? isosSem[6] : ev.fechaFin;
+            const startIdx = isosSem.indexOf(ini);
+            const endIdx = isosSem.indexOf(fin);
+            let row = 0;
+            while (row < rowEnds.length && rowEnds[row] >= ini) row++;
+            rowEnds[row] = fin;
+            return { ev, row, startIdx, endIdx, iniciaAqui: ev.fechaInicio >= isosSem[0], terminaAqui: ev.fechaFin <= isosSem[6] };
+          });
+          const numBarRows = spanEvts.reduce((m, x) => Math.max(m, x.row + 1), 0);
+          const alturaBarras = numBarRows * 22 + (numBarRows > 0 ? 4 : 0);
+
           return (
-            <div key={iso} data-dayiso={iso} onClick={() => onDiaClick(iso)}
-              style={{
-                borderRight: (i + 1) % 7 === 0 ? 'none' : '1px solid var(--app-border)',
-                borderBottom: '1px solid var(--app-border)',
-                padding: '5px 4px 3px',
-                background: esHoy ? 'rgba(229,62,62,0.04)' : 'var(--app-surface)',
-                cursor: 'pointer', overflow: 'hidden',
-                opacity: esMes ? 1 : 0.4,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = esHoy ? 'rgba(229,62,62,0.08)' : 'var(--app-surface-alt)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = esHoy ? 'rgba(229,62,62,0.04)' : 'var(--app-surface)'; }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: esHoy ? '#e53e3e' : 'transparent', marginBottom: 3 }}>
-                <span style={{ fontSize: 12, fontWeight: esHoy ? 700 : 400, color: esHoy ? '#fff' : 'var(--app-text)' }}>
-                  {d.getDate()}
-                </span>
-              </div>
-              {(() => {
-                const base = evs;
-                const filtered = base.filter(ev => !(dragPreview?.id === ev.id && dragPreview.fechaInicio !== iso));
-                const extra = (dragPreview?.fechaInicio === iso && !base.find(e => e.id === dragPreview.id))
-                  ? [dragPreview] : [];
-                const evsShow = [...extra, ...filtered];
+            <div key={semIdx} style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: semIdx < 5 ? '1px solid var(--app-border)' : 'none', position: 'relative', overflow: 'hidden' }}>
+              {/* Celdas de días */}
+              {semDias.map((d, colIdx) => {
+                const iso = toISO(d);
+                const esHoy = iso === hoyISO;
+                const esMes = d.getMonth() === mes;
+                const evs = eventos.filter(ev => evtEnDia(ev, iso) && !multiIds.has(ev.id));
                 return (
-                  <>
-                    {evsShow.slice(0, 3).map(ev => {
-                      const isDragging = dragPreview?.id === ev.id;
-                      const canEdit = canEditEvt ? canEditEvt(ev) : false;
-                      const draggable = ev.fechaInicio === iso && canEdit;
+                  <div key={iso} data-dayiso={iso} onClick={() => onDiaClick(iso)}
+                    style={{
+                      borderRight: colIdx < 6 ? '1px solid var(--app-border)' : 'none',
+                      padding: '5px 4px 3px',
+                      background: esHoy ? 'rgba(229,62,62,0.04)' : 'var(--app-surface)',
+                      cursor: 'pointer', overflow: 'hidden',
+                      opacity: esMes ? 1 : 0.4,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = esHoy ? 'rgba(229,62,62,0.08)' : 'var(--app-surface-alt)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = esHoy ? 'rgba(229,62,62,0.04)' : 'var(--app-surface)'; }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: esHoy ? '#e53e3e' : 'transparent', marginBottom: 3 }}>
+                      <span style={{ fontSize: 12, fontWeight: esHoy ? 700 : 400, color: esHoy ? '#fff' : 'var(--app-text)' }}>
+                        {d.getDate()}
+                      </span>
+                    </div>
+                    {alturaBarras > 0 && <div style={{ height: alturaBarras }} />}
+                    {(() => {
+                      const filtered = evs.filter(ev => !(dragPreview?.id === ev.id && dragPreview.fechaInicio !== iso));
+                      const extra = (dragPreview?.fechaInicio === iso && !evs.find(e => e.id === dragPreview.id)) ? [dragPreview] : [];
+                      const evsShow = [...extra, ...filtered];
                       return (
-                        <div key={ev.id}
-                          onMouseDown={draggable ? e => { e.stopPropagation(); onDragStart(ev, 'mover-dia', e); } : undefined}
-                          onClick={e => e.stopPropagation()}
-                          style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: draggable ? (isDragging ? 'grabbing' : 'grab') : 'default', opacity: isDragging ? 0.7 : 1, userSelect: 'none' }}>
-                          {!ev.todoElDia && ev.horaInicio && <span style={{ opacity: 0.85 }}>{ev.horaInicio} </span>}
-                          {ev.titulo}
+                        <>
+                          {evsShow.slice(0, 3).map(ev => {
+                            const isDragging = dragPreview?.id === ev.id;
+                            const canEdit = canEditEvt ? canEditEvt(ev) : false;
+                            const draggable = ev.fechaInicio === iso && canEdit;
+                            return (
+                              <div key={ev.id}
+                                onMouseDown={draggable ? e => { e.stopPropagation(); onDragStart(ev, 'mover-dia', e); } : undefined}
+                                onClick={e => e.stopPropagation()}
+                                style={{ background: ev.color, color: '#fff', fontSize: 10, fontWeight: 600, borderRadius: 4, padding: '2px 5px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: draggable ? (isDragging ? 'grabbing' : 'grab') : 'default', opacity: isDragging ? 0.7 : 1, userSelect: 'none' }}>
+                                {!ev.todoElDia && ev.horaInicio && <span style={{ opacity: 0.85 }}>{ev.horaInicio} </span>}
+                                {ev.titulo}
+                              </div>
+                            );
+                          })}
+                          {evsShow.length > 3 && (
+                            <div style={{ fontSize: 10, color: 'var(--app-text-muted)', paddingLeft: 5 }}>+{evsShow.length - 3} más</div>
+                          )}
+                        </>
+                      );
+                    })()}
+                    {(() => {
+                      const asist = getAsist(iso);
+                      const cumples = getCumple(iso);
+                      if (!asist.length && !cumples.length) return null;
+                      const cumpleChips = cumples.map(c => ({ nombre: c.nombre, color: '#f59e0b', emoji: '🎂', key: 'cumple-' + c.nombre }));
+                      const asistChips = asist.map(a => ({ ...a, key: a.nombre + a.status }));
+                      const all = [...cumpleChips, ...asistChips];
+                      return (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginTop: 3 }}>
+                          {all.slice(0, 2).map(a => (
+                            <span key={a.key}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: a.color + '28', border: `1px solid ${a.color}55`, borderRadius: 3, padding: '1px 4px', fontSize: 9, color: 'var(--app-text)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden' }}>
+                              {a.emoji} {a.nombre}
+                            </span>
+                          ))}
+                          {all.length > 2 && (
+                            <span style={{ fontSize: 9, color: 'var(--app-text-muted)', display: 'flex', alignItems: 'center' }}>+{all.length - 2}</span>
+                          )}
                         </div>
                       );
-                    })}
-                    {evsShow.length > 3 && (
-                      <div style={{ fontSize: 10, color: 'var(--app-text-muted)', paddingLeft: 5 }}>+{evsShow.length - 3} más</div>
-                    )}
-                  </>
-                );
-              })()}
-              {(() => {
-                const asist = getAsist(iso);
-                const cumples = getCumple(iso);
-                if (!asist.length && !cumples.length) return null;
-                const cumpleChips = cumples.map(c => ({ nombre: c.nombre, color: '#f59e0b', emoji: '🎂', key: 'cumple-' + c.nombre }));
-                const asistChips = asist.map(a => ({ ...a, key: a.nombre + a.status }));
-                const all = [...cumpleChips, ...asistChips];
-                return (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginTop: 3 }}>
-                    {all.slice(0, 2).map(a => (
-                      <span key={a.key}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: a.color + '28', border: `1px solid ${a.color}55`, borderRadius: 3, padding: '1px 4px', fontSize: 9, color: 'var(--app-text)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden' }}>
-                        {a.emoji} {a.nombre}
-                      </span>
-                    ))}
-                    {all.length > 2 && (
-                      <span style={{ fontSize: 9, color: 'var(--app-text-muted)', display: 'flex', alignItems: 'center' }}>+{all.length - 2}</span>
-                    )}
+                    })()}
                   </div>
                 );
-              })()}
+              })}
+              {/* Barras continuas de eventos multi-día */}
+              {spanEvts.length > 0 && (
+                <div style={{ position: 'absolute', top: 32, left: 0, right: 0, pointerEvents: 'none' }}>
+                  {spanEvts.map(({ ev, row, startIdx, endIdx, iniciaAqui, terminaAqui }) => (
+                    <div key={ev.id}
+                      onClick={e => { e.stopPropagation(); onEventoClick(ev, e); }}
+                      style={{
+                        pointerEvents: 'all',
+                        position: 'absolute',
+                        top: row * 22 + 2,
+                        left: `calc(${(startIdx / 7) * 100}% + ${iniciaAqui ? 2 : 0}px)`,
+                        width: `calc(${((endIdx - startIdx + 1) / 7) * 100}% - ${(iniciaAqui ? 2 : 0) + (terminaAqui ? 2 : 0)}px)`,
+                        height: 18,
+                        background: ev.color,
+                        borderRadius: `${iniciaAqui ? 9 : 0}px ${terminaAqui ? 9 : 0}px ${terminaAqui ? 9 : 0}px ${iniciaAqui ? 9 : 0}px`,
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        paddingLeft: iniciaAqui ? 6 : 4,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        alignItems: 'center',
+                        userSelect: 'none',
+                      }}>
+                      {iniciaAqui && ev.titulo}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
